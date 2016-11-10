@@ -1,0 +1,405 @@
+#!/bin/env python
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import sys
+import subprocess as sb
+import xml.etree.ElementTree as ET
+
+import os
+import subprocess as sb
+import argparse
+import platform
+import math
+import re
+
+ERRMSG = '''ERROR: the python package anarelinfo is not available to import.
+anarelinfo comes from the psana-conda package. You must be in a conda environment
+which has it installed. At LCLS, run conda_setup to activate the latest such
+conda environment.
+'''
+
+try:
+    import anarelinfo
+except ImportError:
+    print("%s" % ERRMSG)
+    sys.exit(1)
+
+
+######## globals ######
+SIT_RELEASE_FNAME = '.sit_release'
+SIT_CONDA_ENV_FNAME = '.sit_conda_env'
+VERBOSE=False
+QUIET=False
+PCDS_EXTPKGS=['pdsdata','psalg']
+CONDA_SETUP_ACTIVE_EVAR='_CONDA_SETUP_ACTIVE'
+CONDA_SETUP_ACTIVE_VALUE='1'
+
+######## logging #############
+
+def info(msg):
+    global QUIET
+    if QUIET: return
+    print(msg)
+    sys.stdout.flush()
+
+def vprint(msg):
+    global VERBOSE
+    global QUIET
+    if QUIET: return    
+    if not VERBOSE: return
+    print(msg)
+    sys.stdout.flush()
+
+def warning(msg):
+    sys.stderr.write("WARNING: %s\n" % msg)
+    sys.stderr.flush()
+    
+def fatal(msg):
+    sys.stderr.write("FATAL: %s\n" % msg)
+    sys.stderr.flush()
+    sys.exit(1)
+
+
+##### ARGUMENTS #############
+
+DESCR = '''manage development of psana-conda package. Typical cycle:
+
+1. condarel --newrel --name myrel   
+   creates a release based on the current conda environment.
+2. cd myrel 
+3. condarel --addpkg --name pkgname [--tag HEAD] [--branch xx] [--user]
+   if pkgname is part of psana-conda, checks out the tag used to build psana-conda.
+   --tag and --branch allow one to specify a different tag or branch. Use --tag HEAD to get
+   latest in trunk. If package is already checked out, does svn switch, not checkout.
+
+   If the package is SConsTools, links the SConstruct. If the package is one of %s, creates
+   an 'extpkgs' subdir and checks out the package there.
+
+5. condarel --chenv
+   change the conda environment that this release is built against. (like sit_setup relupgrade)
+''' % ','.join(PCDS_EXTPKGS)
+
+parser = argparse.ArgumentParser(description=DESCR,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+
+parser.add_argument('-n', '--name', type=str, help="name of new release, or package to add, depending on other arguments.", default=None)
+SVN_ANA_DEF='https://pswww.slac.stanford.edu/svn/psdmrepo'
+SVN_USER_ANA_DEF='https://pswww.slac.stanford.edu/svn/userrepo'
+SVN_PCDS_DEF='file:///afs/slac/g/pcds/svn'
+parser.add_argument('--svn_ana', type=str, help="ana SVN repo, where psana and all its packages come from. default=%s" % SVN_ANA_DEF, default=SVN_ANA_DEF)
+parser.add_argument('--svn_user_ana', type=str, help="ana user SVN repo, default=%s" % SVN_USER_ANA_DEF, default=SVN_USER_ANA_DEF)
+parser.add_argument('--svn_pcds', type=str, help="SVN for pcds packages, default=%s" % SVN_PCDS_DEF, default=SVN_PCDS_DEF)
+parser.add_argument('--verbose', action='store_true', help='verbose')
+parser.add_argument('--newrel', action='store_true', help='create new release')
+parser.add_argument('--addpkg', action='store_true', help='add package that is part of psana-conda, or otherwise')
+parser.add_argument('--chenv', action='store_true', help='change conda environment that release is built against to the current one.')
+parser.add_argument('--relinfo', action='store_true', help='release info, compare checked out tags to psana-conda tags')
+parser.add_argument('--tag', type=str, help="name of new release, or package to add, depending on other arguments.", default=None)
+parser.add_argument('--user', action='store_true', help='used with addpkg, get package from user repo')
+parser.add_argument('--branch', type=str, help="name of new release, or package to add, depending on other arguments.", default=None)
+
+##### UTIL ############
+def run_command(cmdList, shell):
+    vprint("run_command: %s" % ' '.join(cmdList))
+    p = sb.Popen(cmdList, shell=shell, stdout=sb.PIPE, stderr=sb.PIPE)
+    stdout, stderr = p.communicate()
+    if isinstance(stdout, bytes):
+        # py3/py2 compatibility:
+        stdout = stdout.decode('utf-8')
+        stderr = stderr.decode('utf-8')
+    return stdout, stderr.strip()
+
+def get_site_packages_path(args):
+    if not 'CONDA_PREFIX' in os.environ: fatal("CONDA_PREFIX not set. source a conda environment")
+    conda_prefix = os.environ['CONDA_PREFIX']
+    pydir = os.path.join(conda_prefix, 'lib', 'python2.7')
+    if not os.path.exists(pydir):
+        pydir = os.path.join(conda_prefix, 'lib', 'python3.5')
+    if not os.path.exists(pydir): fatal("couldn't find either python2.7 or python3.5 in %s/lib" % conda_prefix)
+    site_packages = os.path.join(pydir, 'site-packages')
+    if not os.path.exists(site_packages): fatal("dir doesn't exist: %s" % site_packages)
+    return site_packages
+
+def link_sconstruct(site_packages):
+    '''if SConstruct doesn't exist, links 
+    SConstruct to SConsTools/src/SConstruct.main if it exists, and if not, to
+    site_packages/SConsTools/src/SConstruct.main
+    '''
+    if os.path.exists('SConstruct'):
+        sys.stderr.write('SConstruct already exists - not linking')
+        return
+    sconstruct = os.path.join(site_packages, 'SConsTools', 'SConstruct.main')
+    if os.path.exists('SConsTools'):
+        local_sconstruct = os.path.join('SConsTools','src','SConstruct.main')
+        if os.path.exists(local_sconstruct):
+            sys.stdout.write('found local SConstruct.main')
+            sconstruct = local_sconstruct
+    if not os.path.exists(sconstruct): fatal("file doesn't exist: %s" % sconstruct)
+    cmd = 'ln -s %s SConstruct' % sconstruct
+    assert 0 == os.system(cmd)
+
+def _writeSitRelease():
+    global SIT_RELEASE_FNAME
+    fout = open(SIT_RELEASE_FNAME,'w')
+    fout.write("%s\n" % anarelinfo.version)
+    fout.close()
+    vprint("wrote file %s with contents %s" % (SIT_RELEASE_FNAME, anarelinfo.version,))
+
+def _writeSitCondaEnv(conda_prefix):
+    global SIT_CONDA_ENV_FNAME
+    fout = open(SIT_CONDA_ENV_FNAME,'w')
+    fout.write("%s\n" % conda_prefix)
+    fout.close()
+    vprint("wrote file %s with contents %s" % (SIT_CONDA_ENV_FNAME, conda_prefix,))
+
+######### NEWREL ###################################
+def makeNewRel(args):
+    ####### helpers
+    def makeAndCDintoRelDirectory(name):
+        if os.path.exists(name):fatal("directory %s already exists" % name)
+        if 0 != os.system('mkdir %s' % name): fatal("system call: mkdir %s failed." % name)
+        vprint("mkdir %s completed" % name)
+        os.chdir(name)
+        vprint("in dir %s" % name)
+        
+    def makeSitReleaseFile():
+        global SIT_RELEASE_FNAME
+        if os.path.exists(SIT_RELEASE_FNAME): fatal("file %s exists." % SIT_RELEASE_FNAME)
+        _writeSitRelease()
+ 
+    def makeSitCondaFile():
+        sit_conda_fname = '.sit_conda_env'
+        conda_prefix=os.environ['CONDA_PREFIX']
+        if 0==len(conda_prefix): fatal("CONDA_PREFIX not set")
+        if os.path.exists(sit_conda_fname): fatal("file %s already exists" % sit_conda_fname)
+        _writeSitCondaEnv(conda_prefix)
+        return conda_prefix
+
+    ###############
+    global CONDA_SETUP_ACTIVE_VALUE
+    global CONDA_SETUP_ACTIVE_EVAR
+
+    if not args.name: fatal("must speficy --name with --newrel")
+    SP_DIR = get_site_packages_path(args)
+    makeAndCDintoRelDirectory(args.name)
+    link_sconstruct(SP_DIR)
+    makeSitReleaseFile()
+    conda_env = makeSitCondaFile()
+    os.chdir('..')
+
+    msg = "directory %s is a conda based release against env=%s\n" % (args.name, os.path.basename(conda_env))
+    msg += "do the following to activate:\n"
+    msg += "cd %s\n" % args.name    
+    if os.environ.get(CONDA_SETUP_ACTIVE_EVAR,None)==CONDA_SETUP_ACTIVE_VALUE:
+        msg += "undo_conda\n"
+    msg += "source conda_setup"
+
+########## ADDPKG ###############
+def addPkg(args):    
+    def switch_or_checkout(in_localrel): 
+        if in_localrel:
+            return 'switch'
+        return 'checkout'
+
+    def set_tag_branch(user_specified_branch, user_specified_tag, anrel_tag):
+        if user_specified_branch:
+            tag = None
+            branch = user_specified_branch
+        else:
+            if user_specified_tag:
+                tag = user_specified_tag
+                branch = None
+            elif anrel_tag:
+                if anarel_tag == 'conda_branch':
+                    tag = None
+                    branch = 'conda'
+                else:
+                    branch = None
+                    tag = anarel_tag
+            else:
+                tag = 'HEAD'
+                branch = None
+        return tag, branch
+
+    def get_repo(user, in_pcds, anarel_tag, args):
+        if in_pcds:
+            if user:
+                warning("addpkg: ignoring --user for pkg=%s, it is a pcds external package" % args.name) 
+            return args.svn_pcds
+        if anarel_tag:
+            if user:
+                warning("addpkg: ignoring --user for pkg=%s, it is a ana release package" % args.name) 
+            return args.svn_ana
+        if user:
+            return args.svn_user_ana
+        return args.svn_ana        
+        
+    def get_pkg_url(repo, pkg, tag, branch):
+        url = "%s/%s" % (repo, pkg)
+        if tag == 'HEAD':
+            url += '/trunk'
+        elif tag:
+            url += '/tags/%s' % tag
+        elif branch:
+            url += '/branches/%s' % branch
+        return url
+
+    ##########
+    if not args.name: fatal("must use --name to specify package names with --addpkg")
+    if args.tag and args.branch: fatal("only specify none, or one, of --tag --branch with --addpkg")
+    global PCDS_EXTPKGS
+    pkg = args.name
+    pkgtags = anarelinfo.pkgtags
+    anarel_tag = pkgtags.get(pkg,None)
+    pcdsext = pkg in PCDS_EXTPKGS
+    if pcdsext:
+       in_localrel = os.path.exists('extpkgs') and os.path.exists(os.path.join('extpkgs', pkg))
+    else:
+        in_localrel = os.path.exists(pkg)
+    vprint("addPkg: pkg=%s anarel_tag=%s in_localrel=%s in_pcds=%s user=%s" % 
+           (pkg, anarel_tag, in_localrel, pcdsext, args.user))
+    repo = get_repo(user=args.user, in_pcds=pcdsext, anarel_tag=anarel_tag, args=args) 
+    tag, branch = set_tag_branch(user_specified_branch=args.branch, 
+                                 user_specified_tag=args.tag, 
+                                 anrel_tag=anarel_tag)
+    pkg_url = get_pkg_url(repo=repo, pkg=pkg, tag=tag, branch=branch)
+
+    cmd = 'svn %s' % switch_or_checkout(in_localrel)
+    cmd += ' %s' % pkg_url
+    cmd += ' %s' % pkg
+    
+    if pcdsext:
+        if not os.path.exists('extpkgs'):
+            os.mkdir('extpkgs')
+            if not os.path.exists('extpkgs'): fatal("addpkg: could not make directory extpkgs")
+            info("addpkg: pkg=%s is a pcds external, created subdirectory extpkgs, will checkout into there" % pkg)
+        os.chdir('extpkgs')
+        vprint("chdir into extpkgs")
+    if not anarel_tag:
+        info("addpkg: pkg %s is not in anarel." % pkg)
+    info("addpkg: about to run: %s" % cmd)
+    if 0 != os.system(cmd): fatal("addpkg: command failed: %s" % cmd)
+    if pcdsext:
+        os.chdir('..')
+
+def changeEnv(args):
+    conda_prefix = os.environ.get('CONDA_PREFIX',None)
+    if not conda_prefix: fatal("--chenv: must be in a conda environment, but CONDA_PREFIX not defined")
+    if not os.path.exists('.sit_conda_env'): fatal("--chenv: .sit_conda_env file not present, are you in the release directory, for a release built against a conda environment?")
+    if not os.path.exists('.sit_release'): fatal("--chenv: .sit_release file not present, are you in the release directory, for a release built against a conda environment?")
+    current_conda_prefix = open('.sit_conda_env','r').read().strip()
+    current_sit_release = open('.sit_release','r').read().strip()
+    new_sit_release = anarelinfo.version
+    if new_sit_release == current_sit_release and conda_prefix == current_conda_prefix:
+        warning("changeEnv: not doing anything. There is no change in conda environment or psana-conda version between the current conda environment and the release")
+        return
+    _writeSitRelease()
+    _writeSitCondaEnv(conda_prefix)
+    msg = "chenv: updated release information.\n"
+    msg += "   conda_env: %s -> %s\n" % (os.path.basename(current_conda_prefix), os.path.basename(conda_prefix))
+    msg += " sit_release: %s -> %s\n" % (current_sit_release, new_sit_release)
+    msg += "\nNow run: conda_setup\n"
+    msg += "to activate new release environment, and\n"
+    msg += "scons -c\n"
+    msg += "to clean environment. Check compatability of check out packages with --relinfo command.\n"
+    msg += "Then rebuild against new conda env.\n"
+    info(msg)
+
+def relInfo(args):
+    def get_svn_info(path, args):
+        svn_info = {'tag':None, 'branch':None, 'head':False, 'repo':None}
+        cmd = 'svn info --xml %s' % path
+        stdout, stderr = run_command(cmd, shell=True)
+        if stderr:
+            vprint("cmd: %s gave error: %s" % (cmd, stderr))
+            return svn_info
+        root=ET.fromstring(stdout)
+        url = root.find('entry/url')
+        if url is None:
+            warning("cmd: %s couldn't get entry/url from xml" % cmd)
+        url = url.text
+        for name, repo_url in zip(['ana','pcds','user'],
+                                  [args.svn_ana, args.svn_user_ana, args.svn_pcds]):
+            if url.startswith(repo_url):
+                svn_info['repo']=name
+                _, after = url.split(repo_url)
+                fields = [fld for fld in after.split('/') if len(fld)>0]
+                if fields[-1]=='trunk':
+                    svn_info['head']=True
+                elif len(fields)>=2:
+                    if fields[-2] == 'tags':
+                        svn_info['tag'] = fields[-1]
+                        return svn_info
+                    elif fields[-2] == 'branches':
+                        svn_info['branch'] = fields[-1]
+                        return svn_info
+                 
+        warning("cmd: %s got url=%s but couldn't parse trunk, tag or branch" % (cmd, url))
+        return svn_info
+
+    #############
+    cand_pkgs = os.listdir('.')
+    if 'extpkgs' in cand_pkgs:
+        cand_pkgs.remove('extpkgs')
+        cand_pkgs.extend([os.path.join('extpkgs', sdir) for sdir in os.listdir('extpkgs')])
+    paths_without_svn=[]
+    pkgs_with_svn=[]
+    for cand_pkg in cand_pkgs:
+        if not os.path.isdir(cand_pkg): continue
+        svn_info = get_svn_info(cand_pkg, args)
+        if not svn_info['repo']:
+            paths_without_svn.append(cand_pkg)
+            continue
+        pkg = os.path.basename(cand_pkg)
+        svn_info['anarel_tag'] = anarelinfo.pkgtags.get(pkg, None)
+        svn_info['pkg']=pkg
+        svn_info['path']=cand_pkg
+        pkgs_with_svn.append(svn_info)
+    def pathcmp(A,B):
+        if A['path']<B['path']: return -1
+        if A['path']>B['path']: return 1
+        return 0
+    pkgs_with_svn.sort(pathcmp)
+    paths_without_svn.sort(pathcmp)
+
+    pathwidth = max([len(svn_info['path']) for svn_info in pkgs_with_svn])
+    info("--- relinfo: pkgs under svn  ----")
+    info(" -- pkg -- tag/branch  -- anrel tag/branch --")
+    for svn_info in pkgs_with_svn:
+        diff = False
+        ln = svn_info['path'].rjust(pathwidth)
+        ln += "  "
+        if svn_info['tag']:
+            ln += "tag=%s" % svn_info['tag'].ljust(15)
+        else:
+            ln += "branch=%s" % svn_info['branch'].ljust(12)
+        if svn_info['anarel_tag']:
+            ln += "  %s" % svn_info['anarel_tag']
+            if svn_info['anarel_tag'] == 'conda_branch' and svn_info['branch'] == 'conda':
+                pass
+            else:
+                if svn_info['anarel_tag'] != svn_info['tag']:
+                    diff = True
+        else:
+            ln += "  ---"
+        if diff:
+            ln += " **diff**"
+        info(ln)
+    
+if __name__ == '__main__':
+    args = parser.parse_args()
+    VERBOSE=args.verbose
+    number_commands_given = int(args.addpkg) + int(args.newrel) + int(args.chenv) + int(args.relinfo)
+    if number_commands_given != 1: fatal("must specify one, and only one, of --addpkg --newrel --chenv --relinfo (note two dashes --  not one - with flags)."
+                                         " computed %d for number commands." % (number_commands_given,))
+    if args.newrel:
+        makeNewRel(args)
+    elif args.addpkg:
+        addPkg(args)
+    elif args.chenv:
+        changeEnv(args)
+    elif args.relinfo:
+        relInfo(args)

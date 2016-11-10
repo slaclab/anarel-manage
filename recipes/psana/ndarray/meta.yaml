@@ -1,0 +1,16 @@
+package:
+  name: ndarray
+  version: 1.1.5
+
+source:
+  svn_url: https://pswww.slac.stanford.edu/svn/psdmrepo/ndarray/tags/V01-01-05
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - boost
+  run:
+    - boost
+

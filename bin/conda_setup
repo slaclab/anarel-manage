@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Determine the directory containing this script
+if [[ -n $BASH_VERSION ]]; then
+    _SCRIPT_LOCATION=${BASH_SOURCE[0]}
+    _SHELL="bash"
+else
+    echo "Only bash is supported"
+    return 1
+fi
+_CONDA_SETUP_DIR=$(dirname "$_SCRIPT_LOCATION")
+
+# Ensure that this script is sourced, not executed
+if [[ -n $BASH_VERSION ]] && [[ "$(basename "$0" 2> /dev/null)" == "conda_setup" ]]; then
+    (>&2 echo "Error: conda_setup must be sourced. Run 'source conda_setup'
+instead of 'conda_setup' To see conda_setup options, add -h.
+")
+    exit 1
+fi
+
+if [[ $_CONDA_SETUP_ACTIVE ]]; then
+    echo "conda_setup is being re-run - restoring old environment first"
+    undo_conda
+fi
+
+FNAME=`mktemp`
+$_CONDA_SETUP_DIR/conda_setup_details --file $FNAME $*
+source $FNAME
+rm $FNAME

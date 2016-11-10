@@ -1,0 +1,341 @@
+# Maintain the packages we want to install into a miniconda anarel environment.
+# support variants on a anarel, like anarel-py3 anarel-gpu
+
+# the format of this file is
+# -  list of stage 1 packages
+# -  list of stage 2 packages, ect
+#
+# after each stage, ana-rel-manage will test the new packages just installed, as well as
+# retest the previous packages installed. In this was we can see 
+# if installing some later package causes problems for an earlier package.
+
+# each stage is a list of packages. We can specify a version, and then a full package
+# build string for different variants, or specify that we should skip a package for
+# a given variant. We can also specify a channel for channels not in the condarc files
+
+# ana-rel-manage will add the appropriate python version when creating, so we don't
+# list python below.
+
+# syntax for a package
+#  packagename:
+#    ver: '=1.0.0'  or '>=1.0' or latest, note we need '' around the specification, and
+#         we need to start numbers with = or >, latest means just let conda get the latest
+#         version of the package
+#    py3ver: '=1.0.1' if for some reason the python three installation requires a different
+#                     version, specify it here 
+#    bld: lfs_verbs_100   full package build string, for the default py27 opt anarelease
+#    dbg: blah            likewise for the py27 debug release
+#    gpu: blah            likewise for the gpu py27 opt release
+#    py3: blah            likwise fot eh py3 opt release
+#                     you can also put the string skip here, important for py3
+#    chl: the channel to find the package in, fully qualified file urls, or off of anaconda for things
+#         like conda-forge, ect, only needed if channel is not in condarc
+                   
+# stage 1 - ana-rel-manage will create env with correct python version.
+# also add tracked features.
+-
+  dbg:
+    ver: latest
+    only_in_variant: dbg
+
+  gpu:
+    ver: latest
+    only_in_variant: gpu
+
+# stage 2 - now that we have gpu feature in place, add cudnn to gpu environment
+-
+  cudnn:
+    ver: '=5.1'
+    only_in_variant: gpu
+  
+# stage 3 - C libraries, openmpi, hdf5, etc.
+-
+  openmpi:
+    ver: '=1.10.3'
+    bld: lsf_verbs_101       
+
+  szip:
+    ver: '=2.1'
+
+  hdf5:
+    ver: '=1.8.17'
+    bld: openmpi_101
+    dbg: openmpi_dbg_101
+
+  ipython:
+    ver: latest
+
+  nose:
+    ver: latest
+
+# stage 3 - numpy, we have had so much trouble with it, we may want to 
+# test it in a pretty light environment, then install the rest of the
+# packages and test again
+-
+  numpy:
+    ver: latest
+
+  scipy:
+    ver: latest
+
+  h5py:
+    ver: '=2.5.0'
+    bld: py27_101
+    py3: py35_101
+
+  mpi4py:
+    ver: '=2.0.0'
+    bld: py27_openmpi_101
+    py3: py35_openmpi_101
+
+  tables:
+    ver: '=3.3.0'
+    bld: py27_100
+    py3: py35_100
+
+# all the package we want from defaults/conda-forge, 
+# where we use our .condarc channel order - i.e, defaults
+# first, than conda-forge
+-
+
+# from build requirements for psana-conda
+
+  scons:
+    ver: latest
+    py3: skip
+
+  cython:
+    ver: latest
+
+  boost:
+    ver: '=1.57.0'
+    py3ver: '=1.60.0'
+    # moving to 1.60.0 got the boost_python lib to load, but there
+    # are still other boost libraries that don't load
+
+  mysql:
+    ver: latest
+
+
+  ndarray:
+    ver: latest
+
+  # we build psana with 4.8.5, I don't think building with 4.8.7 works
+  # but spyder doesn't work with 4.8.5, however psana seems to run  with 4.8.7
+  qt:
+    ver: '=4.8.7'
+
+  matplotlib:
+    ver: latest
+
+  pyzmq:
+    ver: latest
+
+# generally good things, most users might expect want, some part of psana uses
+  pylint:
+    ver: latest
+
+  coverage:
+    ver: latest
+
+  jinja2:
+    ver: latest
+
+  pandas:
+    ver: '=0.19.0'
+    # version '=0.19.1' has a unit test that segfaults, 
+    # https://github.com/pandas-dev/pandas/issues/14621
+  
+  pillow:
+    ver: latest
+
+  pyqt:
+    ver: '=4.11.4'
+
+  pyqtgraph:
+    ver: latest
+
+  python-dateutil:
+    ver: latest
+
+  scikit-beam:
+    ver: latest
+
+  scikit-learn:
+    ver: latest
+
+  pyyaml:
+    ver: latest
+
+  jupyter:
+    ver: latest
+
+  virtualenv:
+    ver: latest
+
+  requests:
+    ver: latest
+
+  simplejson:
+    ver: latest
+
+  # looks like this is not in py3
+  MySQL-python:
+    ver: latest
+    py3: skip
+
+  # zmq.backend.cffi won't import without this, still doesn't seem to import with it?
+  cffi:
+    ver: latest
+
+  # also a zmq backend?
+  gevent:
+    ver: latest
+
+  # for the zmq.test module
+  pytest:
+    ver: latest
+
+  # for pyqtgraph.opengl, maybe we don't need this?
+  pyopengl:
+    ver: latest
+
+  # for ipykernel.test, and tensorflow
+  mock:
+    ver: latest
+
+  # for pyPsanaMonit
+  psutil:
+    ver: latest
+
+  # for Jason
+  xarray:
+    ver: latest
+
+  dask:
+    ver: latest
+
+  bottleneck:
+    ver: latest
+
+  seaborn:
+    ver: latest  
+
+  # based on Marco's environments
+  joblib:
+    ver: latest
+
+  bokeh:
+    ver: latest
+
+  # from Marco - pseudo terminal
+  ptyprocess:
+    ver: latest
+
+  # Don't include mkl-rt - it brakes a scipy test, see https://jira.slac.stanford.edu/browse/PSRT-150
+
+  mkl-service:
+    ver: latest
+
+  # I am a little concerened about resolving spyder dependencies with the
+  # pack, maybe we should do it after the pack in a second stage?
+  spyder:
+    ver: latest
+
+  # for jason, from conda-forge
+  cyordereddict:
+    ver: latest
+
+  # for jason, from conda-forge
+  h5netcdf:
+    ver: latest
+
+  # add a progress bar to your for loops, from conda-forge, pure python
+  tqdm:
+    ver: latest
+
+  # add web stuff for Chris O' Grady - hashtag interface
+  click:
+    ver: latest
+
+  Flask:
+    ver: latest
+
+  itsdangerous:
+    ver: latest
+
+  tzlocal:
+    ver: latest
+
+  werkzeug:
+    ver: latest
+
+  # chuck says this is good  
+  plotly:
+    ver: latest
+
+  # pypi packaging recommend this, comes from condaforge
+  twine:
+    ver: latest
+  
+# stages for different channels
+-
+  # for pyPsanaMonit, but needs non-default channel, also I got an error
+  # trying to install it in the py3 build
+  guppy:
+    ver: latest
+    chl: kalefranz
+    py3: skip
+
+# now psana, don't trust our package as much, we'll test all that first
+# then retest with psana in it
+- 
+  psana-conda:
+    ver: '=1.0.5'
+    bld: py27_1
+    dbg: py27_dbg_1
+    py3: skip
+
+-
+# conda-forge override step - conda-forge has a later version of opencv (3.1) that
+# works with our other packages, except it updates jpeg, libtiff, but downgraded pillow
+  opencv:
+    ver: latest
+    chl: conda-forge
+
+  theano:
+    ver: latest
+    chl: conda-forge
+
+# after psana with its strict qt dependencies, and opencv with its own dependencies on 
+# libpng, ect, we'll install apps with wider qt dependencies
+-
+  logbookclient:
+    ver: latest
+    py3: skip
+
+#-
+#  protobuf:
+# I think tensorflow will pickup what it needs in its dependencies
+#    ver: '=3.0.0b2'
+#    chl: conda-forge
+
+
+# We will use our own channel for tensorflow to get the latest version and a 
+# gpu version - this should pick up the appropriate protobuf from defaults or conda-forge
+-
+  tensorflow:
+    ver: '=0.10.0'
+    gpu: py27_gpu_1
+    py3: py35_1
+    limit_os: rhel7
+  
+# now with our own tensorflow, and conda-forge theano, install keras (from our channel to get latest)
+-
+  keras:
+    ver: latest
+-
+  jupyterhub:
+    ver: latest
+    only_in_variant: py3
+    limit_os: rhel7

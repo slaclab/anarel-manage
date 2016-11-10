@@ -1,0 +1,13 @@
+package:
+  name: szip
+  version: 2.1
+
+source:
+  fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/szip-2.1.tar.gz
+  md5: 9cc9125a58b905a4148e4e2fda3fabc6
+
+build:
+  number: 100
+  binary_relocation: true
+  detect_binary_files_with_prefix: true
+

@@ -1,0 +1,438 @@
+#!/usr/bin/env python
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import os
+import sys
+import math
+import re
+import platform
+import argparse
+import subprocess as sb
+
+######## logging #############
+VERBOSE=False
+CONDA_SETUP_ACTIVE_EVAR='_CONDA_SETUP_ACTIVE'
+CONDA_SETUP_ACTIVE_VALUE='1'
+
+def vprint(msg):
+    global VERBOSE
+    if VERBOSE:
+        print(msg)
+        sys.stdout.flush()
+
+def warning(msg):
+    sys.stderr.write("WARNING: %s\n" % msg)
+    sys.stderr.flush()
+    
+def fatal(msg):
+    sys.stderr.write("FATAL: %s\n" % msg)
+    sys.stderr.flush()
+    sys.exit(1)
+
+######### util ########################
+def run_command(cmdList, shell):
+    vprint("run_command: %s" % ' '.join(cmdList))
+    p = sb.Popen(cmdList, shell=shell, stdout=sb.PIPE, stderr=sb.PIPE)
+    stdout, stderr = p.communicate()
+    if isinstance(stdout, bytes):
+        # py2/py3 compatibility
+        stdout = stdout.decode('utf-8')
+        stderr = stderr.decode('utf-8')
+    return stdout, stderr.strip()
+
+def conda_setup_is_active():
+    global CONDA_SETUP_ACTIVE_EVAR
+    global CONDA_SETUP_ACTIVE_VALUE
+    return os.environ.get(CONDA_SETUP_ACTIVE_EVAR, None)==CONDA_SETUP_ACTIVE_VALUE
+
+def set_conda_setup_active(newenv):
+    newenv[CONDA_SETUP_ACTIVE_EVAR]=CONDA_SETUP_ACTIVE_VALUE
+
+def write_env_file(args, oldenv, newenv):
+    fout = open(args.file, 'w')
+    write_newenv(fout, newenv)
+    write_undo_function(fout, oldenv, newenv)
+    write_activate_condaenv(fout, args)
+    if is_conda_release_dir():
+        put_release_bin_in_front_of_conda(fout, newenv['SIT_ARCH'])
+        # when the conda environment activates, it may overwrite somethings, put them back
+        for evar in ['SIT_ARCH', 'SIT_DATA', 'SIT_ROOT']:
+            if evar in newenv and newenv[evar] not in [None, 'None']:
+                fout.write("export %s=%s\n" % (evar, newenv[evar]))
+    fout.write('echo "environment setup. Type: undo_conda  [return] at the prompt to undo."\n')
+
+def write_newenv(fout, newenv):
+    for evar, val in newenv.items():
+        if val is None or val == 'None':
+            fout.write("unset %s\n" % evar)
+        else:
+            fout.write("export %s=%s\n" % (evar, val))
+    fout.write('\n\n')
+
+REHASH='''
+  if [ -n "$BASH" -o -n "$ZSH_VERSION" ] ; then
+        hash -r 2>/dev/null
+  fi
+'''
+
+# this borrows from virtualenv activate script
+def write_undo_function(fout, oldenv, newenv):
+    fout.write("undo_conda() {\n")
+    fout.write("  source deactivate\n")
+    for evar in newenv:
+        fout.write("  unset %s\n" % evar)
+    for evar,val in oldenv.items():
+        if val is None:
+            fout.write('  unset %s\n' % evar)
+        else:
+            fout.write('  export %s="%s"\n' % (evar,val))
+    # This should detect bash and zsh, which have a hash command that must
+    # be called to get it to forget past commands.  Without forgetting
+    # past commands the $PATH changes we made may not be respected
+    fout.write(REHASH)
+    fout.write('  unset -f undo_conda\n')
+    fout.write("}\n\n\n")
+
+def write_activate_condaenv(fout, args):
+    if args.noenv:
+        return
+    if None is args.env:
+        if not os.path.exists(args.anacur):
+            fatal("configuration directory with ana_current information doesn't exist, it is: %s" % args.ana_current)
+        if args.gpu + args.py3 >1:
+            fatal("cannot specify both --gpu and --py3")
+        if args.gpu:
+            fname = 'ana-current-gpu'
+        elif args.py3:
+            fname = 'ana-current-py3'
+        else:
+            fname = 'ana-current'
+        path = os.path.join(args.anacur, fname)
+        if not os.path.exists(path):
+            fatal("The file %s doesn't exists, can't identify ana-current for given options (gpu=%s py3=%s)" %
+                  (path, args.gpu, args.py3))
+        args.env=file(path,'r').read()
+
+    activate_line = 'source activate %s' % args.env
+    fout.write('echo "activating a conda environment with command %s"\n' % activate_line)
+    fout.write("%s\n\n\n" % activate_line)
+
+def put_release_bin_in_front_of_conda(fout, sit_arch):
+    cwd=os.path.abspath('.')
+    relbin = os.path.join(cwd, 'arch', sit_arch, 'bin')
+    fout.write("export PATH=%s:$PATH\n" % relbin)
+    
+########### undo sit_setup ###################
+def is_sitsetup_arch_subdir(path, subdir_to_arch):
+    '''return True if path ends with
+    arch/x86*/subdir/* where subdir is 2nd argument, usually one of
+    bin, lib or python. This should strip out things like
+    arch/x86*/python/pyextra as well as arch/x86*/python
+    '''
+    directories = path.split(os.path.sep)
+    while len(directories) and directories[-1] !=subdir_to_arch:
+        directories.pop()
+    if len(directories)<3: return False
+    assert directories[-1] == subdir_to_arch, "unexpected programming error"
+    if directories[-3] != 'arch': return False
+    if not directories[-2].startswith('x86'):
+        warning("is_sitsetup_arch_subdir - "
+                "path=%s ends with %s, and has 'arch', but in "
+                "between it is %s, which does not start with x86, "
+                "unusual. Not cleaning from path" % (path, subdir_to_arch, directories[-2]))
+        return False
+    return True
+    
+def dedup(data):
+    unique=[]
+    seen=set()
+    for el in data:
+        if el not in seen:
+            unique.append(el)
+            seen.add(el)
+    return unique
+
+def get_evar_paths(evar):
+    if evar not in os.environ:
+        return []
+    paths = os.environ[evar]
+    if len(paths.strip())==0:
+        return []
+    paths = paths.split(os.path.pathsep)
+    paths = dedup(paths)
+    vprint("get_evar_paths evar=%s:%s" % (evar, paths))
+    return paths
+
+def clean_path_evars(sit_releases, sit_external):
+    oldenv = {}
+    newenv = {}
+    for evar, arch_subdir, others_to_remove, expectempty in \
+        zip(['PYTHONPATH', 'PATH', 'LD_LIBRARY_PATH'],
+            ['python', 'bin', 'lib'],
+            [[], [], ['/afs/slac/package/lsf/curr/lib']],
+            [True, False, True]):
+        vprint('cleaning evar=%s' % evar)
+        oldenv[evar]=os.environ.get(evar,None)
+        paths = get_evar_paths(evar)
+        filtered = []
+        for path in paths:
+            if path.startswith(sit_releases):
+                vprint("  %s: removing - starts with %s" % (path, sit_releases))
+            elif path.startswith(sit_external):
+                vprint("  %s: removing - starts with %s" % (path, sit_external))
+            elif is_sitsetup_arch_subdir(path, arch_subdir):
+                vprint("  %s: removing - looks like arch subdir=%s" % (path, arch_subdir))
+            elif path in others_to_remove:
+                vprint("  %s: removing - part of set of paths to remove for this envvar" % path)
+            else:
+                vprint("  %s: KEEPING" % path)
+                filtered.append(path)
+        
+        paths = os.path.pathsep.join(filtered)
+        if len(filtered)>0 and expectempty:
+            warning('expected %s to be empty after undoing sit_setup. '
+                    'However it is not, make sure compatible with '
+                    'conda environment. it is %s' % (evar, paths))
+
+        if len(filtered)==0:
+            if evar in os.environ:
+                newenv[evar]=None
+        else:
+            newenv[evar]=paths
+    return oldenv, newenv
+
+def save_other_env(oldenv):
+    for evar in ('PS1',):
+        if evar in os.environ:
+            vprint("saving %s=%s" % (evar, os.environ[evar]))
+            oldenv[evar]=os.environ[evar]
+
+def undo_sit_setup():
+    sit_root = os.environ.get('SIT_ROOT','/reg/g/psdm')
+    vprint("identified sit_root as: %s" % sit_root)
+    sit_releases = os.path.join(sit_root, 'sw/releases')
+    sit_external = os.path.join(sit_root, 'sw/external')
+    oldenv, newenv = clean_path_evars(sit_releases, sit_external)
+    toremove = ['SIT_DATA', 'SIT_ARCH', 'SIT_ROOT', 
+                'SIT_SVN', 'SIT_ENV', 'SIT_RELDIR',
+                'SIT_REPOS', 'SIT_SVN_USER',
+                'SIT_RELEASE', 'SIT_USE_CONDA']
+    for evar in toremove:
+        if evar in os.environ:
+            oldenv[evar]=os.environ[evar]
+            vprint("removing %s=%s" % (evar, os.environ[evar]))
+            newenv[evar]=None
+    return oldenv, newenv
+
+############ new conda vars #################    
+def getOsAndPlatform():
+    platform_string = platform.platform()
+    if platform_string.startswith('Darwin'):
+        return 'osx','osx'
+    elif platform_string.startswith('Linux'):
+        if '-redhat-' in platform_string:
+            version_string = platform_string.split('-redhat-')[1].split('-')[0]
+            major_version = int(math.floor(float(version_string)))
+            archMachine = platform.machine()
+            assert archMachine == 'x86_64', "unexpected - machine architechture is not x86_64"
+            return 'rhel%d' % major_version, 'linux-64'
+    raise Exception("could not determin Os/platform. Only looked for Darwin and redhat linux, but platform string is %s" % platform_string)
+
+def get_SIT_ARCH(debug=False):
+    '''return dictionary of all SIT variables needed for build
+    '''
+    osName, platStr = getOsAndPlatform()
+    vprint("osName=%s" % osName)
+    vprint("platform=%s" % platform)
+    compiler = os.environ.get('CC','gcc')
+    stdout, stderr = run_command(['which', compiler], shell=False)
+    assert len(stderr.strip())==0, "no compiler found. Tried %s" % compiler
+    vprint("compiler=%s" % compiler)
+    stdout, stderr = run_command([compiler, '--version'], shell=False)
+    assert len(stderr.strip())==0, "found compiler=%s, but command %s --version produced error:\n%s\nstdout=%s" % \
+        (compiler, compiler, stderr, stdout)
+    vprint("%s --version produced:\nstdout=%s\nstderr=%s" % (compiler, stdout, stderr))
+    COMPILER_VERSION = re.compile('\s+(\d+\.\d+)\.\d+')
+    lineOneOfVersionOutput = stdout.split('\n')[0]
+    ccVerMatch = re.search(COMPILER_VERSION, lineOneOfVersionOutput)
+    assert ccVerMatch, "could not identify a complier version from first line of %s --version which is: %s" % (compiler, lineOneOfVersionOutput)
+    versionWithDot = ccVerMatch.groups()[0]
+    versionWithoutDot = ''.join(versionWithDot.split('.'))
+    archMachine = platform.machine()
+    optOrDebug = {False:'opt', True:'dbg'}[debug]
+    SIT_ARCH = '%s-%s-%s%s-%s' % (archMachine, osName, compiler, versionWithoutDot, optOrDebug)
+    return SIT_ARCH
+
+def get_conda_bin_for(args):
+    if args.conda:
+        if args.dev or args.rhel5 or args.rhel6 or args.rhel7:
+            warning("--conda is set, ignoring options like --dev, --rhel7, etc")
+        condadir=args.conda
+        if not os.path.exists(condadir):
+            fatal('explicit conda specified with --conda, but dir=%s does not exist' % condadir)
+        condabin = os.path.join(condadir, 'bin')
+        if not os.path.exists(condabin):
+            fatal('conda bin=%s from --conda does not exist, use --conda to specify base dir for conda installation, it must have a bin subdir' % condabin)
+        return condabin
+
+    instdir = args.instdir
+    if not os.path.exists(instdir): fatal("installation directory=%s doesn't exist, can be set through --instdir" % instdir)
+    minicondadir = os.path.join(instdir, 'miniconda2')
+    if args.rhel5 + args.rhel6 + args.rhel7 != 1:
+        fatal("internal error - there is not one platform specified, args=%r" % args)
+    if args.dev:
+        minicondadir += '-dev'
+    else:
+        minicondadir += '-prod'
+    if args.rhel7:
+        minicondadir += '-rhel7'
+    elif args.rhel6:
+        minicondadir += '-rhel6'
+    elif args.rhel5:
+        minicondadir += '-rhel5'
+    condabin = os.path.join(instdir, minicondadir, 'bin')
+    if not os.path.exists(condabin):
+        fatal("parsed args, got condabin=%s, but it doesn't exist" % (condabin,))
+    return condabin
+
+SIT_RELEASE_FNAME = '.sit_release'
+SIT_CONDA_ENV_FNAME = '.sit_conda_env'
+
+def is_conda_release_dir():
+    global SIT_RELEASE_FNAME
+    global SIT_CONDA_ENV_FNAME
+    return os.path.exists(SIT_RELEASE_FNAME) and os.path.exists(SIT_CONDA_ENV_FNAME)
+
+def get_conda_from_release():
+    global SIT_CONDA_ENV_FNAME
+    conda_prefix = open(SIT_CONDA_ENV_FNAME,'r').read().strip()
+    if not os.path.exists(conda_prefix): fatal("Release directory specifies conda_prefix path that doesn't exist: %s, use condarel to change base conda env"  % conda_prefix)
+    env_dir, conda_env = os.path.split(conda_prefix)
+    conda_root, jnk = os.path.split(env_dir)
+    conda_bin = os.path.join(conda_root, 'bin')
+    if not os.path.exists(conda_bin): fatal("Unable to form conda root bin subdir from conda_prefix=%s, tried conda_bin=%s but it doesn't exist" % (conda_prefix, conda_bin))
+    return conda_bin, conda_env
+
+def update_newenv_for_release(newenv):
+    cwd=os.path.abspath('.')
+    sit_arch = get_SIT_ARCH(debug=False)
+
+    # PATH has to be done after activating the conda environment
+    
+    paths = newenv.get('PYTHONPATH','').split(os.path.pathsep)
+    paths.insert(0,os.path.join(cwd, 'arch',sit_arch, 'python'))
+    newenv['PYTHONPATH']=os.path.pathsep.join(paths)
+
+    paths = newenv.get('LD_LIBRARY_PATH','').split(os.path.pathsep)
+    paths.insert(0,os.path.join(cwd, 'arch',sit_arch, 'lib'))
+    newenv['LD_LIBRARY_PATH']=os.path.pathsep.join(paths)
+
+    global SIT_CONDA_ENV_FNAME
+    conda_prefix = open(SIT_CONDA_ENV_FNAME,'r').read().strip()
+
+    sit_repos = os.path.join(conda_prefix, 'data', 'anarelinfo')
+    if not os.path.exists(sit_repos):
+        warning("the directory %s doesn't exist, no base release dependency information will be available\n" % sit_repos)
+    else:
+        newenv['SIT_REPOS']=sit_repos
+
+    global SIT_RELEASE_FNAME
+    sit_release = open(SIT_RELEASE_FNAME,'r').read().strip()
+    newenv['SIT_ARCH']=sit_arch
+    newenv['SIT_RELEASE']=sit_release
+    newenv['SIT_USE_CONDA']='1'
+    newenv['CONDA_ENV_PATH'] = conda_prefix
+    newenv['SIT_DATA'] = os.path.pathsep.join([os.path.join(cwd,'data'),
+                                               os.path.join(args.sitroot,'data')])
+
+def add_to_condaenv(args, newenv):
+    if is_conda_release_dir():
+        conda_bin, conda_env = get_conda_from_release()
+        vprint("detected conda release, setting env to %s" % conda_env)
+        if args.env or args.py3 or args.gpu or args.dev or args.rhel5 or args.rhel7 or args.conda:
+            warning("detected conda release, explicitly setting env to activate to %s, ignoring command line options" % conda_env)
+        args.env = conda_env
+    else:
+        conda_bin = get_conda_bin_for(args)
+
+    paths = newenv['PATH'].split(os.path.pathsep)
+    paths.insert(0, conda_bin)
+    newenv['PATH'] = os.path.pathsep.join(paths)
+    newenv['SIT_ROOT'] = args.sitroot
+
+    if is_conda_release_dir():
+        update_newenv_for_release(newenv)
+                     
+
+DESCR='''
+Modifies environment for conda. Undoes results of sit_setup, if it was run.
+If run from a conda release directory (created with the condarel tool), activates 
+conda environment specified in release. Otherwise, defaults to activate the 
+current python 2.7 ana environment in the production miniconda installation for this
+platform (rhel5/rhel6 or rhel7 - usually rhel7). 
+
+Options allow one to specify a specific installation and environment within that 
+installation.  For examples, the development rhel7 installation with the current python 3 
+environment -- however, it is safest to let the script determine the correct OS - i.e, 
+rhel7, rhel6 or rhel5.  This script - conda_setup_details - is not meant to be
+run directly. It is used from the script conda_setup, that is sourced to change the
+environment.
+'''
+
+if __name__ == '__main__':
+    def_sit_root='/reg/g/psdm'
+    def_inst = '/reg/g/psdm/sw/conda/inst'
+    def_ana_current = '/reg/g/psdm/sw/conda/ana-current'
+    
+    osName, _ = getOsAndPlatform()
+    def_rhel5 = False
+    def_rhel6 = False
+    def_rhel7 = False
+    if osName == 'rhel5': def_rhel5 = True 
+    if osName == 'rhel6': def_rhel6 = True 
+    if osName == 'rhel7': def_rhel7 = True 
+
+    parser = argparse.ArgumentParser(description=DESCR)
+    parser.add_argument('--verbose',action='store_true', help='verbose messages')
+    parser.add_argument('--noenv', action='store_true', help='do not activate a conda environment')
+    parser.add_argument('--dev', action='store_true', help="use development miniconda installation, not production")
+    parser.add_argument('--rhel5', action='store_true', help="use rhel5 miniconda installation. def=%s"%def_rhel5)
+    parser.add_argument('--rhel6', action='store_true', help="use rhel6 miniconda installation. def=%s"%def_rhel6)
+    parser.add_argument('--rhel7', action='store_true', help="use rhel7 miniconda installation. def=%s"%def_rhel7)
+    parser.add_argument('--instdir', type=str, help="overrides default directory for conda installations", default=def_inst)
+    parser.add_argument('--anacur', type=str, help="overrides default directory for ana current config", default=def_ana_current)
+    parser.add_argument('--conda', type=str, help="alternative path to conda installation", default=None)
+    parser.add_argument('--sitroot', type=str, help="set SIT_ROOT, default is %s" % def_sit_root, default=def_sit_root)
+    parser.add_argument('--env', type=str, help='explicitly name an environment to activate')
+    parser.add_argument('--py3', action='store_true', help='activate current python 3 environment')
+    parser.add_argument('--gpu', action='store_true', help='activate current gpu environment (do with --dev)')
+    parser.add_argument('--file', type=str, help='output file [ignore this option, implementation detail]')
+    args = parser.parse_args()
+
+    if None == args.file: fatal("must provide the --file with an output file to write environment modifications to.") 
+
+    if args.gpu and (not args.dev): fatal("--gpu must be accompanied by --dev")
+    if args.py3 and args.gpu: fatal("cannot specify both --py3 and --gpu")
+
+    if args.rhel5 + args.rhel6 + args.rhel7 > 1:
+        fatal("specify none, or just one, of --rhel5 --rhel6 --rhel7")
+        
+    if args.rhel5 + args.rhel6 + args.rhel7 == 0:
+        if def_rhel7: args.rhel7=def_rhel7
+        elif def_rhel6: args.rhel6=def_rhel6
+        elif def_rhel5: args.rhel5=def_rhel5
+    if args.rhel5 + args.rhel6 + args.rhel7 != 1:
+        fatal("internal error: could not determine which of rhel5/rhel6/rhel7 this is")
+    
+    VERBOSE=args.verbose
+    oldenv, newenv = undo_sit_setup()
+    add_to_condaenv(args, newenv)
+    set_conda_setup_active(newenv)
+    save_other_env(oldenv)    
+    write_env_file(args, oldenv, newenv)
+        
+
+    

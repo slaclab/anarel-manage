@@ -1,0 +1,148 @@
+{% set pkg = 'psana-conda' %}
+{% set version = '1.0.5' %}
+{% set build = 1 %}
+
+package:
+  name: {{ pkg }}
+  version: {{ version }}
+
+source:
+  fn: /reg/g/psdm/sw/conda/downloads/anarel/{{ pkg }}-{{ version }}.tar.gz
+
+# see build notes below
+
+requirements:
+  build:
+    - python
+    - scons
+    - cython
+    - boost    ==1.57.0
+    - mysql
+    - ndarray
+    - qt       ==4.8.5
+    - numpy 
+    - matplotlib
+    - scipy
+    - pyzmq
+    - openmpi  ==1.10.3 lsf_verbs_101
+    - hdf5     ==1.8.17 openmpi_101
+    - h5py     ==2.5.0 py27_101
+    - mpi4py   ==2.0.0 py27_openmpi_101
+    - tables   ==3.3.0 py27_100
+
+  run:
+    - python  >=2.7,<3
+    - boost   ==1.57.0
+    - mysql    
+    - qt       >=4,<5
+    - numpy
+    - openmpi  ==1.10.3 lsf_verbs_101
+    - hdf5     ==1.8.17 openmpi_101
+    - h5py     ==2.5.0 py27_101
+    - mpi4py   ==2.0.0 py27_openmpi_101
+    - tables   ==3.3.0 py27_100
+    - matplotlib
+    - scipy
+    - pyzmq
+#    - pyqtgraph
+#    - pandas
+
+build:
+  number: {{ build }}
+  string: py{{py}}_{{ build }}
+
+  script_env:
+    - SIT_ARCH
+    - SIT_ROOT
+
+#test:
+#  commands:
+#    - psana -h
+#    - xtclinedump -h
+#    - detnames -h
+#    - det_ndarr_average -h
+#    - parCorAnaDriver -h
+#    - psocake -h
+
+#  imports:
+#    - CSPadPixCoords  
+#    - ImgAlgos  
+#    - ParCorAna   
+#    - Translator   
+#    - LusiTime
+#    - XtcInput
+#    - psana
+#    - psana_examples  
+#    - psocake  
+#    - pypsalg
+#    - Detector        
+#    - PSCalib   
+#    - TimeTool 
+#    - psana_test
+#
+
+# build/run notes:
+
+# doesn't make sense to set md5sum as we want to automate building, we'd have
+# to change the md5sum in here each time
+ 
+# use qt=4.8.7-1 because qt 4.8.7-3 renamed moc to moc-qt4 which brakes SConsTools
+# actually, go down to 4.8.5 since that is how we build psana
+
+# boost, got errors with 1.60, go down to 1.57
+
+# we need matplotlib to get pylab which is imported by DataSummary and PyDetector
+# although I douldn't get DataSummary to pass its tests
+
+# psana_test uses SIT_ROOT to find the test data, this needs to be set,
+# the build script will set it if it is not already set
+
+# ParCorAna uses scipy to manipulate data
+
+# a unit test, the live mode unit tests, fail without pyzmq, due to import
+
+# h5py 2.6.0 has a bug, it can't read our translated compund types, have to use h5py 2.5.0
+
+# in general, we're not constraining the dependencies on the build environment - 
+# this is so we can try psana with different versions of boost, numpy, etc,
+# however if there are problems we should go to the versions we build with
+
+# I'd like to specify versions of python and numpy for the build, but get
+# conda errors, those have to be specified through the conda build 
+# command line - specify --python 2.7 --numpy 1.11
+
+# we don't need ndarray when running, ndarray is a header only 
+# package, so all code is already compiled into binaries during run
+# a development version will have to include ndarray
+
+# I don't think we need cython to run, need it for building
+
+# some of these packages should be added into the anarelease environment
+# that the psana conda package lives in
+
+# After building against boost 1.57.0, I tried to run with boost 1.60.0 and
+# it crashed. Apparently the name, boost 1.57.0 is hard wired into _psana, so it
+# couldn't load
+
+# The run section really should have
+# hdf5 =1.8.17
+# openmpi = 1.10.3
+
+# these are binary libraies that the Translator is built against, so the 
+# Translator probably won't run without them, but since most people won't
+# run the translator, we'll keep the dependencies out of the list - for later
+# we move the Translator into a separate package
+
+# psocake depends on LogBook, pandas, and pyqtgraph. Since we're currently not
+# doing LogBook - disable it from the tests.
+
+# we aren't going to test the parCorAnaDriver or import ParCorAna, on the
+# rhel5 build machine, we get errors about the infiniband - scons test will
+# exclude the rhel5 for mpi stuff, we don't have a good way to exclude the
+# test for certain build machines here
+
+# I really can't get the test section to work - strange issues with conda using an
+# old package file, we'll just do our own testing after the fact.
+
+# adding psparallel, which has circular dependency on psana
+# add tables as a build and run dependency, otherwise, I don't think psana will import

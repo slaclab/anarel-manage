@@ -1,0 +1,228 @@
+# List of packages that are part of the ana release.
+
+# first packages that live in a subdir to the release:
+
+pdsdata             svn=pcds  subdir=extpkgs conda_branch=no
+psalg               svn=pcds  subdir=extpkgs conda_branch=no
+
+# we could do ndarray in this fashion, but since pdsdata and psalg
+# both depend on it, and it is a source only package, it is easier
+# to have ndarray be a proper conda package
+
+# new release level packages
+
+AppUtils           svn=psdm subdir=no conda_branch=no
+CSPadPixCoords     svn=psdm subdir=no conda_branch=no
+
+CalibManager       svn=psdm subdir=no conda_branch=no
+
+CodeGen            svn=psdm subdir=no conda_branch=no
+ConfigSvc          svn=psdm subdir=no conda_branch=no
+
+CorAna             svn=psdm subdir=no conda_branch=no
+
+CythonUtils        svn=psdm subdir=no conda_branch=no
+
+# can't get its unit test to pass
+#DataSummary        svn=psdm subdir=no conda_branch=no
+
+DbTools            svn=psdm subdir=no conda_branch=no
+
+Detector           svn=psdm subdir=no conda_branch=no
+
+ErrSvc             svn=psdm subdir=no conda_branch=no
+ExpNameDb          svn=psdm subdir=no conda_branch=no
+FileIO             svn=psdm subdir=no conda_branch=no
+
+# this is a python wrapper to gnuplot, I don't see it in conda
+# we could get the latest gnuplot with
+# conda install -c bioconda gnuplot
+# but it installs a later version of gcc, gcc 5.3
+#Gnuplot            svn=psdm subdir=no conda_branch=no
+
+# maybe we won't support these - old translator
+H5DataTypes        svn=psdm subdir=no conda_branch=no
+HDF5Explorer       svn=psdm subdir=no conda_branch=no
+
+IData              svn=psdm subdir=no conda_branch=no
+ImgAlgos           svn=psdm subdir=no conda_branch=no
+
+ImgPixSpectra      svn=psdm subdir=no conda_branch=no
+#lmfit              svn=psdm subdir=no conda_branch=no
+#LogBook            svn=psdm subdir=no conda_branch=no
+
+LusiTime           svn=psdm subdir=no conda_branch=no
+
+MsgLogger          svn=psdm subdir=no conda_branch=no
+
+ParCorAna          svn=psdm subdir=no conda_branch=no
+
+# this should come from conda
+#Pillow             svn=psdm subdir=no conda_branch=no
+
+PSCalib            svn=psdm subdir=no conda_branch=no
+PSEnv              svn=psdm subdir=no conda_branch=no
+PSEvt              svn=psdm subdir=no conda_branch=no
+
+PSHdf5Input        svn=psdm subdir=no conda_branch=no
+
+PSHist             svn=psdm subdir=no conda_branch=no
+
+PSQt               svn=psdm subdir=no conda_branch=no
+PSShmemInput       svn=psdm subdir=no conda_branch=no
+
+PSXtcInput         svn=psdm subdir=no conda_branch=no
+
+PSXtcMPInput       svn=psdm subdir=no conda_branch=no
+PSXtcOutput        svn=psdm subdir=no conda_branch=no
+
+PSTime             svn=psdm subdir=no conda_branch=no
+
+PyCSPadImage       svn=psdm subdir=no conda_branch=no
+PyDataSource       svn=psdm subdir=no conda_branch=no
+RdbMySQL           svn=psdm subdir=no conda_branch=no
+RegDB              svn=psdm subdir=no conda_branch=no
+
+# we want to drop root, the root conda package has a build problem with png
+#RootHist           svn=psdm subdir=no conda_branch=no
+
+SConsTools          svn=psdm subdir=no conda_branch=yes
+
+TimeTool           svn=psdm subdir=no conda_branch=no
+Translator         svn=psdm subdir=no conda_branch=no
+
+XtcExplorer        svn=psdm subdir=no conda_branch=no
+
+XtcInput           svn=psdm subdir=no conda_branch=no
+
+boost              svn=psdm subdir=no conda_branch=yes
+
+#cffi              svn=psdm subdir=no conda_branch=no
+#cheetah           svn=psdm subdir=no conda_branch=no
+
+cspad_mod          svn=psdm subdir=no conda_branch=no
+
+#decorator           svn=psdm subdir=no conda_branch=no
+#doctools            svn=psdm subdir=no conda_branch=no
+#ds9                 svn=psdm subdir=no conda_branch=no
+#ecdsa               svn=psdm subdir=no conda_branch=no
+#fftw                svn=psdm subdir=no conda_branch=no
+#freetype            svn=psdm subdir=no conda_branch=no
+#geos                svn=psdm subdir=no conda_branch=no
+#gmp                 svn=psdm subdir=no conda_branch=no
+
+h5tools             svn=psdm subdir=no conda_branch=no
+
+hdf5                svn=psdm subdir=no conda_branch=yes
+
+hdf5pp               svn=psdm subdir=no conda_branch=no
+
+# should come from conda env
+#hdfview             svn=psdm subdir=no conda_branch=no
+
+# should come from condanv
+#hypre               svn=psdm subdir=no conda_branch=no
+#ipython             svn=psdm subdir=no conda_branch=no
+#matplotlib          svn=psdm subdir=no conda_branch=no
+#mpi4py              svn=psdm subdir=no conda_branch=no
+
+mysql                svn=psdm subdir=no conda_branch=yes
+ndarray_ext           svn=psdm subdir=no conda_branch=yes
+
+#networkx            svn=psdm subdir=no conda_branch=no
+
+numpy                svn=psdm subdir=no conda_branch=yes
+
+#opencv2             svn=psdm subdir=no conda_branch=no
+
+openmpi              svn=psdm subdir=no conda_branch=yes
+
+#pandas              svn=psdm subdir=no conda_branch=no
+#paramiko            svn=psdm subdir=no conda_branch=no
+
+# This is something we developed which the production Translator uses -
+# the parallel gzip
+# I think we do it as an external package
+#pazlib              svn=psdm subdir=no conda_branch=no
+
+pdscalibdata         svn=psdm subdir=no conda_branch=no
+
+pdsdata_ext           svn=psdm subdir=no conda_branch=yes
+
+# this is an external package, LogBook depends on it, ver 0.8.1
+#poster              svn=psdm subdir=no conda_branch=no
+
+psalg_ext            svn=psdm subdir=no conda_branch=yes
+
+psana                svn=psdm subdir=no conda_branch=no
+
+psana_examples       svn=psdm subdir=no conda_branch=no
+
+psana_python         svn=psdm subdir=no conda_branch=no
+
+psana_test           svn=psdm subdir=no conda_branch=no
+psddl                svn=psdm subdir=no conda_branch=no
+psddl_hdf2psana      svn=psdm subdir=no conda_branch=no
+
+psddl_pds2psana      svn=psdm subdir=no conda_branch=no
+
+psddl_psana          svn=psdm subdir=no conda_branch=no
+psddl_python         svn=psdm subdir=no conda_branch=no
+
+psddldata            svn=psdm subdir=no conda_branch=no
+
+# looks like a simple thing to display an image
+psdisplay           svn=psdm subdir=no conda_branch=no
+
+psmon                svn=psdm subdir=no conda_branch=no
+
+psocake              svn=psdm subdir=no conda_branch=no
+
+#pyana               svn=psdm subdir=no conda_branch=no
+#pyana_examples      svn=psdm subdir=no conda_branch=no
+#pyasn1              svn=psdm subdir=no conda_branch=no
+#pycparser           svn=psdm subdir=no conda_branch=no
+#pycrypto            svn=psdm subdir=no conda_branch=no
+#pyextra             svn=psdm subdir=no conda_branch=no
+#pyFFTW              svn=psdm subdir=no conda_branch=no
+#pyfits              svn=psdm subdir=no conda_branch=no
+
+pyimgalgos          svn=psdm subdir=no conda_branch=no
+
+pypsalg             svn=psdm subdir=no conda_branch=no
+
+#pyqt                svn=psdm subdir=no conda_branch=no
+#pyqtgraph           svn=psdm subdir=no conda_branch=no
+
+python               svn=psdm subdir=no conda_branch=yes
+
+#python-gssapi       svn=psdm subdir=no conda_branch=no
+
+pytools              svn=psdm subdir=no conda_branch=no
+
+#pywt                svn=psdm subdir=no conda_branch=no
+#qt4                 svn=psdm subdir=no conda_branch=no
+#redis               svn=psdm subdir=no conda_branch=no
+#requests            svn=psdm subdir=no conda_branch=no
+#requests_kerberos   svn=psdm subdir=no conda_branch=no
+#root                svn=psdm subdir=no conda_branch=no
+#scikit-image        svn=psdm subdir=no conda_branch=no
+#scikit-beam         svn=psdm subdir=no conda_branch=no
+#scipy               svn=psdm subdir=no conda_branch=no
+#sip                 svn=psdm subdir=no conda_branch=no
+#sklearn             svn=psdm subdir=no conda_branch=no
+#spyder              svn=psdm subdir=no conda_branch=no
+#tables              svn=psdm subdir=no conda_branch=no
+#wxpython            svn=psdm subdir=no conda_branch=no
+#xraylib             svn=psdm subdir=no conda_branch=no
+
+xtcav                svn=psdm subdir=no conda_branch=no
+
+######## new packages, these packages came out during conda work
+# need this, psana imports it, but it also import psana, circular
+# dependency, can't separate it
+#psparallel          svn=psdm subdir=no conda_branch=no
+# this was taken out, this stuff was moved into psana
+# 
+# Chris says unit tests are Ok
+psgeom             svn=psdm subdir=no conda_branch=no

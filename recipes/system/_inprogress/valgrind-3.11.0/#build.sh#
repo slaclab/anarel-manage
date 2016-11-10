@@ -1,0 +1,22 @@
+#!/bin/bash -x
+
+echo "######## env ############"
+echo $REDHATVER
+echo "#########################"
+
+if [ -z ${REDHATVER} ]; then
+echo "REDHATVER not set"
+exit 1
+fi
+
+VALPRE=/reg/g/psdm/sw/inst/external/valgrind/valgrind-3.11.0/rhel${REDHATVER}
+VALBIN=$VALPRE/bin
+VALINC=$VALPRE/include
+VALLIB=$VALPRE/lib
+
+if [ ! -f $VALBIN ]; then
+   echo "Valgrind bin dir not found $VALBIN"
+   exit 1
+fi
+
+ln -s $VALBIN/valgrind $PREFIX/bin/valgrind

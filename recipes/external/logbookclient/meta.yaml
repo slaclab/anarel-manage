@@ -1,0 +1,31 @@
+package:
+  name: logbookclient
+  version: "0.0.2"
+
+source:
+  svn_url: https://pswww.slac.stanford.edu/svn/psdmrepo/LogBookClient/tags/0.0.2
+  svn_ignore_externals: True
+
+build:
+  script:
+    - pip install --no-deps --disable-pip-version-check .
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - requests
+    - simplejson
+    - mysql-python
+    - qt
+  run:
+    - python
+    - requests
+    - simplejson
+    - mysql-python
+    - qt
+
+about:
+  home: https://pswww.slac.stanford.edu/svn/psdmrepo/LogBookClient
+  license: EPICS
+

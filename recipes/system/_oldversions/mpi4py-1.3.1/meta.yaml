@@ -1,0 +1,32 @@
+{% set build = 1 %}
+{% set version = '1.3.1' %}
+{% set mpi = 'openmpi' %}
+{% set mpi_version = '>=1.8.6' %}
+
+package:
+  name: mpi4py
+  version: {{version}}
+
+source:
+  fn: /reg/g/psdm/sw/conda/downloads/mpi4py-1.3.1.tar.gz
+
+requirements:
+  build:
+    - python
+    - openmpi {{mpi_version}}
+
+  run:
+    - python
+    - openmpi {{mpi_version}}
+
+build:
+  number: {{build}}
+  string: py{{py}}_{{mpi}}_{{build}}
+
+
+test:
+  imports:
+    - mpi4py
+    - mpi4py.rc
+    - mpi4py.dl # [not win]
+    - mpi4py.MPI

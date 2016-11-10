@@ -1,0 +1,61 @@
+# copy meta.yaml from mpi4py/conf/conda-recipes
+
+{% set build = 3 %}
+{% set version = '1.10.2' %}
+
+package:
+  name: openmpi
+  version: {{version}}
+
+about:
+  home: http://www.open-mpi.org/
+  summary: 'Open MPI: A high performance message passing library'
+  license: 'BSD (https://www.open-mpi.org/community/license.php)'
+
+requirements:
+  build:
+    - gcc >=4.8.2,<5
+
+  run:
+    - gcc >=4.8.2,<5
+
+  conflicts:
+    - mpich
+    - mpich2
+
+source:
+  fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/openmpi-{{version}}.tar.gz
+#  url: http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-{{version}}.tar.gz
+  md5: becfa47fde80bda7cf7553caa4a7aeea
+
+build:
+  number: {{build}}
+  # want a string that lets us select this easily in environment specifications
+  string: local_opt_{{build}}
+  binary_relocation: true
+  detect_binary_files_with_prefix: true
+  skip: true # [win]
+
+  rpaths:
+    - lib
+    - /afs/slac/package/lsf/curr/lib
+
+test:
+  files:
+    - test/helloworld.c
+    - test/helloworld.cxx
+  commands:
+    - command -v ompi_info
+    - ompi_info
+    - command -v mpiexec
+    - mpiexec -n 4 hostname
+    - command -v mpicc
+    - mpicc -show
+    - command -v mpicxx
+    - mpicxx -show
+    - mpicc  helloworld.c   -o helloworld_c
+    - mpicxx helloworld.cxx -o helloworld_cxx
+    - export DYLD_LIBRARY_PATH=$PREFIX/lib # [osx]
+    - mpiexec -n 4 ./helloworld_c
+    - mpiexec -n 4 ./helloworld_cxx
+

@@ -1,0 +1,50 @@
+{% set pkg = 'tables' %}
+{% set version = '3.3.0' %}
+{% set build = 100 %}
+
+{% set openmpi_build = 101 %}
+{% set mpi4py_build = 101 %}
+{% set hdf5_build = 101 %}
+
+package:
+  name: {{ pkg }}
+  version: {{ version }}
+
+source:
+  # this came from github, not pypi
+  fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/{{ pkg }}-{{ version }}.tar.gz
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - cython
+    - numpy
+    - zlib 1.2.*
+    - lzo 2.06  # [linux]
+    - bzip2 1.0.*
+    - hdf5 ==1.8.17 openmpi_101
+    - openmpi ==1.10.3 lsf_verbs_101
+    - numexpr
+  run:
+    - python
+    - six
+    - numpy
+    - numexpr
+    - hdf5 1.8.17|1.8.17.*
+    - zlib 1.2.*
+    - bzip2 1.0.*  # [win]
+
+test:
+  requires:
+    - setuptools
+  commands:
+    - pt2to3 -h
+    - ptdump -h
+    - ptrepack -h
+    - pttree -h
+
+build:
+  number: {{build}}
+  string: py27_{{build}}
+

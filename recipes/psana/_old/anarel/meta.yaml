@@ -1,0 +1,28 @@
+package:
+  name: anarel
+  version: 1.0.0
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - python    =2.7
+    - scons
+    - cython
+    - boost    >=1.49.0
+    - ndarray  >=1.1.5
+    - hdf5      =1.8.17 openmpi_100
+    - openmpi   =1.10.3 lsf_verbs_100
+    - qt        =4.8.7-1
+    
+
+# build notes
+# qt 4.8.7-3 brakes scons because moc was renamed to moc-qt4
+
+  run:
+    - boost    >=1.49.0
+    - ndarray  >=1.1.5
+    - hdf5     ==1.8.17
+
+

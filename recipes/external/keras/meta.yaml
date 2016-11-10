@@ -1,0 +1,52 @@
+# https://github.com/conda-forge/keras-feedstock/blob/master/recipe/meta.yaml
+
+{% set version = "1.1.0" %}
+{% set build = "1" %}
+package:
+    name: keras
+    version: {{ version }}
+
+source:
+#    url: https://github.com/fchollet/keras/tarball/{{ version }}.tar.gz
+    fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/Keras-{{  version }}.tar.gz
+
+build:
+  number: {{build}}
+  string: py{{py}}_{{build}}  
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+    build:
+        - python
+        - setuptools
+        - six
+        - pyyaml
+        - theano
+        - numpy
+        - scipy
+    run:
+        - numpy
+        - setuptools
+        - scipy
+        - python
+        - pyyaml
+        - six
+        - theano
+
+test:
+    imports:
+        - keras
+        - keras.backend
+        - keras.datasets
+        - keras.engine
+        - keras.layers
+        - keras.legacy
+        - keras.preprocessing
+        - keras.utils
+        - keras.wrappers
+
+about:
+    home: https://github.com/fchollet/keras
+    license: MIT
+    summary: Deep Learning for Python
+

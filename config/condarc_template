@@ -1,0 +1,74 @@
+###########
+# conda configuration for ana based conda releases.
+# ref: http://conda.pydata.org/docs/config.html
+#
+
+channel_alias: https://conda.anaconda.org/
+#    gets preprended to channel names that don't specify an exact loc
+
+channels:
+  - file://{{ CONDA_ROOT }}/channels/system-{{ OS }}
+  - file://{{ CONDA_ROOT }}/channels/psana-{{ OS }}
+  - file://{{ CONDA_ROOT }}/channels/external-{{ OS }}
+  - defaults
+  - conda-forge
+  - scikit-beam
+# menpo is for Eigen
+#  - menpo
+  - file://{{ CONDA_ROOT }}/channels/testing-{{ OS }}
+
+always_yes: False
+#  False means ask to proceed before installation new packages, override with --yes
+
+show_channel_urls: True
+# True means show channel URLs during relevant operations and commands
+
+changeps1: True
+# True means prepend (env) to prompt
+
+use_pip: True  
+#  True means list pip installed packages from conda list
+
+offline: False
+
+allow_softlinks: True
+#  False means if you can't make a hard link, don't make a soft link, copy files over
+#  for users when they create environments from central install - if on a different file
+#  system they will get soft links
+
+# do we want all new environments to include certain packages?
+# users can bypass with --no-default-packages flag if need be, but if so, uncomment and
+# add them here
+
+#create_default_packages:
+#  - ipython
+
+# when resolving new packages, look for these features
+#track_features:
+#   - mkl
+
+# the docs read backwards, default is to always update 
+# dependent packages, but docs say to set this to True to Not do that?
+# made a pull request as davidslac - but haven't tried the option yet
+#update_dependencies: False
+
+
+#conda-build:
+#    root-dir: {{ CONDA_ROOT }}/build/{{ BUILD }}-{{ OS }}
+
+# this blog: https://www.continuum.io/blog/developer/advanced-features-conda-part-1#configuration
+# says that this option
+
+#envs_dirs:
+#  - {{ CONDA_ROOT }}/envs/{{ BUILD }}-{{ OS }}
+
+# is for A list of directories that conda will use to create environments and keep its package cache.
+# useful to us?
+
+# we are building some system dependent packages, so do we don't want to automatically 
+# upload to a binstar account, assuming we set one up?
+binstar_upload: False
+
+# this is per https://github.com/conda/conda/issues/2681
+# we want to protect ourselves from bugs in new versions of conda
+auto_update_conda: false

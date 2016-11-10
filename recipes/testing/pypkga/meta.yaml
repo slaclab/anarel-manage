@@ -1,0 +1,23 @@
+package:
+  name: pypkga
+  version: "0.0.1"
+ 
+source:
+  path: /reg/g/psdm/sw/conda/testing/pypkga
+# the git source stoped working with conda 4.03 tag?
+#  git_rev: v0.0.1
+#  git_url: https://github.com/davidslac/PyPkgA.git
+ 
+requirements:
+  build:
+    - python
+    - setuptools
+  run:
+    - python
+ 
+test:
+  imports:
+    - pypkga
+ 
+about:
+  home: https://github.com/davidsch/PyPkgA

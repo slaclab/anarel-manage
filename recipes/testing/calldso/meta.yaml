@@ -1,0 +1,20 @@
+package:
+  name: calldso
+  version: "0.0.0"
+
+source:
+  path: /reg/g/psdm/sw/conda/testing/calldso
+
+build:
+  binary_relocation: True
+  detect_binary_files_with_prefix: True  
+
+  has_prefix_files:
+    - doc/calldso.txt
+
+  rpaths:
+    - lib
+    - /reg/g/psdm/sw/conda/testing/install/lib
+
+
+ 

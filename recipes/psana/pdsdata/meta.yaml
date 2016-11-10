@@ -1,0 +1,21 @@
+package:
+  name: pdsdata
+  version: 8.5.0
+
+source:
+  fn: /reg/g/psdm/sw/dist/rpms/SOURCES/pdsdata-8.5.0.tar.gz
+#  svn_url: file:///afs/slac/g/pcds/svn/pdsdata/tags/V08-05-00
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - boost    >=1.49.0
+    - ndarray  >=1.1.5
+
+  run:
+    - boost    >=1.49.0
+    - ndarray  >=1.1.5
+
+
