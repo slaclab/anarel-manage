@@ -142,9 +142,7 @@
     ver: latest
 
   pandas:
-    ver: '=0.19.0'
-    # version '=0.19.1' has a unit test that segfaults, 
-    # https://github.com/pandas-dev/pandas/issues/14621
+    ver: latest
   
   pillow:
     ver: latest
@@ -155,8 +153,10 @@
   pyqtgraph:
     ver: latest
 
+  # 2.6.0 is the latest, but it crashes pandas 0.19.0 and 0.19.1
+  # https://github.com/pandas-dev/pandas/issues/14621
   python-dateutil:
-    ver: latest
+    ver: 2.5.3
 
   scikit-beam:
     ver: latest
@@ -339,3 +339,86 @@
     ver: latest
     only_in_variant: py3
     limit_os: rhel7
+-
+  # Clemens suggests
+  numba:
+    ver: latest
+
+  # some things that look good from https://docs.continuum.io/anaconda/pkg-docs
+  # machine learning - but natural language processing
+  nltk:
+    ver: latest
+
+  # I think also machine learning, natural language processing
+  gensim:
+    ver: latest
+
+  # a deep learning framework
+  neon:
+    ver: latest
+
+  # Bayesian Stochastic Modelling
+  pymc:
+    ver: latest
+
+  # using python to run ssh commands in other places, Igor liked this 
+  paramiko:
+    ver: latest
+
+  # Object oridented SQL
+  sqlalchemy:
+    ver: latest
+
+  # sphinx 
+  numpydoc:
+    ver: latest
+
+  # Fast NumPy array functions written in Cython. 
+  bottleneck:
+    ver: latest
+
+  # Python multithreaded job distribution module
+  workerpool:
+    ver: latest
+
+  # Data compression software with high compression ratio
+  xz:
+    ver: latest
+
+  # Module for decorators, wrappers and monkey patching
+  wrapt:
+    ver: latest
+
+#  this looks good, but on py3 changed a lot of other packages
+#  # 3D computer graphics, image processing, and visualization
+#  vtk:
+#    ver: latest
+#     py3: skip
+
+  # A system for controlling process state under UNIX, not on python 3
+  supervisor:
+    ver: latest
+    py3: skip
+
+  # A compiler that integrates C and C++ with a variety of languages 
+  swig:
+    ver: latest
+
+  # Python library for symbolic mathematics
+  sympy:
+    ver: latest
+
+  # super sparse multi-class machine learning 
+  thinc:
+    ver: latest
+
+# I was thinking about getting xgboost - wins a lot of kaggle competitions - 
+#but it is not standard, the channel creditx
+# has the latest version, but it also brings in libgcc 5.2.0, so I won't do it right now.
+
+# also want to get runipy to run ipython notebooks, but it brings in ipython-notebook, do we
+# need that or does it conflict with jupyter?
+
+# also wanted blaze, but it brings in pytables, but I already have tables - made anaconda issue
+
+

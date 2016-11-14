@@ -1,0 +1,22 @@
+{% set pkg = 'cudnn' %}
+{% set version = '5.1' %}
+{% set cuda_version = '8.0' %}
+{% set build_number = '1' %}
+
+package:
+  name: {{ pkg }}
+  version: {{ version }}
+
+source:
+  fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/cudnn-{{ cuda_version }}-linux-x64-v{{ version }}.tgz
+  md5: 099ca6a9b21b35e32f3408eff2a1c06d
+
+build:
+  number: {{ build_number }}
+  string: cuda{{ cuda_version }}_{{ build_number }}
+
+about:
+  home: https://developer.nvidia.com/cudnn
+  license: NVIDIA cuDNN License Agreement
+  summary: The NVIDIA CUDA® Deep Neural Network library (cuDNN) is a GPU-accelerated library of primitives for deep neural networks. cuDNN provides highly tuned implementations for standard routines such as forward and backward convolution, pooling, normalization, and activation layers. cuDNN is part of the NVIDIA Deep Learning SDK.
+  license_usage_rights: from their license agreement - Licensee may install and use multiple copies of the SOFTWARE on a shared computer or concurrently on different computers, and make multiple back-up copies of the SOFTWARE, solely for Licensee's use within Licensee's Enterprise. "Enterprise" shall mean individual use by Licensee or any legal entity (such as a corporation or university) and the subsidiaries it owns by more than 50 percent.

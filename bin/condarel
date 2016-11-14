@@ -284,6 +284,10 @@ def addPkg(args):
     if 0 != os.system(cmd): fatal("addpkg: command failed: %s" % cmd)
     if pcdsext:
         os.chdir('..')
+        # The user really needs the proxy package as well
+        proxy_name = args.name + '_ext'
+        if not os.path.exists(proxy_name):
+            warning("You will also need to do --addpkg %s to build %s which has been checked out in extpkgs" % (proxy_name, args.name))
 
 def changeEnv(args):
     conda_prefix = os.environ.get('CONDA_PREFIX',None)
