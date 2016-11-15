@@ -116,7 +116,7 @@
   mysql:
     ver: latest
 
-
+  
   ndarray:
     ver: latest
 
@@ -183,6 +183,10 @@
   MySQL-python:
     ver: latest
     py3: skip
+
+  # Murali says this is the better, more standard interface for mysql python programming
+  mysql-connector-python:
+    ver: latest
 
   # zmq.backend.cffi won't import without this, still doesn't seem to import with it?
   cffi:
