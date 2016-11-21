@@ -67,10 +67,8 @@ def fatal(msg):
 
 DESCR = '''manage development of psana-conda package. Typical cycle:
 
-1. condarel --newrel --name myrel   
-   creates a release based on the current conda environment.
-2. cd myrel 
-3. condarel --addpkg --name pkgname [--tag HEAD] [--branch xx] [--user]
+1. condarel --newrel --name myrel   # creates new release based on current conda environment.
+2. condarel --addpkg --name pkgname [--tag HEAD] [--branch xx] [--user]
    if pkgname is part of psana-conda, checks out the tag used to build psana-conda.
    --tag and --branch allow one to specify a different tag or branch. Use --tag HEAD to get
    latest in trunk. If package is already checked out, does svn switch, not checkout.
@@ -78,14 +76,14 @@ DESCR = '''manage development of psana-conda package. Typical cycle:
    If the package is SConsTools, links the SConstruct. If the package is one of %s, creates
    an 'extpkgs' subdir and checks out the package there.
 
-5. condarel --chenv
+3. condarel --chenv
    change the conda environment that this release is built against. (like sit_setup relupgrade)
 ''' % ','.join(PCDS_EXTPKGS)
 
 parser = argparse.ArgumentParser(description=DESCR,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
 
-parser.add_argument('-n', '--name', type=str, help="name of new release, or package to add, depending on other arguments.", default=None)
+parser.add_argument('--name', type=str, help="name of new release, or package to add.", default=None)
 SVN_ANA_DEF='https://pswww.slac.stanford.edu/svn/psdmrepo'
 SVN_USER_ANA_DEF='https://pswww.slac.stanford.edu/svn/userrepo'
 SVN_PCDS_DEF='file:///afs/slac/g/pcds/svn'
@@ -312,86 +310,80 @@ def changeEnv(args):
     msg += "Then rebuild against new conda env.\n"
     info(msg)
 
+
+    
+def get_version_control_info(path, args):
+    cmd = 'svn info --xml %s' % path
+    stdout, stderr = run_command([cmd], shell=True)
+    if stderr:
+        vprint("cmd: %s gave error: %s" % (cmd, stderr))
+        return None
+    root=ET.fromstring(stdout)
+    url = root.find('entry/url')
+    if url is None:
+        warning("cmd: %s couldn't get entry/url from xml" % cmd)
+        return None
+    url = url.text
+    for name, repo_url in zip(['ana','pcds','user'],
+                              [args.svn_ana, args.svn_pcds, args.svn_user_ana]):
+        if url.startswith(repo_url):
+            _, after = url.split(repo_url)
+            fields = [fld for fld in after.split('/') if len(fld)>0]
+            if fields[-1]=='trunk':
+                return {'tag':'HEAD','repo':name, 'branch':False}
+            if len(fields)>=2:
+                if fields[-2] == 'tags':
+                    return {'tag':fields[-1], 'repo':name, 'branch':False}
+                elif fields[-2] == 'branches':
+                    return {'tag':fields[-1], 'repo':name, 'branch':True}
+    
+    warning("cmd: %s got url=%s but couldn't parse trunk, tag or branch" % (cmd, url))
+    return None
+
 def relInfo(args):
-    def get_svn_info(path, args):
-        svn_info = {'tag':None, 'branch':None, 'head':False, 'repo':None}
-        cmd = 'svn info --xml %s' % path
-        stdout, stderr = run_command(cmd, shell=True)
-        if stderr:
-            vprint("cmd: %s gave error: %s" % (cmd, stderr))
-            return svn_info
-        root=ET.fromstring(stdout)
-        url = root.find('entry/url')
-        if url is None:
-            warning("cmd: %s couldn't get entry/url from xml" % cmd)
-        url = url.text
-        for name, repo_url in zip(['ana','pcds','user'],
-                                  [args.svn_ana, args.svn_user_ana, args.svn_pcds]):
-            if url.startswith(repo_url):
-                svn_info['repo']=name
-                _, after = url.split(repo_url)
-                fields = [fld for fld in after.split('/') if len(fld)>0]
-                if fields[-1]=='trunk':
-                    svn_info['head']=True
-                elif len(fields)>=2:
-                    if fields[-2] == 'tags':
-                        svn_info['tag'] = fields[-1]
-                        return svn_info
-                    elif fields[-2] == 'branches':
-                        svn_info['branch'] = fields[-1]
-                        return svn_info
-                 
-        warning("cmd: %s got url=%s but couldn't parse trunk, tag or branch" % (cmd, url))
-        return svn_info
-
-    #############
     cand_pkgs = os.listdir('.')
-    if 'extpkgs' in cand_pkgs:
-        cand_pkgs.remove('extpkgs')
-        cand_pkgs.extend([os.path.join('extpkgs', sdir) for sdir in os.listdir('extpkgs')])
-    paths_without_svn=[]
-    pkgs_with_svn=[]
-    for cand_pkg in cand_pkgs:
-        if not os.path.isdir(cand_pkg): continue
-        svn_info = get_svn_info(cand_pkg, args)
-        if not svn_info['repo']:
-            paths_without_svn.append(cand_pkg)
-            continue
-        pkg = os.path.basename(cand_pkg)
-        svn_info['anarel_tag'] = anarelinfo.pkgtags.get(pkg, None)
-        svn_info['pkg']=pkg
-        svn_info['path']=cand_pkg
-        pkgs_with_svn.append(svn_info)
-    def pathcmp(A,B):
-        if A['path']<B['path']: return -1
-        if A['path']>B['path']: return 1
-        return 0
-    pkgs_with_svn.sort(pathcmp)
-    paths_without_svn.sort(pathcmp)
+    pkgs = [pkg for pkg in cand_pkgs if os.path.exists(os.path.join(pkg, 'SConscript'))]
+    if os.path.exists('extpkgs'):
+        for sdir in os.listdir('extpkgs'):
+            if sdir in ['build','install', 'arch']: continue
+            pkgs.append(os.path.join('extpkgs', sdir))
+    pkgs.sort()
+    vcinfos = [get_version_control_info(pkg, args) for pkg in pkgs]
+    pkgWidth = max(len("package"), max([len(pkg) for pkg in pkgs]))
+    tagWidth = max([len(vcinfo['tag']) for vcinfo in vcinfos if vcinfo])
+    
+    print(' %s | %s | %s | notes (repo/branch/diff)' % \
+          ('package'.rjust(pkgWidth), 
+           'tag'.ljust(tagWidth),
+           'reltag'.ljust(tagWidth)))
 
-    pathwidth = max([len(svn_info['path']) for svn_info in pkgs_with_svn])
-    info("--- relinfo: pkgs under svn  ----")
-    info(" -- pkg -- tag/branch  -- anrel tag/branch --")
-    for svn_info in pkgs_with_svn:
-        diff = False
-        ln = svn_info['path'].rjust(pathwidth)
-        ln += "  "
-        if svn_info['tag']:
-            ln += "tag=%s" % svn_info['tag'].ljust(15)
+    for pkg, vcinfo in zip(pkgs, vcinfos):
+        ln = ' %s ' % pkg.rjust(pkgWidth)
+        if vcinfo is None:
+            ln += "  --"
         else:
-            ln += "branch=%s" % svn_info['branch'].ljust(12)
-        if svn_info['anarel_tag']:
-            ln += "  %s" % svn_info['anarel_tag']
-            if svn_info['anarel_tag'] == 'conda_branch' and svn_info['branch'] == 'conda':
-                pass
+            ln += '  %s ' % vcinfo['tag'].ljust(tagWidth)
+            anarel_tag = anarelinfo.pkgtags.get(pkg, None)
+            if anarel_tag == 'conda_branch':
+                anarel_tag = 'conda'
+            sign = ''
+            if anarel_tag:
+                ln += ' %s ' % anarel_tag.ljust(tagWidth)
+                if vcinfo['tag'] != anarel_tag:
+                    if vcinfo['tag'] == 'HEAD' or anarel_tag == 'HEAD':
+                        sign = '?'
+                    elif vcinfo['tag'] > anarel_tag:
+                        sign = '+'
+                    elif vcinfo['tag'] < anarel_tag:
+                        sign = '-'
             else:
-                if svn_info['anarel_tag'] != svn_info['tag']:
-                    diff = True
-        else:
-            ln += "  ---"
-        if diff:
-            ln += " **diff**"
-        info(ln)
+                ln += ' %s ' % '--'.ljust(tagWidth)
+            if vcinfo['repo'] != 'ana':
+                ln += ' repo=%s' % vcinfo['repo']
+            if vcinfo['branch']:
+                ln += 'branch=True'
+            ln += ' %s' % sign
+        print(ln)
     
 if __name__ == '__main__':
     args = parser.parse_args()
