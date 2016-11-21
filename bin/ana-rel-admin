@@ -143,24 +143,6 @@ def makePsanaCondaSrc(args):
     print("-- makePsanaCondaSrc: finished in %.2f seconds" % ttime)
     sys.stdout.flush()
 
-def rootPkgCompare(args):
-    prevPkgListFile = util.getConfigFile('conda_root_package_list')
-    assert os.path.exists(prevPkgListFile), "previous package list: %s doesn't exist" % prevPkgListFile
-    prevPkgListTxt = file(prevPkgListFile,'r').read()
-    p = sb.Popen('conda list -n root', shell=True, stdout=sb.PIPE, stderr=sb.PIPE)
-    o,e = p.communicate()
-    assert e.strip() == '', 'cmd=%s\nstderr=%s' % (cmd,e)
-    def getPkgList(txt):
-        pkglist = [ln for ln in txt.split('\n') if len(ln.strip())>0 and ln.strip()[0] != '#']
-        pkglist.sort()
-        return pkglist
-    prevPkgList = getPkgList(prevPkgListTxt)
-    currPkgList = getPkgList(o)
-    if len(prevPkgList) != len(currPkgList) or any([a!=b for a,b in zip(prevPkgList, currPkgList)]):
-        print("------ WARNING --- conda root environment has changed ----")
-        print("previous:\n%s" % '\n'.join(prevPkgList))
-        print("-------------------")
-        print("current:\n%s" % '\n'.join(currPkgList))
         
 def envSetup(args):
     assert not (args.opt and args.dbg), "only one of arg.opt and args.dbg can be true when adding environment variables"
@@ -324,10 +306,6 @@ commandHelpFuncList = [
     ('bld-all',
      'build all packages not built, use --force to rebuild all',
      buildAllPkgs),
-
-    ('root-pkg-cmp',
-     'compare root environment package list to previous',
-     rootPkgCompare),
 
     ('psana-conda-src',
      'checkout, zip up, and copy latest tags for psana-conda to {condaroot}/downloads/anarel. Requieres option: --name psana-conda-n.n.n',

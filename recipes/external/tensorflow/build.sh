@@ -1,4 +1,4 @@
-#!/bi/bash
+#!/bin/bash
 
 # install using pip from the whl file provided by Google
 

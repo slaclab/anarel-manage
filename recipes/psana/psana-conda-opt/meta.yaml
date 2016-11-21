@@ -1,5 +1,5 @@
 {% set pkg = 'psana-conda' %}
-{% set version = '1.0.5' %}
+{% set version = '1.0.6' %}
 {% set build = 1 %}
 
 package:

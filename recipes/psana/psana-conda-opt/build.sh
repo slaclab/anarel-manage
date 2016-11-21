@@ -42,7 +42,7 @@ CWD=$(pwd)
 echo "Current dir: $CWD"
 
 export PYTHONPATH=$CWD/arch/$SIT_ARCH/python:$PYTHONPATH
-export LD_LIBRARY_PATH=$CWD/arch/$SIT_ARCH/lib
+export LD_LIBRARY_PATH=$CWD/arch/$SIT_ARCH/lib:$CONDA_PREFIX/lib
 # put ana release bin second in path
 export PATH=$CWD/arch/$SIT_ARCH/bin:$PATH
 export PATH=$CONDA_ENV_PATH/bin:$PATH
