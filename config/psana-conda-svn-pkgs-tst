@@ -1,0 +1,2 @@
+psalg               svn=pcds  subdir=extpkgs conda_branch=no
+psalg_ext            svn=psdm subdir=no conda_branch=yes

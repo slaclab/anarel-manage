@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import os
 import sys
 import math
 import re
 import platform
-import argparse
 import subprocess as sb
+try:
+    import argparse
+except ImportError:
+    bindir = os.path.split(os.path.abspath(__file__))[0]
+    basedir = os.path.split(bindir)[0]
+    for_old_python = os.path.join(basedir, 'pylib', 'for_old_python')
+    sys.path.append(for_old_python)
+    import argparse
 
 ######## logging #############
 VERBOSE=False
@@ -20,7 +23,7 @@ CONDA_SETUP_ACTIVE_VALUE='1'
 def vprint(msg):
     global VERBOSE
     if VERBOSE:
-        print(msg)
+        sys.stdout.write("%s\n", msg)
         sys.stdout.flush()
 
 def warning(msg):
@@ -60,13 +63,13 @@ def write_env_file(args, oldenv, newenv):
         put_release_bin_in_front_of_conda(fout, newenv['SIT_ARCH'])
         # when the conda environment activates, it may overwrite somethings, put them back
         for evar in ['SIT_ARCH', 'SIT_DATA', 'SIT_ROOT']:
-            if evar in newenv and newenv[evar] not in [None, 'None']:
+            if evar in newenv and newenv[evar] not in [None, '', 'None']:
                 fout.write("export %s=%s\n" % (evar, newenv[evar]))
     fout.write('echo "environment setup. Type: undo_conda  [return] at the prompt to undo."\n')
 
 def write_newenv(fout, newenv):
     for evar, val in newenv.items():
-        if val is None or val == 'None':
+        if val is None or val=='' or val == 'None':
             fout.write("unset %s\n" % evar)
         else:
             fout.write("export %s=%s\n" % (evar, val))
@@ -85,7 +88,7 @@ def write_undo_function(fout, oldenv, newenv):
     for evar in newenv:
         fout.write("  unset %s\n" % evar)
     for evar,val in oldenv.items():
-        if val is None:
+        if val is None or val == '' or val == 'None':
             fout.write('  unset %s\n' % evar)
         else:
             fout.write('  export %s="%s"\n' % (evar,val))
@@ -102,7 +105,7 @@ def write_activate_condaenv(fout, args):
     if None is args.env:
         if not os.path.exists(args.anacur):
             fatal("configuration directory with ana_current information doesn't exist, it is: %s" % args.ana_current)
-        if args.gpu + args.py3 >1:
+        if args.gpu + args.py3 > 1:
             fatal("cannot specify both --gpu and --py3")
         if args.gpu:
             fname = 'ana-current-gpu'
@@ -166,7 +169,16 @@ def get_evar_paths(evar):
     vprint("get_evar_paths evar=%s:%s" % (evar, paths))
     return paths
 
-def clean_path_evars(sit_releases, sit_external):
+def clean_path_evars(sit_releases, sit_external, psdm_bin):
+    '''Returns two dictionaries, oldenv, newenv.
+    Records the current state of PYTHONPATH, PATH and LD_LIBRARY_PATH
+    in oldenv. Records '' if the variable is not set.
+    newenv has either '' for these variables, or a potential 
+    reduced set of paths then what is currently set.
+    The reduced set:
+      strips duplicates, removes sit_releases path, and sit_external paths,
+      and other directories associated with the rpm releases
+    '''
     oldenv = {}
     newenv = {}
     for evar, arch_subdir, others_to_remove, expectempty in \
@@ -175,12 +187,14 @@ def clean_path_evars(sit_releases, sit_external):
             [[], [], ['/afs/slac/package/lsf/curr/lib']],
             [True, False, True]):
         vprint('cleaning evar=%s' % evar)
-        oldenv[evar]=os.environ.get(evar,None)
+        oldenv[evar]=os.environ.get(evar,'')
         paths = get_evar_paths(evar)
         filtered = []
         for path in paths:
             if path.startswith(sit_releases):
                 vprint("  %s: removing - starts with %s" % (path, sit_releases))
+            elif path == psdm_bin:
+                vprint("  %s: removing - equal to  %s" % (path, psdm_bin))
             elif path.startswith(sit_external):
                 vprint("  %s: removing - starts with %s" % (path, sit_external))
             elif is_sitsetup_arch_subdir(path, arch_subdir):
@@ -199,7 +213,7 @@ def clean_path_evars(sit_releases, sit_external):
 
         if len(filtered)==0:
             if evar in os.environ:
-                newenv[evar]=None
+                newenv[evar]=''
         else:
             newenv[evar]=paths
     return oldenv, newenv
@@ -212,10 +226,11 @@ def save_other_env(oldenv):
 
 def undo_sit_setup():
     sit_root = os.environ.get('SIT_ROOT','/reg/g/psdm')
+    psdm_bin = os.path.join(sit_root, 'bin')
     vprint("identified sit_root as: %s" % sit_root)
     sit_releases = os.path.join(sit_root, 'sw/releases')
     sit_external = os.path.join(sit_root, 'sw/external')
-    oldenv, newenv = clean_path_evars(sit_releases, sit_external)
+    oldenv, newenv = clean_path_evars(sit_releases, sit_external, psdm_bin)
     toremove = ['SIT_DATA', 'SIT_ARCH', 'SIT_ROOT', 
                 'SIT_SVN', 'SIT_ENV', 'SIT_RELDIR',
                 'SIT_REPOS', 'SIT_SVN_USER',
@@ -224,7 +239,7 @@ def undo_sit_setup():
         if evar in os.environ:
             oldenv[evar]=os.environ[evar]
             vprint("removing %s=%s" % (evar, os.environ[evar]))
-            newenv[evar]=None
+            newenv[evar]=''
     return oldenv, newenv
 
 ############ new conda vars #################    
@@ -268,9 +283,9 @@ def get_SIT_ARCH(debug=False):
 
 def get_conda_bin_for(args):
     if args.conda:
-        if args.dev or args.rhel5 or args.rhel6 or args.rhel7:
-            warning("--conda is set, ignoring options like --dev, --rhel7, etc")
-        condadir=args.conda
+        if args.dev or args.rhel5 or args.rhel6:
+            warning("--conda is set, ignoring options like --dev, --rhel6, etc")
+        condadir = args.conda
         if not os.path.exists(condadir):
             fatal('explicit conda specified with --conda, but dir=%s does not exist' % condadir)
         condabin = os.path.join(condadir, 'bin')
@@ -298,8 +313,8 @@ def get_conda_bin_for(args):
         fatal("parsed args, got condabin=%s, but it doesn't exist" % (condabin,))
     return condabin
 
-SIT_RELEASE_FNAME = '.sit_release'
-SIT_CONDA_ENV_FNAME = '.sit_conda_env'
+SIT_RELEASE_FNAME = '.sit_release'      # contains psana-conda package name, as anarelinfo reports, i.e psana-conda-n.n.n
+SIT_CONDA_ENV_FNAME = '.sit_conda_env'  # contains full path to conda env
 
 def is_conda_release_dir():
     global SIT_RELEASE_FNAME
@@ -344,7 +359,8 @@ def update_newenv_for_release(newenv):
     newenv['SIT_ARCH']=sit_arch
     newenv['SIT_RELEASE']=sit_release
     newenv['SIT_USE_CONDA']='1'
-    newenv['CONDA_ENV_PATH'] = conda_prefix
+# the source activate should set the conda_env_path
+#    newenv['CONDA_ENV_PATH'] = conda_prefix
     newenv['SIT_DATA'] = os.path.pathsep.join([os.path.join(cwd,'data'),
                                                os.path.join(conda_prefix, 'data'),
                                                os.path.join(args.sitroot,'data')])
@@ -353,13 +369,17 @@ def add_to_condaenv(args, newenv):
     if is_conda_release_dir():
         conda_bin, conda_env = get_conda_from_release()
         vprint("detected conda release, setting env to %s" % conda_env)
-        if args.env or args.py3 or args.gpu or args.dev or args.rhel5 or args.rhel7 or args.conda:
+        if args.env or args.py3 or args.gpu or args.dev or args.conda:
             warning("detected conda release, explicitly setting env to activate to %s, ignoring command line options" % conda_env)
         args.env = conda_env
     else:
         conda_bin = get_conda_bin_for(args)
 
     paths = newenv['PATH'].split(os.path.pathsep)
+    if not os.path.exists(args.manage):
+        fatal("The manage directory, where conda_setup, condarel are, cannot be found. specified is %s, use --manage to override" % args.manage)
+    if args.manage not in paths:
+        paths.insert(0, args.manage)
     paths.insert(0, conda_bin)
     newenv['PATH'] = os.path.pathsep.join(paths)
     newenv['SIT_ROOT'] = args.sitroot
@@ -387,7 +407,8 @@ if __name__ == '__main__':
     def_sit_root='/reg/g/psdm'
     def_inst = '/reg/g/psdm/sw/conda/inst'
     def_ana_current = '/reg/g/psdm/sw/conda/ana-current'
-    
+    def_manage_bin = '/reg/g/psdm/sw/conda/manage/bin'
+
     osName, _ = getOsAndPlatform()
     def_rhel5 = False
     def_rhel6 = False
@@ -397,7 +418,7 @@ if __name__ == '__main__':
     if osName == 'rhel7': def_rhel7 = True 
 
     parser = argparse.ArgumentParser(description=DESCR)
-    parser.add_argument('--verbose',action='store_true', help='verbose messages')
+    parser.add_argument('-v','--verbose',action='store_true', help='verbose messages')
     parser.add_argument('--noenv', action='store_true', help='do not activate a conda environment')
     parser.add_argument('--dev', action='store_true', help="use development miniconda installation, not production")
     parser.add_argument('--rhel5', action='store_true', help="use rhel5 miniconda installation. def=%s"%def_rhel5)
@@ -405,8 +426,9 @@ if __name__ == '__main__':
     parser.add_argument('--rhel7', action='store_true', help="use rhel7 miniconda installation. def=%s"%def_rhel7)
     parser.add_argument('--instdir', type=str, help="overrides default directory for conda installations", default=def_inst)
     parser.add_argument('--anacur', type=str, help="overrides default directory for ana current config", default=def_ana_current)
-    parser.add_argument('--conda', type=str, help="alternative path to conda installation", default=None)
+    parser.add_argument('--conda', type=str, help="non standard path to conda installation (prefix with bin subdir)", default=None)
     parser.add_argument('--sitroot', type=str, help="set SIT_ROOT, default is %s" % def_sit_root, default=def_sit_root)
+    parser.add_argument('--manage', type=str, help="non standard path to manage/bin default is %s" % def_manage_bin, default=def_manage_bin)
     parser.add_argument('--env', type=str, help='explicitly name an environment to activate')
     parser.add_argument('--py3', action='store_true', help='activate current python 3 environment')
     parser.add_argument('--gpu', action='store_true', help='activate current gpu environment (do with --dev)')
@@ -420,7 +442,10 @@ if __name__ == '__main__':
 
     if args.rhel5 + args.rhel6 + args.rhel7 > 1:
         fatal("specify none, or just one, of --rhel5 --rhel6 --rhel7")
-        
+    
+    if args.env and args.noenv:
+        fatal("an environment is names with --env, but the --noenv flag is given as well")
+
     if args.rhel5 + args.rhel6 + args.rhel7 == 0:
         if def_rhel7: args.rhel7=def_rhel7
         elif def_rhel6: args.rhel6=def_rhel6
@@ -430,10 +455,36 @@ if __name__ == '__main__':
     
     VERBOSE=args.verbose
     oldenv, newenv = undo_sit_setup()
-    add_to_condaenv(args, newenv)
-    set_conda_setup_active(newenv)
-    save_other_env(oldenv)    
-    write_env_file(args, oldenv, newenv)
-        
+    # oldenv has current PATH, LD_LIBRARY_PATH,  PYTHONPATH, and any SIT_* evars
+    # releated to rpm installation
+    # newenv has stripped out references to sit_setup, values for PATH, LD_LIBRARY_PATH
+    # PYTHONPATH, and all SIT_ vars. Value can be '' for striped out evar.
 
-    
+    add_to_condaenv(args, newenv)
+    # typicaly, updates newenv as follows:
+    #    adds /reg/g/psdm/sw/conda/manage/bin to front of path
+    #    next adds conda/bin subdir to front of PATH
+    #    and SIT_ROOT
+    # non-typical, if this is a releasee dir
+    #    sets PYTHONPATH, LD_LIBRARY_PATH
+    #    a few SIT variables for the test release
+
+    set_conda_setup_active(newenv)
+    # adds flag to new environment to say that this script is active
+
+    save_other_env(oldenv)  
+    # saves PS1, can save anyother environment variabls we think we need to restore
+
+    write_env_file(args, oldenv, newenv)
+    # writes the file to source for environment change. The file first 
+    # unsets or sets all the variables in newenv, PATH, PYTHONPATH, LD_LIBRARY_PATH, SIT_*
+    # then it writes the undo_conda function.
+    #   this does 
+    #       source deactivate to get out of any conda environment,
+    #       unset everything in newenv
+    #       sets, or unsets variables in oldenv (unsets if they were empty initially)
+    #       deletes itself at the end
+    # then it adds the source activate for a conda_env (unless --noenv given)
+    # if a release directory
+    #    it adds the release bin to the front of path
+    #    it reexports a few SIT variables that might have been overwritten by the environment setup

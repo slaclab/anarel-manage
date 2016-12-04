@@ -3,9 +3,16 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import sys
 import datetime
 import time
 import anarelmanage.util as util
+
+def logOutput(cmd, logFile):
+    if logFile:
+        cmd += ' | tee %s' % logFile
+    return cmd
+
 
 class PackageBuilder(object):
 
@@ -24,6 +31,7 @@ class PackageBuilder(object):
                  numpy_ver,
                  xtra_build_args,
                  opt,
+                 nolog,
                  dbg):
 
         self.basedir=basedir
@@ -40,6 +48,7 @@ class PackageBuilder(object):
         self.numpy_ver = numpy_ver
         self.xtra_build_args=xtra_build_args
         self.opt = opt
+        self.nolog = nolog
         self.dbg = dbg
         assert not (self.opt and self.dbg), "can't specify both a opt and dbg build"
 
@@ -48,12 +57,15 @@ class PackageBuilder(object):
         dest = os.path.join(self.channel_output_dir, os.path.basename(packageFileName))
         if os.path.exists(dest) and not self.overwrite:
             print("ERROR: this build script will create the package file: %s\n However it already exists. Use --force to overwrite, or update the build script. " % dest)
-            return
+            return False
         util.removeIfPresent(packageFileName)
         logFile = self.getLogFilename(packageFileName)
         t0 = time.time()
-        fout = file(logFile,'w')
-        print("starting log file: %s" % logFile)
+        if logFile:
+            fout = file(logFile,'w')
+            print("starting log file: %s" % logFile)
+        else:
+            fout = sys.stdout
         fout.write("############################\n")
         fout.write("## ana-rel-admin - PackageBuilder\n")        
         fout.write("## time: %s\n" % datetime.datetime.now())
@@ -71,27 +83,33 @@ class PackageBuilder(object):
 
         self.runCondaBuild(logFile)
         success = os.path.exists(packageFileName)
-        print("finished running conda build. logfile: %s" % logFile)
+        if logFile:
+            print("finished running conda build. logfile: %s" % logFile)
+        else:
+            print("finished running conda build.")
         if success:
-            os.system("echo '###############################' | tee -a %s" % logFile)
-            os.system("echo '## success, package file exists' | tee -a %s" % logFile)
+            os.system(logOutput(cmd="echo '###############################'", logFile=logFile))
+            os.system(logOutput(cmd="echo '## success, package file exists'", logFile=logFile))
             self.copyPackageFile(packageFileName, logFile)
             self.updateChannelIndex(logFile)
             return True
         else:
-            os.system("echo '## failure, package file doesn't exist' | tee -a %s" % logFile)
+            os.system(logOutput(cmd="echo '## failure, package file doesn't exist'",logFile=logFile))
             return False
 
     def copyPackageFile(self, packageFileName, logFile):
         assert os.path.exists(packageFileName), "package file %s doesn't exist" % packageFileName
         dest = os.path.join(self.channel_output_dir, os.path.basename(packageFileName))
         cmd = 'cp %s %s' % (packageFileName, dest)
-        os.system("%s | tee -a %s" % (cmd, logFile))
+        os.system(logOutput(cmd,logFile))
         assert os.path.exists(dest), "failed to copy package file to %s" % dest
 
     def updateChannelIndex(self, logFile):
         cmd = 'conda index %s' % self.channel_output_dir
-        assert 0 == os.system('%s 2>&1 | tee -a %s' % (cmd, logFile)), "cmd=%s failed" % cmd
+        res = os.system(logOutput('%s 2>&1'%cmd, logFile))
+        if logFile:
+            res = int(os.environ['PIPESTATUS'])
+        assert res==0, "cmd=%s failed" % cmd
 
     def getPackageFileName(self):
         '''Get the name of the output package file that will be produced from
@@ -142,13 +160,19 @@ class PackageBuilder(object):
         cmd += ' %s' % self.xtra_build_args
         for fileChannel in ['system', 'psana', 'external']:
             cmd += ' -c file://%s/channels/%s-%s' % (self.basedir, fileChannel, self.os)
-        cmd += ' --quiet %s 2>&1 | tee -a %s' % (self.recipe_path, logFile)
-
-        file(logFile,'a').write('%s\n' % cmd)
+        cmd += ' --quiet %s 2>&1' % self.recipe_path
+        cmd = logOutput(cmd, logFile)
+        if logFile:
+            file(logFile,'a').write('%s\n' % cmd)
         print(cmd)
-        os.system(cmd)
+        res = os.system(cmd)
+        if logFile:
+            res = int(os.environ['PIPESTATUS'])
+        assert res==0, "cmd=%s failed" % cmd
 
     def getLogFilename(self, packageFileName):
+        if self.nolog:
+            return None
         logbase = os.path.basename(packageFileName)
         assert logbase.endswith('.tar.bz2'), "logbase doesn't end with .tar.bz2, it is %s" % logbase
         logbase = logbase[0:-8]
@@ -220,6 +244,7 @@ def makePackageBuilderFromArgs(args):
                                 numpy_ver=args.numpy,
                                 xtra_build_args=args.xtra,
                                 opt=args.opt,
+                                nolog = args.nolog,
                                 dbg=args.dbg)
     return pkgBuilder
 

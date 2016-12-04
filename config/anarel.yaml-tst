@@ -1,0 +1,29 @@
+# stage 1 - ana-rel-manage will create env with correct python version.
+# also add tracked features.
+-
+  dbg:
+    ver: latest
+    only_in_variant: dbg
+
+  gpu:
+    ver: latest
+    only_in_variant: gpu
+
+-
+  szip:
+    ver: '=2.1'
+
+
+  ipython:
+    ver: latest
+
+  nose:
+    ver: latest
+
+# stage 3 - numpy, we have had so much trouble with it, we may want to 
+# test it in a pretty light environment, then install the rest of the
+# packages and test again
+-
+  numpy:
+    ver: latest
+

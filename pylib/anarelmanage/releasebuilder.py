@@ -64,6 +64,8 @@ class ReleaseBuilder(object):
                  stage,
                  force,
                  inter,
+                 dev,
+                 nolog,
                  name):
 
         self.basedir=basedir
@@ -76,7 +78,8 @@ class ReleaseBuilder(object):
         self.force = force
         self.inter = inter
         self.stage = stage
-
+        self.dev = dev
+        self.nolog = nolog
         assert self.name, "must provide a base name for new anarel"
         if not self.name.startswith('ana-'):
             assert self.force, "The new ana release name does not start with 'ana-'. If you want to proceed with this non-standard name, add the --force option"
@@ -121,13 +124,20 @@ class ReleaseBuilder(object):
         cmd += ' --name %s' % self.name
         if self.variant:
             cmd += ' --variant %s' % self.variant
+        if self.dev:
+            cmd += ' --dev'
+        if self.nolog:
+            cmd += ' --nolog'
         cmd += ' --stage %d' % self.stage
         logfile = self.getLogFilename()
-        cmd += " | tee %s" % logfile
+        if logfile:
+            cmd += " | tee %s" % logfile
         print(cmd)
         return cmd
 
     def getLogFilename(self):
+        if self.nolog:
+            return None
         inst = util.whichCondaInstall(self.basedir)
         logfile = os.path.join(self.logdir, 'build-%s-%s.log' % (self.name, inst))
         if self.force:
@@ -143,8 +153,10 @@ class ReleaseBuilder(object):
         print("############################")
         print("## Release Builder - name=%s\n" % self.name)
         print("## time: %s\n" % datetime.datetime.now())
-        
-        anarelyaml = util.getFile('config','anarel.yaml')
+        basename = 'anarel.yaml'
+        if self.dev:
+            basename += '-tst'
+        anarelyaml = util.getFile('config',basename)
         self.logAndPrint("reading in %s" % anarelyaml)
         self.anaRelBuild = yaml.load(file(anarelyaml,'r'))
         self.verifyAnaRelYaml(self.anaRelBuild)
@@ -191,7 +203,7 @@ class ReleaseBuilder(object):
             self.logAndPrint("--- checking/fixing any permission issues ---")
             util.checkFixPermissions(envDir)
         self.logAndPrint("== SUCCESS == anrel=%s all variants and stages complete" % (self.name))
-
+        return True
 
     def relNameFromVariant(self, variant):
         if len(variant):
@@ -217,7 +229,7 @@ class ReleaseBuilder(object):
                     pkginfo['ver'].startswith('=') or \
                     pkginfo['ver']=='latest', "pkginfo for pkg=%s has a 'ver' key but it doesn't start with > or = or latest" % pkg
                 for ky in pkginfo.keys():
-                    assert ky in ['limit_os', 'ver','bld','dbg','py3','gpu','chl', 'only_in_variant'], "unknown yaml key=%s for pkg=%s in stage=%d" % \
+                    assert ky in ['limit_os', 'py3ver', 'ver','bld','dbg','py3','gpu','chl', 'only_in_variant'], "unknown yaml key=%s for pkg=%s in stage=%d" % \
                         (ky, pkg, stageNum)
                 if 'only_in_variant' in pkginfo:
                     assert pkginfo['only_in_variant'] in ['dbg','gpu','py3','opt'], "allowable values for 'only_in_variant' are ['dbg','gpu','py3',opt'], but for pkg=%s in step=%d the value is %s" % \
@@ -320,6 +332,8 @@ def makeReleaseBuilderFromArgs(args):
                                 stage=args.stage,
                                 force=args.force,
                                 inter=args.inter,
+                                dev=args.dev,
+                                nolog=args.nolog,
                                 name=args.name)
     return relBuilder
 

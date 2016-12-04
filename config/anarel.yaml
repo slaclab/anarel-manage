@@ -156,7 +156,7 @@
   # 2.6.0 is the latest, but it crashes pandas 0.19.0 and 0.19.1
   # https://github.com/pandas-dev/pandas/issues/14621
   python-dateutil:
-    ver: 2.5.3
+    ver: '=2.5.3'
 
   scikit-beam:
     ver: latest
@@ -173,8 +173,9 @@
   virtualenv:
     ver: latest
 
+  # requests 2.12 brakes conda < 2.3, so maybe we'll be careful with this
   requests:
-    ver: latest
+    ver: '=2.11'
 
   simplejson:
     ver: latest
@@ -291,11 +292,11 @@
     chl: kalefranz
     py3: skip
 
-# now psana, don't trust our package as much, we'll test all that first
-# then retest with psana in it
+# now psana, putting it a separate stage gives us opportunity to test 
+# environment before/after install
 - 
   psana-conda:
-    ver: '=1.0.5'
+    ver: '=1.0.6'
     bld: py27_1
     dbg: py27_dbg_1
     py3: skip
@@ -327,6 +328,7 @@
 
 # We will use our own channel for tensorflow to get the latest version and a 
 # gpu version - this should pick up the appropriate protobuf from defaults or conda-forge
+# - note rev10 gpu is against cuda 7.5, but rev 11 and higher is against cuda 8
 -
   tensorflow:
     ver: '=0.10.0'
@@ -369,16 +371,12 @@
   paramiko:
     ver: latest
 
-  # Object oridented SQL
+  # Object oriented SQL
   sqlalchemy:
     ver: latest
 
   # sphinx 
   numpydoc:
-    ver: latest
-
-  # Fast NumPy array functions written in Cython. 
-  bottleneck:
     ver: latest
 
   # Python multithreaded job distribution module

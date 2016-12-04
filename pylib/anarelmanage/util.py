@@ -13,8 +13,8 @@ import json
 
 # utility functions for ana-rel-admin
 
-CONFIG='ANA_REL_ADMIN_CONFIG_DIR'
-RECIPES='ANA_REL_ADMIN_RECIPE_DIR'
+CONFIG = None
+RECIPES = None
 
 def _getTopSubDir(subdir):
     anarelmanagePath = os.path.abspath(os.path.split(__file__)[0])
@@ -24,32 +24,29 @@ def _getTopSubDir(subdir):
     assert os.path.exists(subPath), " %s doesn't exist" % subPath
     return subPath
 
-def setConfigDir(configdir=None):
+def getConfigDir():
     global CONFIG    
-    if os.environ.get(CONFIG,None) is not None:
-        print("ana-rel-admin.setConfigDir: %s already set, not setting config dir to %s" % (CONFIG, configdir))
-        return
-    else:
-        configdir = _getTopSubDir('config')
-    os.environ[CONFIG] = configdir
-    
-def setRecipesDir(recipedir=None):
+    if CONFIG is None:
+        CONFIG = _getTopSubDir('config')
+    return CONFIG
+
+def getRecipesDir():
     global RECIPES
-    if os.environ.get(RECIPES,None) is not None:
-        print("ana-rel-admin.setRecipesDir: %s already set, not setting config dir to %s" % (RECIPES, recipedir))
-        return
-    else:
-        configdir = _getTopSubDir('recipes')
-    os.environ[RECIPES] = configdir
-    
+    if RECIPES is None:
+        RECIPES = _getTopSubDir('recipes')
+    return RECIPES
+
+def getTagsFile(tagsfile):
+    if os.path.exists(tagsfile):
+        return os.path.abspath(tagsfile)
+    return getFile('config',tagsfile)
+
 def getFile(location, fname):
-    global CONFIG
-    global RECIPES
     assert location in ['config', 'recipes']
     if location == 'config':
-        basedir = os.environ[CONFIG]
+        basedir = getConfigDir()
     else:
-        basedir = os.environ[RECIPES]
+        basedir = getRecipesDir()
     assert os.path.exists(basedir), "location directory %s doesn't exist" % basedir
     fullpath = os.path.join(basedir, fname)
     assert os.path.exists(fullpath), "file: %s doesn't exist" % fullpath
@@ -96,8 +93,8 @@ def run_command(cmd_or_cmdList, stderr_in_stdout=False, quiet=False, shell=True)
 
     if stderr_in_stdout:
         p = sb.Popen(cmd_or_cmdList, shell=shell, stdout=sb.PIPE, stderr=sb.STDOUT)
-        out = p.communicate()
-        return out
+        stdout, stderr = p.communicate()
+        return stdout
     else:
         p = sb.Popen(cmd_or_cmdList, shell=shell, stdout=sb.PIPE, stderr=sb.PIPE)
         stdout, stderr = p.communicate()
@@ -358,3 +355,225 @@ def checkFixPermissions(envRoot):
         for fname in dirs + files:
             pth = os.path.join(root,fname)
             checkFixPermissionsForPath(pth)
+
+REGEXP_VERSION_STR = re.compile('(\d+)\.(\d+)\.(\d+)(\w*)')
+def validVersionStr(version_str):
+    match = re.match(REGEXP_VERSION_STR, version_str)
+    return not (None is match)
+
+def versionGreater(verNew, verCur):
+    matchNew = re.match(REGEXP_VERSION_STR, verNew)
+    matchCur = re.match(REGEXP_VERSION_STR, verCur)
+    assert matchNew, "verNew=%s doesn't match %s"  % (verNew, REGEXP_VERSION_STR)
+    assert matchCur, "verCur=%s doesn't match %s"  % (verCur, REGEXP_VERSION_STR)
+    for gr in [1,2,3,4]:
+        if matchNew.group(gr) > matchCur.group(gr): return True
+        if matchNew.group(gr) < matchCur.group(gr): return False
+    return False
+
+def psanaCondaPackageName(version_str):
+    assert validVersionStr(version_str), "psana conda package version string should be n.n.nxx, but it is %s" % version_str
+    return 'psana-conda-%s' % version_str
+
+def psanaCondaSourceZipFilename(basedir, version_str):
+    pkgName = psanaCondaPackageName(version_str)
+    basename = pkgName + '.tar.gz'
+    outputFile = os.path.join(basedir, 'downloads', 'anarel', basename)
+    return outputFile
+
+def psanaCondaRecipeDir(basedir):
+    path=os.path.join(basedir, 'manage', 'recipes', 'psana', 'psana-conda-opt')
+    assert os.path.exists(path), "psana conda recipe dir: %s doesn't exist" % path
+    return path
+
+def standardPath():
+    return '/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/kerberos/bin'
+
+def anaRelManagePath(basedir):
+    path = standardPath()
+    managebin=os.path.join(basedir, 'manage', 'bin')
+    assert os.path.exists(managebin), "path wrong: %s" % managebin
+    path = '%s:%s' % (managebin, path)
+    return path
+
+def testCondaPath(basedir):
+    path = standardPath()
+    testbin = os.path.join(basedir, 'anarel-test')
+    assert os.path.exists(testbin), "path %s doesn't exist" % testbin
+    path = '%s:%s' % (testbin, path)
+    return path
+
+def condaPath(devel, osname, basedir):
+    path = anaRelManagePath(basedir)
+    conda=os.path.join(basedir, 'inst', 'miniconda2-')
+    if devel:
+        conda += 'dev-'
+    else:
+        conda += 'prod-'
+    conda += '%s/bin' % osname
+    if osname != '{OSNAME}':
+        assert os.path.exists(conda), "path wrong: %s" % conda
+    path = "%s:%s" % (conda,path)
+    return path
+
+def compareDicts(dictA,dictB):
+    allkeys = list(set(dictA.keys()).union(set(dictB.keys())))
+    allkeys.sort()
+    report = {'new':[],'old':[],'changed':[], 'same':[]}
+    for key in allkeys:
+        if key in dictA and not (key in dictB):
+            report['old'].append(dictA[key])
+        elif not (key in dictA) and (key in dictB):
+            report['new'].append(dictB[key])
+        elif dictA[key] != dictB[key]:
+            report['changed'].append({'old':dictA[key],
+                                      'new':dictB[key]})
+        elif dictA[key] == dictB[key]:
+            report['same'].append(dictA[key])
+    return report
+
+def htmlPsanaDiffReports(psanaReport):
+    html = ''
+    html += '<h2>psana-conda</h2>\n'
+    html += '<h3>version</h3>\n'
+    oldVer = psanaReport['version']['old']
+    newVer = psanaReport['version']['new']
+    OLD_NEW = '''{old} --> {new}<br>\n'''
+    if oldVer == newVer:
+        html += "*WARNING* version is the same: %s" % oldVer
+    else:
+        html += OLD_NEW.format(old=oldVer, new=newVer)
+    tags = psanaReport['tags']
+    html += '<h3>tags</h3>\n'
+    names = tags['old']
+    names.sort()
+    names = [name.strip() for name in names if name.strip()]
+    if len(names)>0:
+        html += '<h4>dropped</h4>\n'
+        for name in names:
+            html += '%s<br>\n' % name
+    names = tags['new']
+    names.sort()
+    names = [name.strip() for name in names if name.strip()]
+    if len(names)>0:
+        html += '<h4>new</h4>\n'
+        for name in names:
+            html += '%s<br>\n' % name
+
+    listOfChanged = tags['changed']
+    if len(listOfChanged)>0:
+        html += '<h4>changed</h4>\n'
+        html += '<table border="1">\n'
+        html += '  <tr> <th>package</th> <th>old</th> <th></th> <th>new</th> </tr>\n'
+        def cmpnames(aa,bb): return aa['new']['name'] < bb['new']['name']
+        listOfChanged.sort(cmp=cmpnames)
+        for changed in listOfChanged:
+            name=changed['new']['name']
+            oldtag = changed['old']['tag']
+            newtag = changed['new']['tag']
+            html += '  <tr><td>%s</td><td>%s</td><td>--></td><td>%s</td></tr>\n' % (name, oldtag, newtag)        
+        html += '</table>\n'
+    return html
+
+def formatPkgInfo(pkginfo):
+    msg='%s=%s=%s' % (pkginfo['name'], pkginfo['version'], pkginfo['buildstr'])
+    if pkginfo['channel']:
+        msg += ' channel=%s' % pkginfo['channel']
+    return msg
+
+def htmlEnvDiffReports(envA, envB, pkgsReport, psanaReport):    
+    html ='<h1>conda environment report</h1>\n'
+    OLD_NEW = '''{old} --> {new}<br>\n'''
+    html += OLD_NEW.format(old=envA, new=envB)
+    if psanaReport:
+        html += htmlPsanaDiffReports(psanaReport)
+    html += '<h2>Environment Packages</h2>\n'
+    if len(pkgsReport['old']):
+        html += '<h3>Dropped</h3>\n'
+        names = [el['name'] for el in pkgsReport['old']]
+        for name in names:
+            html += '%s<br>\n' % name
+    if len(pkgsReport['new']):
+        html += '<h3>New</h3>\n'
+        pkglist = pkgsReport['new']
+        for pkginfo in pkglist:
+            html += '%s<br>\n' % formatPkgInfo(pkginfo)
+    if len(pkgsReport['changed']):
+        html += '<h3>Changed</h3>\n'
+        html += '<table border="1">\n'
+        html += '<tr> <th>package</th> <th>old</th> <th></th> <th>new</th> <th>channel</th> </tr>\n'
+        changelist = pkgsReport['changed']
+        for changeinfo in changelist:
+            oldinfo, newinfo = changeinfo['old'], changeinfo['new']
+            name = oldinfo['name']
+            oldver = '%s=%s' % (oldinfo['version'], oldinfo['buildstr'])
+            newver = '%s=%s' % (newinfo['version'], newinfo['buildstr'])
+            oldchannel = oldinfo['channel']
+            newchannel = newinfo['channel']
+            channelstr = ''
+            if oldchannel != newchannel:
+                channelstr = "%s --> %s" % (oldchannel, newchannel)
+            if oldchannel or newchannel:
+                channelstr = oldchannel
+            html += '  <tr> <td>%s</td> <td>%s</td> <td> --> </td> <td>%s</td> <td>%s</td> </tr>\n' % (name, oldver, newver, channelstr)
+        html += '</table>\n'
+    return html
+
+def getPsanaReport(envA, envB, basedir):
+    condaInstall = whichCondaInstall(basedir)
+    relinfo = {}
+    for env in [envA,envB]:
+        pyfile = os.path.join(basedir, 'inst', condaInstall, 'envs', env, 'lib', 'python2.7', 'site-packages', 'anarelinfo', '__init__.py')
+        assert os.path.exists(pyfile), "doesn't exist: %s" % pyfile
+        relinfo[env]={}
+        relinfo[env]['pyfile']=pyfile
+        relinfo[env]['globals']={}
+        relinfo[env]['locals']={}
+        execfile(pyfile, relinfo[env]['globals'], relinfo[env]['locals'])
+        pkgtags = {}
+        for pkg, tag in relinfo[env]['locals']['pkgtags'].iteritems():
+            pkgtags[pkg]={'name':pkg, 'tag':tag}
+        relinfo[env]['locals']['pkgtags'] = pkgtags
+
+    report={'version':{},
+            'tags':{'same':[],'new':[],'old':[],'changed':[]}
+        }
+    report['version']['old']=relinfo[envA]['locals']['version']
+    report['version']['new']=relinfo[envB]['locals']['version']
+    report['version']['same']=report['version']['old']==report['version']['new']
+
+    report['tags'] = compareDicts(relinfo[envA]['locals']['pkgtags'],
+                                  relinfo[envB]['locals']['pkgtags'])
+    return report
+
+def diffEnvs(envA, envB, basedir):
+    assert envA != envB, "diffEnvs: can't compare two environments that are the same - both are %s" % envA
+
+    pkgsA={}
+    pkgsB={}
+    
+    for envName, envPkgs in zip([envA, envB],
+                                [pkgsA,pkgsB]):
+        cmd = "conda list --name %s --json"  % envName
+        stdout = run_command(cmd, stderr_in_stdout=True, quiet=True)
+        pkgsList = json.loads(stdout)
+        assert isinstance(pkgsList, list), "error running command:\n%s,json is not list, it is:\n%s" % (cmd, str(pkgsList))
+        for pkg in pkgsList:
+            pkgName, pkgVer, buildstr = pkg.rsplit('-',2)
+            channel = None
+            if '::' in pkgName:
+                channel, pkgName = pkgName.rsplit('::',1)            
+            if pkgName in envPkgs:
+                warning("json output for env=%s has this package twice: %s, overwritting last=%s" % (envName, pkgName, envPkgs[pkgName]))
+            envPkgs[pkgName]={'name':pkgName, 'channel':channel, 'version':pkgVer, 'buildstr':buildstr}
+
+    pkgsReport = compareDicts(pkgsA, pkgsB)
+
+    psanaReport = None
+    if 'psana-conda' in pkgsA and 'psana-conda' in pkgsB:
+        psanaReport = getPsanaReport(envA, envB, basedir)
+
+    print(htmlEnvDiffReports(envA, envB, pkgsReport, psanaReport))
+
+if __name__ == '__main__':
+    diffEnvs('ana-1.0.3','ana-1.0.5', '/reg/g/psdm/sw/conda')

@@ -28,9 +28,7 @@ import anarelmanage.util as util
 import anarelmanage.tags as tags
 from anarelmanage.packagebuilder  import makePackageBuilderFromArgs
 from anarelmanage.releasebuilder import makeReleaseBuilderFromArgs
-
-util.setConfigDir()
-util.setRecipesDir()
+from anarelmanage.automation import automateReleaseBuildFromArgs
 
 ######## Command Functions #########
 
@@ -44,6 +42,7 @@ def firstMinicondaInstalls(args):
         ans = raw_input("Going to use %s as directory to install from, proceed?\n  others=%s" % (toinstall, minis[0:-1]))
         if not ans.lower().strip().startswith('y'):
             print("EXITING")
+            sys.stdout.flush()
             return
         os.chdir(toinstall)
         minicondaInstallScripts = os.listdir('.')
@@ -52,6 +51,7 @@ def firstMinicondaInstalls(args):
         assert installScript.endswith('.sh')
         installDir = os.path.join(args.basedir, 'inst', 'miniconda2-%s-%s' % (bld, args.os))
         print("This is where you want to install to:\n%s" % installDir)
+        sys.stdout.flush()
         os.system('bash %s' % installScript)
 
 def genCondaRcCommand(args):
@@ -64,6 +64,7 @@ def genCondaRcCommand(args):
     template_file = util.getFile('config', 'condarc_template')
     template = jinja2.Template(file(template_file,'r').read())
     print("Read in condarc template file: %s" % template_file)
+    sys.stdout.flush()
 
     for OS in ['rhel5', 'rhel6', 'rhel7']:
         for  BUILD in ['dev', 'prod']:
@@ -76,6 +77,7 @@ def genCondaRcCommand(args):
             fout.write(condarc)
             fout.close()
             print("Wrote %s" % condarc_fname)
+            sys.stdout.flush()
 
 
 def genChanIndicies(args):
@@ -91,10 +93,13 @@ def genChanIndicies(args):
             o,e=p.communicate()
             assert e.strip()=='', "cmd=%s\nstderr=%s" % (cmd, e)
             print(o)
+            sys.stdout.flush()
 
 def buildPackageCommand(args):
     pkgBuilder = makePackageBuilderFromArgs(args)
-    pkgBuilder.run()
+    if pkgBuilder.run():
+        sys.exit(0)
+    sys.exit(-1)
 
 def checkFixPermissions(args):
     assert args.name, "provide name of environment to check permissions"
@@ -104,11 +109,10 @@ def checkFixPermissions(args):
 
 def makePsanaCondaSrc(args):
     t0 = time.time()
-    assert args.name, "must provide name for the psana-conda package, use -n or --name option"
-    relname = args.name
-    assert relname.startswith('psana-conda-'), "psana-conda package name must start with psana-conda-"
-    zipname = relname + '.tar.gz'
-    outputFile = os.path.join(args.basedir, 'downloads', 'anarel', zipname)
+    assert args.name, "must use --name to provide version string for the psana-conda package, i.e, --name n.n.n"
+    version_str = args.name
+    relname = util.psanaCondaPackageName(version_str)
+    outputFile = util.psanaCondaSourceZipFilename(args.basedir, version_str)
     if os.path.exists(outputFile):
         assert args.force, "makePsanaCondaSrc: output file: %s exists. Use --force to overwrite" % outputFile
         print("about to remove old file: %s" % outputFile)
@@ -124,7 +128,7 @@ def makePsanaCondaSrc(args):
         print("removed old scratch directory: %s" % scratchDir)
         sys.stdout.flush()
     os.makedirs(scratchDir)
-    tagsFile = util.getFile('config', 'psana-conda-svn-pkgs')
+    tagsFile = util.getTagsFile(args.tagsfile)
     anaTags = tags.readAnaTags(tagsFile)
     tags.updateWithLatestTags(anaTags)
     os.chdir(scratchDir)
@@ -134,6 +138,7 @@ def makePsanaCondaSrc(args):
     f.write('%s\n' % relname)
     f.close()
     print("-- makePsanaCondaSrc: wrote .sit_release file with contents: %s" % file('.sit_release').read())
+    sys.stdout.flush()
     os.chdir('..')
     cmd = 'tar cfvz %s %s' % (outputFile, relname)
     print(cmd)
@@ -153,6 +158,7 @@ def envSetup(args):
     util.createSitVarsCondaEnv(dbg=args.dbg, force=False, envDir=envDir)
     if args.name.endswith('-gpu'):
         print("Detecting gpu environment, adding GPU variables")
+        sys.stdout.flush()
         util.addToActivateDeactivateGPUVariables(envDir=envDir)
 
 def anacondaUpload(args):
@@ -174,6 +180,7 @@ def makeCheckpointFile(args):
     assert args.name, "must specify --name"
     fname, numFiles = util.checkPoint(args.basedir, args.name, "-stageX")
     print("-- created checkpoint file: %s with %d files" % (fname, numFiles))
+    sys.stdout.flush()
 
 def compareCheckPointFiles(args):
     assert args.fileA, "no --fileA given for checkpoint compare"
@@ -183,10 +190,11 @@ def compareCheckPointFiles(args):
 def newRel(args):
     releaseBuilder = makeReleaseBuilderFromArgs(args)
     if releaseBuilder.inter or args.xx:
-        releaseBuilder.run()
+        assert releaseBuilder.run(), "newRel: releaseBuilder.run Failed."
     else:
         cmd = releaseBuilder.makeCommandWithLogging()
-        os.system(cmd)
+        exitcode = os.system(cmd)
+        assert exitcode ==0, "newRel: FAILED: cmd=%s" % cmd
 
 def changeAnaCurrent(args):
     ### helpder
@@ -204,16 +212,19 @@ def changeAnaCurrent(args):
                     present.append('%s-%s: No' % (inst, osname))
         print("==== Which installations have environment: %s ====" % newAnaCurrent)
         print('\n'.join(present))
+        sys.stdout.flush()
 
     assert args.name, "must provide a name for new ana-current"
     for variantExt, variantName in zip(['', '-gpu', '-py3'],
                                        ['standard', 'gpu', 'python3']):
         print("Changing ana-current, variant=%s" % variantName)
+        sys.stdout.flush()
         anaCurrentFname = 'ana-current' + variantExt
         anaCurrentEnv = args.name + variantExt
         output = os.path.join(args.basedir, 'ana-current', anaCurrentFname)
         assert os.path.exists(output), "file %s doesn't exist" % output
         print("current content of %s:\n%s" % (output, file(output,'r').read()))
+        sys.stdout.flush()
         whichInstallationsHaveThisEnvironment(anaCurrentEnv)
         ans=raw_input("\n====\nGiven report on  %s - switch ana-current? (y/Y)" % anaCurrentEnv)
         if ans.lower().strip()=='y':
@@ -224,6 +235,7 @@ def changeAnaCurrent(args):
             print("replaced ana-current file: %s" % output)
         else:
             print("did NOT replace %s with %s" % (output, anaCurrentEnv))
+        sys.stdout.flush()
               
 def anaEnvLists(args):
     for inst in ['prod','dev']:
@@ -241,13 +253,16 @@ def anaEnvLists(args):
                 binDir=os.path.join(envsDir, env, 'bin')
                 if not os.path.exists(binDir):
                     print("WARNING: env=%s has no bin dir, skipping" % env)
+                    sys.stdout.flush()
                     continue
                 output = os.path.join(outputDir, '%s.json' % env)
                 if os.path.exists(output):
                     print("skipping %s, it exists, use --force to overwrite" % env)
+                    sys.stdout.flush()
                     continue
                 cmd = 'PATH=%s:$PATH conda list -n %s --json | tee %s' % (binDir, env, output)
                 print("######\n%s\n" % cmd)
+                sys.stdout.flush()
                 assert 0 == os.system(cmd)
 
 def buildAllPkgs(args):
@@ -255,6 +270,7 @@ def buildAllPkgs(args):
     for pkginfo in yaml.load(file(fname,'r')):
         if 'limit_os' in pkginfo and pkginfo['limit_os'] != args.os:
             print("skipping pkg=%s since limit_os=%s and os=%s" % (pkginfo['pkg'], pkginfo['limit_os'], args.os))
+            sys.stdout.flush()
             continue
         for pth in pkginfo['paths']:
             recipeDir = util.getFile('config','recipes/%s' % pth)
@@ -262,30 +278,66 @@ def buildAllPkgs(args):
             if args.force:
                 cmd += ' --force'
             print(cmd)
+            sys.stdout.flush()
             assert 0 == os.system(cmd), "problem with cmd=%s" % cmd
     cmd = 'ana-rel-admin --cmd index-channels'
     print("finished biulding all packages, will index channels with cmd= %s" % cmd)
+    sys.stdout.flush()
     assert 0 == os.system(cmd)
 
 def rmRel(args):
     assert args.name, "no name specified"
     envRoot, condaEnvs = util.condaEnvs()
-    print("current environments:\n  %s" % '\n  '.join(condaEnvs))
-    toRemove = [args.name]
-    for variant in ['gpu', 'py3', 'dbg']:
-        toRemove.append(args.name + '-' + variant)
-    removedEnvs = []
+    toRemove=[]
+    for variant in ['', '-gpu', '-py3', '-dbg']:
+        envVariant = args.name + variant
+        if envVariant in condaEnvs:
+            assert envVariant != os.environ.get('CONDA_DEFAULT_ENV',None), "  rmRel: want to remove env=%s, but it is the active environment" % envVariant
+            toRemove.append(envVariant)
+            print("  rmRel: variant %s will be removed" % envVariant)
+        else:
+            print("  rmRel: variant %s not in current environments, will not try to remove" % envVariant)
+    sys.stdout.flush()
+    if len(toRemove)==0:
+        print(" rmRel: WARNING: no environments to remove. Is the name wrong? name=%s envs=\n%s" % (args.name, '\n'.join(condaEnvs)))
+        return
+    
     for env in toRemove:
-        if env in condaEnvs:
-            cmd = 'conda env remove -n %s' % env
-            if args.force:
-                cmd += ' -y -q'
-            assert 0 == os.system(cmd), "command failed: %s" % cmd
-            removedEnvs.append(env)
-    print("number of remved envs is: %d" % len(removedEnvs))
-    if len(removedEnvs)==0:
-        util.warning("no environments removed, is the name wrong? %s" % args.name)
-        
+        cmd = 'conda env remove -n %s' % env
+        if args.force:
+            cmd += ' -y -q'
+        print(cmd)
+        exitcode = os.system(cmd)
+        sys.stdout.flush()
+        sys.stderr.flush()
+        assert exitcode == 0, "command failed: %s, exitcode=%d" % (cmd, exitcode)
+
+    envRoot, condaEnvs = util.condaEnvs()
+    for env in toRemove:
+        assert env not in condaEnvs, "rmRel: FAILED to remove env=%s" % env
+
+def automateNewRel(args):
+    autoBuilder = automateReleaseBuildFromArgs(args)
+
+def envReport(args):
+    assert args.fileA and args.fileB, "specify environment names in fileA and fileB arguments."
+    util.diffEnvs(args.fileA, args.fileB, args.basedir)
+
+def dummy(args):
+    user = os.environ.get('USER','???')
+    username = os.environ.get('USERNAME','???')
+    sudo_user = os.environ.get('SUDO_USER','???')
+    host = os.environ.get('HOST','???')
+    hostname = os.environ.get('HOSTNAME','???')
+    path=os.environ.get('PATH','???')
+    msg = ''
+    for ky,val in os.environ.iteritems():
+        msg += '%s=%s\n' % (ky,val)
+    print("dummy output: user=%s username=%s sudo_user=%s host=%s hostname=%s\npath=%s os.keys=%s\nenviron=%s" % 
+                          (user, username,    sudo_user, host, hostname, path, '\n'.join(os.environ.keys()), msg))
+    sys.stdout.flush()
+    sys.exit(0)
+
 commandHelpFuncList = [
     ('first-installs',
      'initial first installs of miniconda (run once)',
@@ -308,7 +360,7 @@ commandHelpFuncList = [
      buildAllPkgs),
 
     ('psana-conda-src',
-     'checkout, zip up, and copy latest tags for psana-conda to {condaroot}/downloads/anarel. Requieres option: --name psana-conda-n.n.n',
+     'checkout, zip, copy latest tags. Use --name to specify version string (n.n.n) for downloads/anarel/psana-conda-n.n.n.tar.gz',
      makePsanaCondaSrc),
 
     ('env-setup',
@@ -346,12 +398,24 @@ commandHelpFuncList = [
     ('ana-list',
      'create json lists of all new ana environments. Reports on diffs with existing, use --force to overwrite existing',
      anaEnvLists),
+
+    ('auto',
+     'automate the building of a new release - starts interactively. options: --clean --name --force --tagsfile, env: NOASK',
+     automateNewRel),
+
+    ('env-report',
+     'report on differences between two environments. Use --fileA --fileB to name the two environments.',
+     envReport),
+
+    ('dummy',
+     'dummy for testing',
+     dummy),
 ]
 
 commands = [cmdTuple[0] for cmdTuple in commandHelpFuncList]
 
 description='''
-driver to manage conda based ana sw release system.
+admin tool for conda based release system. In addition 
 '''
 
 epilog='''command must be one of:
@@ -363,8 +427,9 @@ for cmdHelpFunc in commandHelpFuncList:
 
 if __name__ == '__main__':
     conda_basedir_default = '/reg/g/psdm/sw/conda'
+    def_email = 'davidsch@slac.stanford.edu'
     osName, platform = util.getOsAndPlatform()
-
+    tagfile='psana-conda-svn-pkgs'
     parser = argparse.ArgumentParser(description=description,
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      epilog=epilog)
@@ -400,8 +465,18 @@ if __name__ == '__main__':
                         help='numpy ver in conda build, ex: 1.11', default=None)
     parser.add_argument('--name', type=str, 
                         help='name for ana release or environment', default=None)
+    parser.add_argument('--email', type=str, 
+                        help='email address for notifications. default=%s' % def_email, default=def_email)
+    parser.add_argument('--nolog', action='store_true', 
+                        help='no log file (for auto and bld-pkg.')
+    parser.add_argument('--dev', action='store_true', 
+                        help='develop mode, for auto.')
+    parser.add_argument('--tagsfile', type=str, 
+                        help="alternate svn tags file. if relative path doesn't exist, will look in basedir/manage/config. default=%s" % tagfile, default=tagfile) 
+    parser.add_argument('--clean', action='store_true', default=False, help='for auto, dont pickup where last succeeded, clean build.')
     parser.add_argument('--opt', action='store_true', default=False, help='specify opt build for psana-conda pkg')
     parser.add_argument('--dbg', action='store_true', default=False, help='specify dbg build for psana-conda pkg')
+    parser.add_argument('--prod', action='store_true', default=False, help='for test_wrapper, specify production install')
     parser.add_argument('--inter', action='store_true', default=False, help='interactive, for newrel cmd')
     parser.add_argument('--xx', action='store_true', default=False, help='internal switch, do not use')
     args = parser.parse_args()
