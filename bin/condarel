@@ -83,21 +83,30 @@ DESCR = '''manage development of psana-conda package. Typical cycle:
 parser = argparse.ArgumentParser(description=DESCR,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
 
-parser.add_argument('--name', type=str, help="name of new release, or package to add.", default=None)
 SVN_ANA_DEF='https://pswww.slac.stanford.edu/svn/psdmrepo'
 SVN_USER_ANA_DEF='https://pswww.slac.stanford.edu/svn/userrepo'
 SVN_PCDS_DEF='file:///afs/slac/g/pcds/svn'
+SIT_RELDIR_DEF='/reg/g/psdm/sw/releases'
+SVN_ANA_DEF=os.environ.get('SIT_SVN',SVN_ANA_DEF)
+SVN_USER_ANA_DEF=os.environ.get('SIT_SVN_USER',SVN_USER_ANA_DEF)
+
+parser.add_argument('--name', type=str, help="name of new release, or package to add/create.", default=None)
 parser.add_argument('--svn_ana', type=str, help="ana SVN repo, where psana and all its packages come from. default=%s" % SVN_ANA_DEF, default=SVN_ANA_DEF)
 parser.add_argument('--svn_user_ana', type=str, help="ana user SVN repo, default=%s" % SVN_USER_ANA_DEF, default=SVN_USER_ANA_DEF)
 parser.add_argument('--svn_pcds', type=str, help="SVN for pcds packages, default=%s" % SVN_PCDS_DEF, default=SVN_PCDS_DEF)
 parser.add_argument('--verbose', action='store_true', help='verbose')
 parser.add_argument('--newrel', action='store_true', help='create new release')
+parser.add_argument('--sconslnk', action='store_true', help='link SConstruct (usually done automatically)')
 parser.add_argument('--addpkg', action='store_true', help='add package that is part of psana-conda, or otherwise')
-parser.add_argument('--chenv', action='store_true', help='change conda environment that release is built against to the current one.')
+parser.add_argument('--newpkg', action='store_true', help='create a new package. Uses --name')
+parser.add_argument('--chenv', action='store_true', help='change conda environment that release is built against to current, use source activate to activate a conda environment first.')
 parser.add_argument('--relinfo', action='store_true', help='release info, compare checked out tags to psana-conda tags')
 parser.add_argument('--tag', type=str, help="name of new release, or package to add, depending on other arguments.", default=None)
 parser.add_argument('--user', action='store_true', help='used with addpkg, get package from user repo')
 parser.add_argument('--branch', type=str, help="name of new release, or package to add, depending on other arguments.", default=None)
+parser.add_argument('--convert2rpm', action='store_true', help="converts conda release to rpm. Use --name to specify ana release")
+parser.add_argument('--convert2conda', action='store_true', help="converts a rpm release to a conda release. Uses currently active conda environment.")
+parser.add_argument('--sit_reldir', type=str, help="rpm sit release directory, for convert2rpm command, defaults to %s" % SIT_RELDIR_DEF, default=SIT_RELDIR_DEF)
 
 ##### UTIL ############
 def run_command(cmdList, shell):
@@ -124,20 +133,48 @@ def get_site_packages_path(args):
 def link_sconstruct(site_packages):
     '''if SConstruct doesn't exist, links 
     SConstruct to SConsTools/src/SConstruct.main if it exists, and if not, to
-    site_packages/SConsTools/src/SConstruct.main
+    site_packages/SConsTools/src/SConstruct.main, it it exists
     '''
-    if os.path.exists('SConstruct'):
-        sys.stderr.write('SConstruct already exists - not linking')
-        return
-    sconstruct = os.path.join(site_packages, 'SConsTools', 'SConstruct.main')
-    if os.path.exists('SConsTools'):
-        local_sconstruct = os.path.join('SConsTools','src','SConstruct.main')
+    def make_link(site_packages_sconstruct, local_sconstruct):
+        assert not os.path.exists('SConstruct'), "internal error: make_link should not be called if SConstruct exists"
+        link_source = None
         if os.path.exists(local_sconstruct):
-            sys.stdout.write('found local SConstruct.main')
-            sconstruct = local_sconstruct
-    if not os.path.exists(sconstruct): fatal("file doesn't exist: %s" % sconstruct)
-    cmd = 'ln -s %s SConstruct' % sconstruct
-    assert 0 == os.system(cmd)
+            print("linking SConstruct to locally checked out file: %s" % local_sconstruct)
+            link_source = local_sconstruct
+        elif os.path.exists(site_packages_sconstruct):
+            print("linking SConstruct to site packages file: %s" % site_packages_sconstruct)
+            link_source = site_packages_sconstruct
+        if link_source:
+            os.symlink(link_source, 'SConstruct')
+        else:
+            warning("unexpected: did not link SConstruct, found neither site_packages nor local SConstruct.main")
+
+    ########
+    site_packages_sconstruct = os.path.join(site_packages, 'SConsTools', 'SConstruct.main')
+    local_sconstruct = os.path.join('SConsTools', 'src', 'SConstruct.main')
+
+    if not os.path.exists('SConstruct'):
+        return make_link(site_packages_sconstruct, local_sconstruct)
+
+    if not os.path.islink('SConstruct'):
+        if os.path.exists(local_sconstruct):
+            warning("SConstruct exists that is NOT a link.\n*NO* link make to: %s\nConsider removing your SConstruct and rerunning command." %  local_sconstruct)
+        elif os.path.exists(site_packages_sconstruct):
+            warning("SConstruct exists that is NOT a link.\n*NO* link make to site packages SConstruct.main\nConsider removing your SConstruct and rerunning command.")
+        return
+
+    link_source = os.readlink('SConstruct')
+    if link_source == local_sconstruct:
+        vprint("SConstruct link to %s already exists, not updating" % local_sconstruct)
+        return
+    elif link_source == site_packages_sconstruct:
+        if os.path.exists(local_sconstruct):
+            info("removing current SConstruct as it is a link to site_packages")
+            os.unlink('SConstruct')
+            return make_link(site_packages_sconstruct, local_sconstruct)
+        vprint("not updating SConstruct, link to site_packages, and no local version avail to link to")
+        return
+    warning("SConstruct is a link pointing to %s, something other than local SConstruct.main or version in site_packages.\n*NO* new link made. Consider removing and rerunning command." % link_source)
 
 def _writeSitRelease():
     global SIT_RELEASE_FNAME
@@ -287,7 +324,37 @@ def addPkg(args):
         if not os.path.exists(proxy_name):
             warning("You will also need to do --addpkg %s to build %s which has been checked out in extpkgs" % (proxy_name, args.name))
 
+    if pkg == 'SConsTools':
+        spdir = get_site_packages_path(args)
+        link_sconstruct(spdir)
+
+def newPkg(args):
+    global SIT_RELEASE_FNAME
+    global SIT_CONDA_ENV_FNAME
+    pkg = args.name
+    if not pkg: fatal("must use --name to specify package name")
+    if not os.path.exists(SIT_RELEASE_FNAME) or not os.path.exists(SIT_CONDA_ENV_FNAME):
+        fatal("newpkg should be run from a test release, this does not appear to be a test release")
+    if os.path.exists(pkg):
+        fatal("there is already a package named %s" % pkg)
+    os.mkdir(pkg)
+    info("made directory %s" % pkg)
+    for subdir in ['doc','src','app','data']:
+        subpath = os.path.join(pkg,subdir) 
+        os.mkdir(subpath)
+        info("made sub directory %s" % subpath)
+    docsub = os.path.join(pkg,'doc')
+    info("You can remove any subdirs you won't make use of")
+    cmds=["codegen -o %s -l SConscript %s SConscript" % (pkg,pkg),
+          "codegen -o %s -l README %s SConscript" % (docsub, pkg),
+          "codegen -o %s -l ChangeLog %s ChangeLog" % (docsub, pkg)]
+    for cmd in cmds:
+        if 0 != os.system(cmd):
+            warning("newrel: command failed: %s" % cmd)
+    
+
 def changeEnv(args):
+    if args.name: fatal("chenv does not use --name argument, activate conda environment you want to change to first, with source activate [envname]")
     conda_prefix = os.environ.get('CONDA_PREFIX',None)
     if not conda_prefix: fatal("--chenv: must be in a conda environment, but CONDA_PREFIX not defined")
     if not os.path.exists('.sit_conda_env'): fatal("--chenv: .sit_conda_env file not present, are you in the release directory, for a release built against a conda environment?")
@@ -303,7 +370,7 @@ def changeEnv(args):
     msg = "chenv: updated release information.\n"
     msg += "   conda_env: %s -> %s\n" % (os.path.basename(current_conda_prefix), os.path.basename(conda_prefix))
     msg += " sit_release: %s -> %s\n" % (current_sit_release, new_sit_release)
-    msg += "\nNow run: conda_setup\n"
+    msg += "\nNow run:\nsource conda_setup\n"
     msg += "to activate new release environment, and\n"
     msg += "scons -c\n"
     msg += "to clean environment. Check compatability of check out packages with --relinfo command.\n"
@@ -340,6 +407,85 @@ def get_version_control_info(path, args):
     warning("cmd: %s got url=%s but couldn't parse trunk, tag or branch" % (cmd, url))
     return None
 
+def convert2rpm(args):
+    if not args.name: fatal("must use --name to specify rpm release to build against.")
+    if not os.path.exists(args.sit_reldir): fatal("sit_reldir=%s does not exist" % args.sit_reldir)
+    anarel = os.path.join(args.sit_reldir, args.name)
+    if not os.path.exists(anarel): fatal("%s does not exist in the sit releases" % args.name)
+    
+    global SIT_RELEASE_FNAME
+    global SIT_CONDA_ENV_FNAME
+
+    if not os.path.exists(SIT_RELEASE_FNAME) or not os.path.exists(SIT_CONDA_ENV_FNAME):
+        fatal("The currrent directory is not a conda release")
+
+    if os.path.islink(anarel):
+        relname = os.path.basename(os.readlink(anarel))
+    else:
+        relname = os.path.basename(anarel)
+
+    rel_conda_env = file(SIT_CONDA_ENV_FNAME,'r').read().strip()
+    os.unlink(SIT_CONDA_ENV_FNAME)
+    info("Deleted file %s with content %s" % (SIT_CONDA_ENV_FNAME, rel_conda_env))
+
+    old_sit_release = file(SIT_RELEASE_FNAME,'r').read().strip()    
+    fout = file(SIT_RELEASE_FNAME,'w')
+    fout.write(relname)
+    fout.close()
+    info("Overwrote file %s with %s\n  old contents: %s" % (SIT_RELEASE_FNAME, relname, old_sit_release))
+    info("** This test release has been converted to a SIT RPM test release **")
+    in_conda_set = int(os.environ.get('_CONDA_SETUP_ACTIVE','0'))
+    if in_conda_set:
+        info("** use the \nundo_conda\n function to remove conda from the environment.")
+    else:
+        info("** make sure conda is cleaned from the environment")
+    for pkg in os.listdir('.'):
+        sconscript = os.path.join(pkg,'SConscript')
+        if os.path.exists(sconscript):
+            if pkg in ['hdf5','numpy','boost','openmpi','pdsdata','psalg','python']:
+                info("You have the package %s checked out, the conda version is not compatible with the rpm system" % pkg)
+        if pkg == 'extpkgs':
+            info("You have a extpkgs directory, that is not compatible with the rpm system")
+    info("** note: any proxy packages for external packages may not function properly when switching")    
+    info("** After cleaning conda from the environment, do\nsit_setup\nas usual to activate the test release, and do\nscons -c")
+    info("** Finally do scons to rebuild against the rpm packages.")
+        
+def convert2conda(args):
+    if args.name: fatal("don't use --name with --convert2conda, converts to currently active conda environ.")
+
+    global SIT_RELEASE_FNAME
+    global SIT_CONDA_ENV_FNAME
+
+    if not os.path.exists(SIT_RELEASE_FNAME):
+        fatal("This is not a rpm test release, there is no %s file" % SIT_RELEASE_FNAME)
+
+    if os.path.exists(SIT_CONDA_ENV_FNAME):
+        fatal("This is already a conda test release, there is a %s file" % SIT_CONDA_ENV_FNAME)
+
+    old_rel = file(SIT_RELEASE_FNAME,'r').read().strip()
+
+    newrel = anarelinfo.version
+    condaenv = os.environ.get('CONDA_PREFIX',None)
+    if not condaenv:
+        fatal("unexpected, CONDA_PREFIX is not defined, can't identify conda environment.")
+
+    fout = file(SIT_RELEASE_FNAME,'w')
+    fout.write(newrel)
+    fout.close()
+
+    fout = file(SIT_CONDA_ENV_FNAME,'w')
+    fout.write(condaenv)
+    fout.close()
+    
+    info("Overwrote file %s with %s\n  old contents: %s" % (SIT_RELEASE_FNAME, newrel, old_rel))
+    info("Wrote new file %s with contents %s" % (SIT_CONDA_ENV_FNAME, condaenv))
+    
+    info("** This test release has been converted to a conda test release **")
+    info("** do\nsource conda_setup\n from this directory to activate.")
+    info("** then do scons -c to clean. Note, any packages related to external packages, such as ")
+    info("** hdf5 openmpi pdsdata numpy boost, etc")
+    info("** will not function properly")
+        
 def relInfo(args):
     cand_pkgs = os.listdir('.')
     pkgs = [pkg for pkg in cand_pkgs if os.path.exists(os.path.join(pkg, 'SConscript'))]
@@ -388,14 +534,31 @@ def relInfo(args):
 if __name__ == '__main__':
     args = parser.parse_args()
     VERBOSE=args.verbose
-    number_commands_given = int(args.addpkg) + int(args.newrel) + int(args.chenv) + int(args.relinfo)
-    if number_commands_given != 1: fatal("must specify one, and only one, of --addpkg --newrel --chenv --relinfo (note two dashes --  not one - with flags)."
+    number_commands_given = int(args.sconslnk) + int(args.addpkg) + \
+                            int(args.newrel) + int(args.chenv) + \
+                            int(args.relinfo) + int(args.newpkg) + \
+                            int(args.convert2conda) + int(args.convert2rpm)
+    
+    if number_commands_given != 1: fatal("must specify one, and only one, of "
+                                         "--addpkg --newpkg --newrel --chenv "
+                                         "--convert2conda --convert2rpm "
+                                         "--relinfo --sconslnk (note two "
+                                         "dashes --  not one - with flags)."
                                          " computed %d for number commands." % (number_commands_given,))
     if args.newrel:
         makeNewRel(args)
     elif args.addpkg:
         addPkg(args)
+    elif args.newpkg:
+        newPkg(args)
     elif args.chenv:
         changeEnv(args)
     elif args.relinfo:
         relInfo(args)
+    elif args.sconslnk:
+        spdir = get_site_packages_path(args)
+        link_sconstruct(spdir)
+    elif args.convert2rpm:
+        convert2rpm(args)
+    elif args.convert2conda:
+        convert2conda(args)

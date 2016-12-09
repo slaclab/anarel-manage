@@ -1,0 +1,270 @@
+#!/bin/sh
+#
+# Provides various information about the composition of the releases
+#
+#
+
+set -e
+
+#
+# various functions definition
+#
+
+usage() {
+
+  cat << EOD
+
+Usage: `basename $0` [options] [release ...]
+
+  Available options:
+    -h          this message
+    -d          debug (turn on -x shell option)
+    -n          do not print header
+    -r          do not decorate tags
+    -s          skip packages with all identical tags
+    -p package  print info for specified package(s)
+    -f file     read list of packages from a file
+    -a          list all packages from all releases
+    -t string   field delimiter string
+    -P          only use production-style tags from REPO
+    
+Release name can be any valid release name from \$SIT_RELDIR,
+"REPO" for repository information, "." for current test release, or
+"BASE" for the base release of current test release. If you do not 
+specify release name then ". BASE" will be used. 
+EOD
+}
+
+#
+# Get the list of packages for particular release
+#
+getPkgList() {
+  rel=${1:?No release name provided}	
+  
+  if [ "$rel" == "REPO" ] ; then
+    # not a release, but SVN repository
+    repo="$SIT_SVN"
+    svn list "$repo" | sed 's%\(.*\)/$%\1%'
+  else
+    # get the list of directories with SConscript file inside
+    if [ "$rel" != "." ] ; then
+      test -n "$SIT_RELDIR" && rel="$SIT_RELDIR/$rel"
+    fi
+    for f in $rel/* ; do
+      test -d "$f" -a -f "$f/SConscript" && basename $f
+    done
+  fi
+}
+
+#
+# get the package tag from particular release
+#
+getPkgTag() {
+
+  rel=${1:?No release name provided}
+  pkg=${2:?No package name provided}
+
+  if [ "$rel" == "REPO" ] ; then
+  	
+  	# get most recent tag from SVN repository
+    filter="cat"
+    repo="$SIT_SVN"
+    if [ "$prod" = "yes" ]; then
+      tag=`svn -v list "$repo/$pkg/tags" | sort -k1,1n | sed 's%.* \([^ ]*\)/$%\1%' | grep -E "^V[0-9]{2}-[0-9]{2}-[0-9]{2}$" | tail -1`
+    else
+      tag=`svn -v list "$repo/$pkg/tags" | sort -k1,1n | sed 's%.* \([^ ]*\)/$%\1%' | tail -1`
+    fi
+  	test "$tag" = '.' && tag=""
+  	echo $tag
+  	
+  else
+  
+    if [ "$rel" != "." ] ; then
+      test -n "$SIT_RELDIR" && rel="$SIT_RELDIR/$rel"
+    fi
+    pkg="$rel/$pkg"
+  
+    if [ -f "$pkg/.sit-tag" ] ; then
+      # .sit-tag means exported package
+      cat "$pkg/.sit-tag"
+    elif [ -d "$pkg/.svn" ] ; then
+      # use svn info to get the location of the package in SVN repository
+      # main trunk means HEAD, otherwize assume it's in tag or branch directory
+      svn info "$pkg" 2> /dev/null | grep URL: | sed -e 's%.*/\([^/]*\)$%\1%' -e 's/trunk/HEAD/'
+    else
+      # package has no tag
+      echo -
+    fi
+  fi
+}
+
+#
+# make the list of packages for a number of releases - simple union of all package names
+#
+listPackages() {
+  for p in "$@" ; do getPkgList "$p" ; done | tr ' ' '\n' | sort -u
+}
+
+#
+# return true if all tags are the same
+#
+same_tags() {
+  tag=$1
+  for t in "$@" ; do test $tag = $t || return 1 ; done
+  return 0
+}
+
+#
+# Decorate list of tags for a given package
+#  - if a tag is newer that any other tag decorate it with (+)
+#  - otherwise if a tag is older that any other tag decorate it with (-)
+#
+decorate() {
+
+  echo $* | gawk '{ \
+  	min=""; max=""; \
+  	for(i=1;i<=NF;i++) { \
+  	  if( $i!="HEAD" && $i!="-" ) { if(min=="" || $i<min) min=$i; if(max=="" || $i>max) max=$i; } \
+  	} ; \
+    for(i=1;i<=NF;i++) { \
+      if( $i!="HEAD" && $i!="-" ) { if($i>min) { if($i<max) { $i=$i"(*)" } else { $i=$i"(+)" } } else { if($i<max) $i=$i"(-)"; } } \
+    } ; print ;\
+  }'
+
+}
+
+#
+# "normalize" release names:
+#  - BASE is replaced with the real base release name
+#  - releases that look like real releases (not REPO) are checked for existence
+#
+normReleases() {
+
+  for r in "$@" ; do 
+  	if [ $r = "BASE" ] ; then
+      if [ -f .sit_release ] ; then
+  	    cat .sit_release
+  	  else 
+        echo ".sit_release is absent, cannot use BASE" 1>&2
+        exit 2
+  	  fi
+    elif [ "$r" == "." ] ; then
+      test -f .sit_release || { echo ".sit_release is absent, cannot use ." 1>&2 ; exit 2 ; }
+      echo $r
+    elif [ "$r" == "REPO" ] ; then
+      echo $r
+  	else
+      test -d "$SIT_RELDIR/$r" || { echo "release $r does not exist" 1>&2 ; exit 2 ; }
+      echo $r
+    fi
+  done
+}
+
+#
+# make list of printable releases names for header:
+# - "BASE" becomes "BASE(number)"
+# - "." becomes "TEST"
+#
+relHeader() {
+  for r in "$@" ; do 
+    if [ $r = "BASE" ] ; then
+      if [ -r .sit_release ] ; then
+      	echo "BASE(`cat .sit_release`)"
+      fi
+    elif [ "$r" == "." ] ; then
+      echo "TEST"
+    else
+      echo $r
+    fi
+  done
+}
+
+# ==========================
+#   execution starts here
+# ==========================
+
+header="yes"
+delim=""
+decorate="yes"
+allpkgs="no"
+skip="no"
+prod="no"
+
+# get the options
+while getopts hdnt:rsap:f:P c ; do
+  case $c in
+    h) usage ; exit 0 ;;
+    d) set -x ;;
+    n) header="no" ;;
+    t) delim="$OPTARG" ;;
+    p) packages="$packages $OPTARG" ;;
+    f) packages="$packages $(cat $OPTARG)" ;;
+    r) decorate="no" ;;
+    s) skip="yes" ;;
+    a) allpkgs="yes" ;;
+    P) prod="yes" ;;
+    \?) usage ; exit 2 ;;
+  esac
+done
+shift `expr $OPTIND - 1`
+
+# make the list of releases, no arguments means ". BASE"
+releases="$@"
+test -n "$releases" || releases=". BASE"
+relnums=`normReleases $releases` || exit 2
+
+#
+# make the list of packages, if . is present in release list
+# then take the packages from test releases, otherwise make
+# the list of all packages in all releases
+#
+if [ -z "$packages" -a x$allpkgs = xno ] ; then
+  for r in $relnums ; do
+    if [ $r = '.' ] ; then
+      packages=`listPackages .` || exit 2
+      break
+    fi
+  done
+fi
+if [ -z "$packages" ] ; then
+  packages=`listPackages $relnums` || exit 2
+fi
+
+# we not print output just yet, put output into "lines" var and then format
+lines=""
+
+# add header
+if [ x$header = xyes ] ; then
+  lines="Pkg/Rel `relHeader $releases`"
+  sep=':'
+fi
+
+# scan all package names
+for p in $packages ; do
+  
+  tsep=''
+  l=''
+  
+  for r in $relnums ; do
+    tag=`getPkgTag $r $p` || exit 2
+    test -z "$tag" && tag="-"
+    l="$l$tsep$tag"
+    tsep=' '
+  done
+
+  test x$skip = xyes && same_tags $l && continue
+
+  test x$decorate = xyes && l=`decorate $l`
+  lines="$lines$sep$p $l"
+  sep=':'
+  
+done
+
+if [ -n "$delim" ] ; then
+  # if delimiter is specified then simply dump everyrthing with delimiter 
+  echo $lines | tr ':' '\n' | sed "s/ /$delim/"
+else
+  # human-friendly formatting
+  fmt=`echo $lines | tr ':' '\n' | gawk '{ if (nf<NF) nf=NF ; for(i=1;i<=NF;i++) { l=length($i); if ( w[i]<l ) w[i]=l ; } } END {for(i=1;i<=nf-1;i++) printf "%%-%ds:", w[i]+3; printf "%%s"}'`
+  echo $lines | tr ':' '\n' | gawk -v fmt=$fmt 'BEGIN { split(fmt,fmta,":");} { for (i=1;i<=NF;++i) printf fmta[i], $i; printf "\n" }'
+fi

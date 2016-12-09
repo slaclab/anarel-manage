@@ -20,6 +20,10 @@ VERBOSE=False
 CONDA_SETUP_ACTIVE_EVAR='_CONDA_SETUP_ACTIVE'
 CONDA_SETUP_ACTIVE_VALUE='1'
 
+def info(msg):
+    sys.stdout.write("%s\n" % msg)
+    sys.stdout.flush()
+
 def vprint(msg):
     global VERBOSE
     if VERBOSE:
@@ -57,6 +61,8 @@ def set_conda_setup_active(newenv):
 def write_env_file(args, oldenv, newenv):
     fout = open(args.file, 'w')
     write_newenv(fout, newenv)
+    if is_conda_release_dir() and args.prompt.lower() != 'none' :
+        fout.write('''export PS1="%s $PS1"\n''' % args.prompt)
     write_undo_function(fout, oldenv, newenv)
     write_activate_condaenv(fout, args)
     if is_conda_release_dir():
@@ -120,7 +126,10 @@ def write_activate_condaenv(fout, args):
         args.env=file(path,'r').read()
 
     activate_line = 'source activate %s' % args.env
-    fout.write('echo "activating a conda environment with command %s"\n' % activate_line)
+    prod_or_dev = 'production'
+    if args.dev:
+        prod_or_dev = 'devel'
+    fout.write('echo "activating a %s conda environment with command %s"\n' % (prod_or_dev, activate_line))
     fout.write("%s\n\n\n" % activate_line)
 
 def put_release_bin_in_front_of_conda(fout, sit_arch):
@@ -239,7 +248,7 @@ def undo_sit_setup():
         if evar in os.environ:
             oldenv[evar]=os.environ[evar]
             vprint("removing %s=%s" % (evar, os.environ[evar]))
-            newenv[evar]=''
+            newenv[evar]=''    
     return oldenv, newenv
 
 ############ new conda vars #################    
@@ -368,7 +377,7 @@ def update_newenv_for_release(newenv):
 def add_to_condaenv(args, newenv):
     if is_conda_release_dir():
         conda_bin, conda_env = get_conda_from_release()
-        vprint("detected conda release, setting env to %s" % conda_env)
+        info("detected conda release directory.")
         if args.env or args.py3 or args.gpu or args.dev or args.conda:
             warning("detected conda release, explicitly setting env to activate to %s, ignoring command line options" % conda_env)
         args.env = conda_env
@@ -383,6 +392,11 @@ def add_to_condaenv(args, newenv):
     paths.insert(0, conda_bin)
     newenv['PATH'] = os.path.pathsep.join(paths)
     newenv['SIT_ROOT'] = args.sitroot
+
+    # for psvn
+    newenv['SIT_SVN']='https://pswww.slac.stanford.edu/svn/psdmrepo'
+    newenv['SIT_SVN_USER']='https://pswww.slac.stanford.edu/svn/userrepo'
+
 
     if is_conda_release_dir():
         update_newenv_for_release(newenv)
@@ -408,7 +422,7 @@ if __name__ == '__main__':
     def_inst = '/reg/g/psdm/sw/conda/inst'
     def_ana_current = '/reg/g/psdm/sw/conda/ana-current'
     def_manage_bin = '/reg/g/psdm/sw/conda/manage/bin'
-
+    def_test_release_prompt = '*tr*'
     osName, _ = getOsAndPlatform()
     def_rhel5 = False
     def_rhel6 = False
@@ -430,6 +444,8 @@ if __name__ == '__main__':
     parser.add_argument('--sitroot', type=str, help="set SIT_ROOT, default is %s" % def_sit_root, default=def_sit_root)
     parser.add_argument('--manage', type=str, help="non standard path to manage/bin default is %s" % def_manage_bin, default=def_manage_bin)
     parser.add_argument('--env', type=str, help='explicitly name an environment to activate')
+    parser.add_argument('--prompt', type=str, help='prompt string for test release (pass none to turn off), default=%s' % def_test_release_prompt, 
+                        default=def_test_release_prompt)
     parser.add_argument('--py3', action='store_true', help='activate current python 3 environment')
     parser.add_argument('--gpu', action='store_true', help='activate current gpu environment (do with --dev)')
     parser.add_argument('--file', type=str, help='output file [ignore this option, implementation detail]')
