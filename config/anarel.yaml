@@ -296,7 +296,7 @@
 # environment before/after install
 - 
   psana-conda:
-    ver: '=1.0.6'
+    ver: '=1.0.7'
     bld: py27_1
     dbg: py27_dbg_1
     py3: skip
@@ -423,4 +423,12 @@
 
 # also wanted blaze, but it brings in pytables, but I already have tables - made anaconda issue
 
+-
+# Murali ran into this bug, https://github.com/conda-forge/conda-forge.github.io/issues/189​, in the py3 enviornment,
+# so we'll overwrite the defaults readline with the conda-forge one (should get at least readline=6.2) this will also replace
+# ncurses with the conda-forge build 
 
+  readline:
+    ver: latest
+    chl: conda-forge
+    

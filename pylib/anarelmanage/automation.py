@@ -31,6 +31,10 @@ master log file at {master_log_file}
 
 link: https://pswww.slac.stanford.edu/user/psreldev/builds/auto-{version}/
 
+prod py27 report: https://pswww.slac.stanford.edu/user/psreldev/builds/auto-{version}/release_notes_py27_prod-rhel7.html
+
+prod py3 report: https://pswww.slac.stanford.edu/user/psreldev/builds/auto-{version}/release_notes_py3_prod-rhel7.html
+
 When ready, have admin account execute:
 
 ana-rel-admin --cmd change-ana-current --name {anaVer}
@@ -337,7 +341,7 @@ class AutoReleaseBuilder(object):
     def getStepLogFile(self, name, html, tester, osname=None):
         log = name
         if osname:
-            log += '_%s' % osname
+            log += '-%s' % osname
         if html:
             log += '.html'
         else:
@@ -358,7 +362,7 @@ class AutoReleaseBuilder(object):
         return cmds
 
     def write_ssh_log(self, name, osname, res, logexists, logfilesize, stdout, stderr):
-        basename = '%s_%s_ssh.txt' % (name, osname)
+        basename = '%s-%s_ssh.txt' % (name, osname)
         fullname = os.path.join(self.logDir, basename)
         fout = file(fullname, 'w')
         fout.write("command result=%d logexists=%r log filesize=%d\n" % (res, logexists, logfilesize))
@@ -394,7 +398,7 @@ class AutoReleaseBuilder(object):
             master.write(" ** FAIL **")
             master.close()
             print("-- AUTO: ** FAIL **")
-            self.failureNotify(step=name, logfile=log)
+            self.failureNotify(step=name)
             sys.exit(-1)
         else:
             total_time = time.time()-t0
@@ -437,7 +441,7 @@ class AutoReleaseBuilder(object):
             logfile = execdict['log']
             loglink = os.path.basename(logfile)
             res = execdict['stdout'].channel.recv_exit_status()
-            print("--- AUTO: %s_%s: finished exit code=%d" % (name, osname, res))
+            print("--- AUTO: %s-%s: finished exit code=%d" % (name, osname, res))
             execdict['exit_code']=res
             time.sleep(1)
             util.run_command('ls %s' % logfile)  # in case there are filesystem issues, stat file made an a different host
@@ -572,8 +576,14 @@ class AutoReleaseBuilder(object):
         cmddict = {# Turning off tests on rhel5. The psana-conda tests fail because the
                    # ibverbs is not installed correctly on psdev106 and we get warnings about mpi.
                    # not sure why we didn't get them when building psana.
-                   #'rhel5':'%s --pkgs --pkglist psana-conda,openmpi,hdf5,mpi4py,h5py,numpy,conda' % testcmd,
-                   'rhel6':'%s --soft --import --bins --libs --pkgs --pkglist psana-conda,openmpi,hdf5,mpi4py,h5py,numpy,scipy,conda,pandas,tables' % testcmd,
+                   # removing conda from the packages tested on rhel6. If we test conda on both rhel6 and rhel7, we
+                   # can get locking problems. Even though they are different conda installations,
+                   # the conda package tests currently use the same environment in the tester's .conda/envs area,
+                   # that is /testing_new_env directory, and so the rhel6 can lock out the rhel7. We could
+                   # create environments with os or hostname dependent names.
+            
+                   #'rhel5':'%s --pkgs --pkglist psana-conda,openmpi,hdf5,mpi4py,h5py,numpy,conda' % testcmd,            
+                   'rhel6':'%s --soft --import --bins --libs --pkgs --pkglist psana-conda,openmpi,hdf5,mpi4py,h5py,numpy,scipy,pandas,tables' % testcmd,
                    'rhel7':'%s --verbose --import --bins --libs --pkgs --pkglist all' % testcmd,
                }
 #        cmddict = {'rhel7':'which python; %s --verbose --import' % testcmd}

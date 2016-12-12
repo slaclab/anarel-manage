@@ -481,7 +481,12 @@ def formatPkgInfo(pkginfo):
         msg += ' channel=%s' % pkginfo['channel']
     return msg
 
-def htmlEnvDiffReports(envA, envB, pkgsReport, psanaReport):    
+def htmlEnvDiffReports(envA, envB, pkgsReport, psanaReport):
+    def replaceNoneWithDefaults(channel):
+        if channel is None:
+            return 'defaults'
+        return channel
+    
     html ='<h1>conda environment report</h1>\n'
     OLD_NEW = '''{old} --> {new}<br>\n'''
     html += OLD_NEW.format(old=envA, new=envB)
@@ -508,13 +513,13 @@ def htmlEnvDiffReports(envA, envB, pkgsReport, psanaReport):
             name = oldinfo['name']
             oldver = '%s=%s' % (oldinfo['version'], oldinfo['buildstr'])
             newver = '%s=%s' % (newinfo['version'], newinfo['buildstr'])
-            oldchannel = oldinfo['channel']
-            newchannel = newinfo['channel']
+            oldchannel = replaceNoneWithDefaults(oldinfo['channel'])
+            newchannel = replaceNoneWithDefaults(newinfo['channel'])
             channelstr = ''
             if oldchannel != newchannel:
                 channelstr = "%s --> %s" % (oldchannel, newchannel)
-            if oldchannel or newchannel:
-                channelstr = oldchannel
+            else:
+                channelstr = newchannel
             html += '  <tr> <td>%s</td> <td>%s</td> <td> --> </td> <td>%s</td> <td>%s</td> </tr>\n' % (name, oldver, newver, channelstr)
         html += '</table>\n'
     return html
