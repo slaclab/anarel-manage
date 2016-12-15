@@ -66,7 +66,7 @@ def write_env_file(args, oldenv, newenv):
     write_undo_function(fout, oldenv, newenv)
     write_activate_condaenv(fout, args)
     if is_conda_test_release_dir(args):
-        put_release_bin_in_front_of_conda(fout, newenv['SIT_ARCH'])
+        put_release_bin_in_front_of_conda(args, fout, newenv['SIT_ARCH'])
         # when the conda environment activates, it may overwrite somethings, put them back
         for evar in ['SIT_ARCH', 'SIT_DATA', 'SIT_ROOT']:
             if evar in newenv and newenv[evar] not in [None, '', 'None']:
@@ -132,9 +132,9 @@ def write_activate_condaenv(fout, args):
     fout.write('echo "activating a %s conda environment with command %s"\n' % (prod_or_dev, activate_line))
     fout.write("%s\n\n\n" % activate_line)
 
-def put_release_bin_in_front_of_conda(fout, sit_arch):
-    cwd=os.path.abspath('.')
-    relbin = os.path.join(cwd, 'arch', sit_arch, 'bin')
+def put_release_bin_in_front_of_conda(args, fout, sit_arch):
+    test_release_root = get_abspath_test_release_root(args)
+    relbin = os.path.join(test_release_root, 'arch', sit_arch, 'bin')
     fout.write("export PATH=%s:$PATH\n" % relbin)
     
 ########### undo sit_setup ###################
@@ -353,7 +353,16 @@ def get_conda_prefix_for_test_release(args):
     if sit_conda_env_fname is None: fatal("internal error: not a test release")
     conda_prefix = open(sit_conda_env_fname,'r').read().strip()
     return conda_prefix
-    
+
+def get_abspath_test_release_root(args):
+    if args.reldir:
+        rootdir = os.path.abspath(args.reldir)
+    else:
+        rootdir = os.path.abspath('.')
+    if not os.path.exists(rootdir):
+        fatal("test release root directory:\n%s\ndoesn't exist" % rootdir)
+    return rootdir
+
 def get_conda_bin_and_env_from_test_release(args):
     conda_prefix = get_conda_prefix_for_test_release(args)
     env_dir, conda_env = os.path.split(conda_prefix)
@@ -363,17 +372,17 @@ def get_conda_bin_and_env_from_test_release(args):
     return conda_bin, conda_env
 
 def update_newenv_for_test_release(args, newenv):
-    cwd=os.path.abspath('.')
+    test_release_root_dir = get_abspath_test_release_root(args)    
     sit_arch = get_SIT_ARCH(debug=False)
 
     # PATH has to be done after activating the conda environment
     
     paths = newenv.get('PYTHONPATH','').split(os.path.pathsep)
-    paths.insert(0,os.path.join(cwd, 'arch',sit_arch, 'python'))
+    paths.insert(0,os.path.join(test_release_root_dir, 'arch',sit_arch, 'python'))
     newenv['PYTHONPATH']=os.path.pathsep.join(paths)
 
     paths = newenv.get('LD_LIBRARY_PATH','').split(os.path.pathsep)
-    paths.insert(0,os.path.join(cwd, 'arch',sit_arch, 'lib'))
+    paths.insert(0,os.path.join(test_release_root_dir, 'arch',sit_arch, 'lib'))
     newenv['LD_LIBRARY_PATH']=os.path.pathsep.join(paths)
 
     conda_prefix = get_conda_prefix_for_test_release(args)
@@ -391,7 +400,7 @@ def update_newenv_for_test_release(args, newenv):
     newenv['SIT_USE_CONDA']='1'
 # the source activate should set the conda_env_path
 #    newenv['CONDA_ENV_PATH'] = conda_prefix
-    newenv['SIT_DATA'] = os.path.pathsep.join([os.path.join(cwd,'data'),
+    newenv['SIT_DATA'] = os.path.pathsep.join([os.path.join(test_release_root_dir,'data'),
                                                os.path.join(conda_prefix, 'data'),
                                                os.path.join(args.sitroot,'data')])
 
@@ -425,14 +434,14 @@ def add_to_condaenv(args, newenv):
 
 DESCR='''
 Modifies environment for conda. Undoes results of sit_setup, if it was run.
-If run from a conda release directory, (created with the condarel tool), or the 
---reldir argument is given to specify a conda release directory, activates 
-conda environment specified in release. Otherwise, defaults to activate the 
+If run from a conda release directory or the --reldir argument is given to
+specify a release directory, (created with the condarel tool), activates the 
+conda environment specified in that test release. Otherwise, defaults to activate the 
 current python 2.7 ana environment in the production miniconda installation for this
 platform (rhel5/rhel6 or rhel7 - usually rhel7). 
 
-Options allow one to specify a specific installation and environment within that 
-installation.  For examples, the development rhel7 installation with the current python 3 
+Options allow one to specify a specific installation and environment.  
+For examples, the development rhel7 installation with the current python 3 
 environment -- however, it is safest to let the script determine the correct OS - i.e, 
 rhel7, rhel6 or rhel5.  This script - conda_setup_details - is not meant to be
 run directly. It is used from the script conda_setup, that is sourced to change the
@@ -466,7 +475,7 @@ if __name__ == '__main__':
     parser.add_argument('--sitroot', type=str, help="set SIT_ROOT, default is %s" % def_sit_root, default=def_sit_root)
     parser.add_argument('--manage', type=str, help="non standard path to manage/bin default is %s" % def_manage_bin, default=def_manage_bin)
     parser.add_argument('--env', type=str, help='explicitly name an environment to activate')
-    parser.add_argument('--reldir', type=str, help='explicitly specify a conda release directory to activate')
+    parser.add_argument('--reldir', type=str, help='explicitly specify path to a conda test release directory to activate')
     parser.add_argument('--prompt', type=str, help='prompt string for test release (pass none to turn off), default=%s' % def_test_release_prompt, default=def_test_release_prompt)
     parser.add_argument('--py3', action='store_true', help='activate current python 3 environment')
     parser.add_argument('--gpu', action='store_true', help='activate current gpu environment (do with --dev)')
