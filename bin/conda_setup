@@ -23,7 +23,8 @@ if [[ $_CONDA_SETUP_ACTIVE ]]; then
     undo_conda
 fi
 
+export PS1=$PS1
 FNAME=`mktemp`
 $_CONDA_SETUP_DIR/conda_setup_details --file $FNAME $*
 source $FNAME
-rm $FNAME
+rm -f $FNAME
