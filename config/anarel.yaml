@@ -296,7 +296,7 @@
 # environment before/after install
 - 
   psana-conda:
-    ver: '=1.0.7'
+    ver: '=1.0.8'
     bld: py27_1
     dbg: py27_dbg_1
     py3: skip
@@ -322,6 +322,9 @@
 #-
 #  protobuf:
 # I think tensorflow will pickup what it needs in its dependencies
+# tensorflow v12 however needs protobuf 3.1.0 which is not (as of dec/29) in conda-forge
+# but it is in jjhelmus
+  
 #    ver: '=3.0.0b2'
 #    chl: conda-forge
 
@@ -412,6 +415,10 @@
 
   # super sparse multi-class machine learning 
   thinc:
+    ver: latest
+
+  # Chuck suggests: https://github.com/slaclab/anarel-manage/issues/4
+  biopython:
     ver: latest
 
 # I was thinking about getting xgboost - wins a lot of kaggle competitions - 

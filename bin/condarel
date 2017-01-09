@@ -494,6 +494,11 @@ def relInfo(args):
             if sdir in ['build','install', 'arch']: continue
             pkgs.append(os.path.join('extpkgs', sdir))
     pkgs.sort()
+    if len(pkgs)==0:
+        print("No psana packages were found (subdirectories with a SConscript file)")
+        print("exiting.")
+        return
+
     vcinfos = [get_version_control_info(pkg, args) for pkg in pkgs]
     pkgWidth = max(len("package"), max([len(pkg) for pkg in pkgs]))
     tagWidth = max([len(vcinfo['tag']) for vcinfo in vcinfos if vcinfo])
