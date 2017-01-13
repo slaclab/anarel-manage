@@ -104,9 +104,11 @@ def removeIfPresent(fname):
     if os.path.exists(fname):
         print("rm %s " % fname)
         os.unlink(fname)
+        return True
     else:
         print("## file %s ## doesn't exist" % fname)
-
+        return False
+    
 def warning(msg):
     sys.stderr.write("WARNING: %s\n" % msg)
     sys.stderr.flush()

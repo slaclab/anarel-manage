@@ -8,10 +8,22 @@ import datetime
 import time
 import anarelmanage.util as util
 
-def logOutput(cmd, logFile):
+def logMsg(msg, logFile):
+    print(msg)
     if logFile:
-        cmd += ' | tee %s' % logFile
-    return cmd
+        f = file(logFile,'a')
+        f.write(msg)
+        f.close()
+        
+def logOutput(cmd, logFile):
+    logMsg("cmd: %s" % cmd, logFile)
+    if logFile:
+        cmd += ''' 2>&1 | tee -a %s''' % logFile
+    sys.stderr.flush()
+    sys.stdout.flush()
+    os.system(cmd)
+    sys.stderr.flush()
+    sys.stdout.flush()
 
 
 class PackageBuilder(object):
@@ -31,6 +43,7 @@ class PackageBuilder(object):
                  numpy_ver,
                  xtra_build_args,
                  opt,
+                 warn_if_exists,
                  nolog,
                  dbg):
 
@@ -48,6 +61,7 @@ class PackageBuilder(object):
         self.numpy_ver = numpy_ver
         self.xtra_build_args=xtra_build_args
         self.opt = opt
+        self.warn_if_exists = warn_if_exists
         self.nolog = nolog
         self.dbg = dbg
         assert not (self.opt and self.dbg), "can't specify both a opt and dbg build"
@@ -56,9 +70,21 @@ class PackageBuilder(object):
         packageFileName = self.getPackageFileName()
         dest = os.path.join(self.channel_output_dir, os.path.basename(packageFileName))
         if os.path.exists(dest) and not self.overwrite:
-            print("ERROR: this build script will create the package file: %s\n However it already exists. Use --force to overwrite, or update the build script. " % dest)
-            return False
-        util.removeIfPresent(packageFileName)
+            msg = "this build script will create the package file: %s\n However it already exists. Use --force to overwrite, or update the build script. " % dest
+            if self.warn_if_exists:
+                print("WARNING: %s" % msg)
+                return True
+            else:
+                print("ERROR: %s" % msg)
+                return False
+
+        isPresent = util.removeIfPresent(packageFileName)
+        if isPresent:
+            # should be in conda-bld/linux-64, re-index
+            pkgDir = os.path.split(packageFileName)[0]
+            if os.path.exists(pkgDir):
+                os.system("conda-index %s" % pkgDir)
+                
         logFile = self.getLogFilename(packageFileName)
         t0 = time.time()
         if logFile:
@@ -80,42 +106,39 @@ class PackageBuilder(object):
         fout.write("## platform = %s\n" % self.platform)
         fout.write("## xtra_build_args = %s\n" % self.xtra_build_args)
         fout.write("## \n## \n")
-
-        self.runCondaBuild(logFile)
-        success = os.path.exists(packageFileName)
         if logFile:
-            print("finished running conda build. logfile: %s" % logFile)
-        else:
-            print("finished running conda build.")
+            fout.close()
+            
+        self.runCondaBuild(logFile)
+        tm = os.path.getctime(packageFileName)-t0
+        success = os.path.exists(packageFileName) and tm>0
+        logMsg("finished running conda build. success=%r tm=%d:%d" % (success, tm//60, tm%60), logFile)
+        if logFile:
+            logMsg("logfile=%s" % logFile, logFile)
         if success:
-            os.system(logOutput(cmd="echo '###############################'", logFile=logFile))
-            os.system(logOutput(cmd="echo '## success, package file exists'", logFile=logFile))
             self.copyPackageFile(packageFileName, logFile)
             self.updateChannelIndex(logFile)
             return True
         else:
-            os.system(logOutput(cmd="echo '## failure, package file doesn't exist'",logFile=logFile))
+            logMsg(cmd="echo '## failure, package file doesn't exist'",logFile=logFile)
             return False
 
     def copyPackageFile(self, packageFileName, logFile):
         assert os.path.exists(packageFileName), "package file %s doesn't exist" % packageFileName
         dest = os.path.join(self.channel_output_dir, os.path.basename(packageFileName))
         cmd = 'cp %s %s' % (packageFileName, dest)
-        os.system(logOutput(cmd,logFile))
+        logOutput(cmd,logFile)
         assert os.path.exists(dest), "failed to copy package file to %s" % dest
 
     def updateChannelIndex(self, logFile):
         cmd = 'conda index %s' % self.channel_output_dir
-        res = os.system(logOutput('%s 2>&1'%cmd, logFile))
-        if logFile:
-            res = int(os.environ['PIPESTATUS'])
-        assert res==0, "cmd=%s failed" % cmd
+        logOutput(cmd, logFile)
 
     def getPackageFileName(self):
         '''Get the name of the output package file that will be produced from
         the conda build.
         '''
-        cmd = 'conda build %s' % self.xtra_build_args
+        cmd = 'conda-build %s' % self.xtra_build_args
 
         if self.python_ver:
             cmd += ' --python=%s' % (self.python_ver,)
@@ -129,20 +152,7 @@ class PackageBuilder(object):
         assert len(stderr_no_warnings)==0, "channel=%s pkg=%s problem with cmd=%s: stderr=%s" % \
             (self.channel, self.pkg, cmd, stderr)
         packagefile = stdout.strip()
-        print("## packagefile: %s" % packagefile)
         return packagefile
-
-#    def cleanCondaBldEnvs(self):
-#        '''deletes the conda-bld subdir and tree
-#        deletes the _build and _test environments
-#        '''
-#        conda_bin = os.environ["PATH"].split(os.pathsep)[0]
-#        assert os.path.exists(os.path.join(path, 'python')), "python not in first path subdir"
-#        conda_prefix = os.path.split(conda_bin)[0]
-#        subdirs = conda_prefix.split(os.path.sep)
-#        if len(subdirs)>2 and subdir[-2]=='envs':
-#            raise Exception("ERROR: it appears that bld-pkg is being run from a environment. deactivate and run from root so we can safely remove conda-buld and _test/_build environments.\n")
-#        conda_bld_dir = os.path.join(conda_prefix, 'conda-bld')
 
     def runCondaBuild(self, logFile):
         dbgBuild = False
@@ -151,24 +161,25 @@ class PackageBuilder(object):
             if self.dbg or self.recipe_path.endswith('dbg'):
                 dbgBuild = True
         sitvars = util.getSITvariables(debug=dbgBuild)
-#        self.cleanCondaBldEnvs()
-        cmd = 'SIT_ARCH=%s conda build' % sitvars['SIT_ARCH']
+        cmd = 'SIT_ARCH=%s conda-build' % sitvars['SIT_ARCH']
         if self.python_ver:
             cmd += ' --python=%s' % self.python_ver
         if self.numpy_ver:
             cmd += ' --numpy=%s' % self.numpy_ver
         cmd += ' %s' % self.xtra_build_args
+        # if we don't put our channels first, we can pick
+        # up packages from locals - i.e, the conda-build
+        # workspace, would rather get them from channels
         for fileChannel in ['system', 'psana', 'external']:
             cmd += ' -c file://%s/channels/%s-%s' % (self.basedir, fileChannel, self.os)
-        cmd += ' --quiet %s 2>&1' % self.recipe_path
-        cmd = logOutput(cmd, logFile)
-        if logFile:
-            file(logFile,'a').write('%s\n' % cmd)
-        print(cmd)
-        res = os.system(cmd)
-        if logFile:
-            res = int(os.environ['PIPESTATUS'])
-        assert res==0, "cmd=%s failed" % cmd
+#        if self.os == 'rhel5':
+            ## currently, with conda 4.2.14, there is a bug: https://github.com/conda/conda-build/issues/1648            
+            ## on rhel5
+            ## but per https://github.com/slaclab/anarel-manage/issues/6
+            ## this isn't enough, we're at conda 4.2.13 in rhel5
+ #           cmd += ' --no-test'
+        cmd += ' --quiet %s' % self.recipe_path
+        logOutput(cmd, logFile)
 
     def getLogFilename(self, packageFileName):
         if self.nolog:
@@ -206,12 +217,20 @@ class PackageBuilder(object):
 
 ### factory function
 def makePackageBuilderFromArgs(args):
+    def is_py3recipe(recipe):
+        if recipe.endswith('-py3'): return True
+        if recipe.find('-py3-')>0: return True
+        if recipe.find('-py3_')>0: return True
+        if recipe.find('_py3-')>0: return True
+        if recipe.find('_py3_')>0: return True
+        return False
+    
     assert args.recipe is not None, "must supply -r with recipe dir"
     assert os.path.exists(args.recipe), "recipe path doesn't exist: %s" % args.recipe
     assert os.path.isdir(args.recipe), "%s is not a directory" % args.recipe
     assert os.path.exists(os.path.join(args.recipe, 'meta.yaml')), \
         "there is no meta.yaml in %s" % args.recipe
-    if args.recipe.endswith('-py3'):
+    if is_py3recipe(args.recipe):
         if args.python is None:
             print("detecting a py3 recipe, seeting args.python to 3.5")
             args.python='3.5'
@@ -244,6 +263,7 @@ def makePackageBuilderFromArgs(args):
                                 numpy_ver=args.numpy,
                                 xtra_build_args=args.xtra,
                                 opt=args.opt,
+                                warn_if_exists=args.warn_if_exists,
                                 nolog = args.nolog,
                                 dbg=args.dbg)
     return pkgBuilder

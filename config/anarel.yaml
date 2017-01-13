@@ -31,9 +31,12 @@
 #    chl: the channel to find the package in, fully qualified file urls, or off of anaconda for things
 #         like conda-forge, ect, only needed if channel is not in condarc
                    
-# stage 1 - ana-rel-manage will create env with correct python version.
-# also add tracked features.
 -
+    # I couldn't import psana with python=2.7.13
+  python:
+    ver: '=2.7.12'
+    py3ver: '=3.5'
+  
   dbg:
     ver: latest
     only_in_variant: dbg
@@ -42,25 +45,18 @@
     ver: latest
     only_in_variant: gpu
 
-# stage 2 - now that we have gpu feature in place, add cudnn to gpu environment
--
   cudnn:
     ver: '=5.1'
     only_in_variant: gpu
   
-# stage 3 - C libraries, openmpi, hdf5, etc.
--
   openmpi:
-    ver: '=1.10.3'
-    bld: lsf_verbs_101       
+    ver: '=2.0.1'
 
   szip:
     ver: '=2.1'
 
   hdf5:
-    ver: '=1.8.17'
-    bld: openmpi_101
-    dbg: openmpi_dbg_101
+    ver: '=1.8.18'
 
   ipython:
     ver: latest
@@ -68,10 +64,6 @@
   nose:
     ver: latest
 
-# stage 3 - numpy, we have had so much trouble with it, we may want to 
-# test it in a pretty light environment, then install the rest of the
-# packages and test again
--
   numpy:
     ver: latest
 
@@ -79,26 +71,13 @@
     ver: latest
 
   h5py:
-    ver: '=2.5.0'
-    bld: py27_101
-    py3: py35_101
+    ver: '=2.7.0'
 
   mpi4py:
     ver: '=2.0.0'
-    bld: py27_openmpi_101
-    py3: py35_openmpi_101
 
   tables:
     ver: '=3.3.0'
-    bld: py27_100
-    py3: py35_100
-
-# all the package we want from defaults/conda-forge, 
-# where we use our .condarc channel order - i.e, defaults
-# first, than conda-forge
--
-
-# from build requirements for psana-conda
 
   scons:
     ver: latest
@@ -116,7 +95,6 @@
   mysql:
     ver: latest
 
-  
   ndarray:
     ver: latest
 
@@ -242,8 +220,6 @@
   mkl-service:
     ver: latest
 
-  # I am a little concerened about resolving spyder dependencies with the
-  # pack, maybe we should do it after the pack in a second stage?
   spyder:
     ver: latest
 
@@ -282,73 +258,30 @@
   # pypi packaging recommend this, comes from condaforge
   twine:
     ver: latest
+
+  eigen:
+    ver: latest
   
-# stages for different channels
--
-  # for pyPsanaMonit, but needs non-default channel, also I got an error
+  # for pyPsanaMonit I got an error
   # trying to install it in the py3 build
   guppy:
     ver: latest
-    chl: kalefranz
     py3: skip
 
-# now psana, putting it a separate stage gives us opportunity to test 
-# environment before/after install
-- 
   psana-conda:
-    ver: '=1.0.8'
-    bld: py27_1
-    dbg: py27_dbg_1
+    ver: '=1.1.0'
     py3: skip
 
--
-# conda-forge override step - conda-forge has a later version of opencv (3.1) that
-# works with our other packages, except it updates jpeg, libtiff, but downgraded pillow
   opencv:
     ver: latest
-    chl: conda-forge
 
   theano:
     ver: latest
-    chl: conda-forge
 
-# after psana with its strict qt dependencies, and opencv with its own dependencies on 
-# libpng, ect, we'll install apps with wider qt dependencies
--
   logbookclient:
     ver: latest
     py3: skip
 
-#-
-#  protobuf:
-# I think tensorflow will pickup what it needs in its dependencies
-# tensorflow v12 however needs protobuf 3.1.0 which is not (as of dec/29) in conda-forge
-# but it is in jjhelmus
-  
-#    ver: '=3.0.0b2'
-#    chl: conda-forge
-
-
-# We will use our own channel for tensorflow to get the latest version and a 
-# gpu version - this should pick up the appropriate protobuf from defaults or conda-forge
-# - note rev10 gpu is against cuda 7.5, but rev 11 and higher is against cuda 8
--
-  tensorflow:
-    ver: '=0.10.0'
-    gpu: py27_gpu_1
-    py3: py35_1
-    limit_os: rhel7
-  
-# now with our own tensorflow, and conda-forge theano, install keras (from our channel to get latest)
--
-  keras:
-    ver: latest
--
-  jupyterhub:
-    ver: latest
-    only_in_variant: py3
-    limit_os: rhel7
--
   # Clemens suggests
   numba:
     ver: latest
@@ -421,6 +354,34 @@
   biopython:
     ver: latest
 
+#-
+#  protobuf:
+# I think tensorflow will pickup what it needs in its dependencies
+# tensorflow v12 however needs protobuf 3.1.0 which is not (as of dec/29) in conda-forge
+# but it is in jjhelmus
+  
+#    ver: '=3.0.0b2'
+#    chl: conda-forge
+
+
+# We will use our own channel for tensorflow to get the latest version and a 
+# gpu version - this should pick up the appropriate protobuf from defaults or conda-forge
+# note rev10 gpu is against cuda 7.5, but rev 11 and higher is against cuda 8
+
+  tensorflow:
+    ver: '=0.10.0'
+    gpu: py27_gpu_1
+    py3: py35_1
+    limit_os: rhel7
+  
+  keras:
+    ver: latest
+
+  jupyterhub:
+    ver: latest
+    only_in_variant: py3
+    limit_os: rhel7
+
 # I was thinking about getting xgboost - wins a lot of kaggle competitions - 
 #but it is not standard, the channel creditx
 # has the latest version, but it also brings in libgcc 5.2.0, so I won't do it right now.
@@ -439,3 +400,11 @@
     ver: latest
     chl: conda-forge
     
+# Chuck is using cbf from this channel, note, an earlier build was only against
+# numpy 1.9 and we couldn't install it, but now it seems to introduce no 
+# changes to our environments, however it does add a .egg and .pth file,
+# I'm not sure I want those in the environments, we won't put it in for now
+#-
+#  cbf:
+#    ver: latest
+#    chl: paulscherrerinstitute 

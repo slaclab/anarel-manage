@@ -1,0 +1,39 @@
+{% set pkg = 'h5py' %}
+{% set version = '2.6.0' %}
+{% set build = 100 %}
+
+{% set openmpi_build = 100 %}
+{% set mpi4py_build = 100 %}
+{% set hdf5_build = 100 %}
+
+package:
+  name: {{ pkg }}
+  version: {{ version }}
+
+source:
+  fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/h5py-{{version}}.tar.gz
+  md5: ec476211bd1de3f5ac150544189b0bf4
+
+requirements:
+  build:
+    - python ==3.5
+    - numpy ==1.11.1 py35_blas_openblas_200
+    - openmpi ==1.10.3 lsf_verbs_{{ openmpi_build }}
+    - mpi4py ==2.0.0 py35_openmpi_{{ mpi4py_build }}
+    - hdf5 ==1.10.0 openmpi_{{ hdf5_build }}
+    - cython
+    - six
+    - pkgconfig
+
+  run:
+    - python >=3.4,<4
+    - numpy >=1.11,<1.12
+    - mpi4py >=2.0.0,<3
+    - hdf5 ==1.10.0
+    - six
+    - unittest2    #[py26]
+
+build:
+  number: {{build}}
+  string: py35_hdf110_mpi4py2_{{build}}
+

@@ -10,11 +10,11 @@ channels:
   - file://{{ CONDA_ROOT }}/channels/system-{{ OS }}
   - file://{{ CONDA_ROOT }}/channels/psana-{{ OS }}
   - file://{{ CONDA_ROOT }}/channels/external-{{ OS }}
+  # prefer defaults to conda-forge
+  # since defaults numpy works on rhel5, but conda-forge doesn't
   - defaults
   - conda-forge
-  - scikit-beam
-# menpo is for Eigen
-#  - menpo
+  - kalefranz    # for guppy
   - file://{{ CONDA_ROOT }}/channels/testing-{{ OS }}
 
 always_yes: False

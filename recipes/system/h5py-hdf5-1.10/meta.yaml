@@ -1,0 +1,36 @@
+{% set build = 1 %}
+{% set version = '2.7.0rc2' %}
+{% set mpi = 'openmpi' %}
+
+package:
+  name: h5py
+  version: {{version}}
+
+source:
+  fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/h5py-{{version}}.tar.gz
+
+requirements:
+  build:
+    - python
+    - numpy
+    - openmpi ==2.0.1 lsf_verbs_1
+    - mpi4py ==2.0.0 py27_openmpi_102
+    - hdf5 ==1.10.0 openmpi_1
+    - cython
+    - six
+    - pkgconfig
+
+  run:
+    - python >=2.7,<3
+    - numpy 
+    - openmpi >=2,<3
+    - mpi4py >=2.0.0,<3
+    - hdf5 ==1.10.0
+    - six
+    - unittest2    #[py26]
+
+build:
+  number: {{build}}
+  string: py27_hdf110_{{build}}
+
+  

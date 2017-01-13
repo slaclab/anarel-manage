@@ -10,7 +10,7 @@ build:
   skip: True  # [win]
   skip: True  # [py26]
 
-    entry_points:
+  entry_points:
     - tensorboard = tensorflow.tensorboard.tensorboard:main
 
 # pip install tensorflow to see what pip puts in

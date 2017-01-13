@@ -12,34 +12,35 @@
 
 - pkg: openmpi
   paths: 
-  - system/openmpi-1.10.3-prod  
+  - system/openmpi-1.10x
+  - system/openmpi-2x
   
 - pkg: hdf5
   paths:
-  - system/hdf5-1.8.17-prod
-  - system/hdf5-1.8.17-dbg
-  - system/hdf5-1.10.0-prod
-  - system/hdf5-1.10.0-dbg
+  - system/hdf5-1.8x
+  - system/hdf5-1.10x
 
 - pkg: mpi4py
   paths:
-  - system/mpi4py-2.0.0
-  - system/mpi4py-2.0.0-py3
+  - system/mpi4py
+  - system/mpi4py-py3
 
 - pkg: h5py
   paths:
-  - system/h5py-2.5.0
-  - system/h5py-2.5.0-py3
+  - system/h5py
+  - system/h5py-py3
+  - system/h5py-hdf5-1.10
+  - system/h5py-hdf5-1.10-py3
 
 - pkg: tables
   paths:
-  - system/tables-3.3.0
-  - system/tables-3.3.0-py3
-
+  - system/tables
+  - system/tables-py3
+  # tables doesn't support hdf5 1.10
+  
 - pkg: psana-conda
   paths:
   - psana/psana-conda-opt
-  - psana/psana-conda-dbg
 
 - pkg: tensorflow
   paths:

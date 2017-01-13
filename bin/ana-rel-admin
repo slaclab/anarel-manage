@@ -26,7 +26,7 @@ import anarelmanage
 
 import anarelmanage.util as util
 import anarelmanage.tags as tags
-from anarelmanage.packagebuilder  import makePackageBuilderFromArgs
+from anarelmanage.packagebuilder import makePackageBuilderFromArgs
 from anarelmanage.releasebuilder import makeReleaseBuilderFromArgs
 from anarelmanage.automation import automateReleaseBuildFromArgs
 
@@ -266,15 +266,15 @@ def anaEnvLists(args):
                 assert 0 == os.system(cmd)
 
 def buildAllPkgs(args):
-    fname = util.getConfigFile('pkg_build_order.yaml')
+    fname = util.getFile(location='config', fname='pkg_build_order.yaml')
     for pkginfo in yaml.load(file(fname,'r')):
         if 'limit_os' in pkginfo and pkginfo['limit_os'] != args.os:
             print("skipping pkg=%s since limit_os=%s and os=%s" % (pkginfo['pkg'], pkginfo['limit_os'], args.os))
             sys.stdout.flush()
             continue
         for pth in pkginfo['paths']:
-            recipeDir = util.getFile('config','recipes/%s' % pth)
-            cmd = 'ana-rel-admin --cmd bld-pkg -r %s' % recipeDir
+            recipeDir = util.getFile(location='recipes', fname=pth)
+            cmd = 'ana-rel-admin --cmd bld-pkg --recipe %s --warn-if-exists' % recipeDir
             if args.force:
                 cmd += ' --force'
             print(cmd)
@@ -450,6 +450,9 @@ if __name__ == '__main__':
                         conda_basedir_default, default=conda_basedir_default)
     parser.add_argument('--force', action='store_true', 
                         help="overwrite existing files.", default=False)
+    parser.add_argument('--warn-if-exists', action='store_true', 
+                        help="just print a warning if output exists, don't create error.",
+                        default=False)
     parser.add_argument('--os', type=str, 
                         help="operationg system. Default is (for this platform) %s" % osName, default=osName)
     parser.add_argument('--checkpoint', action='store_true', 

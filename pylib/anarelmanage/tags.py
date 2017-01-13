@@ -71,7 +71,7 @@ def checkoutCode(anaTags):
         print("----- %s ----" % cmd)
         sys.stdout.flush()
         stdout, stderr=run_command(cmd)
-        assert stderr=='', "error with cmd: %s" % cmd
+        assert stderr=='', "error with cmd: %s\n  stderr=%s" % (cmd, stderr)
         print(stdout)
         sys.stdout.flush()
 

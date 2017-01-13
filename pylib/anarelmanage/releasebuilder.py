@@ -274,7 +274,7 @@ class ReleaseBuilder(object):
         # add python, check if python 3
         cmd += ' python'
         if variant == 'py3':
-            cmd += '=3.5*'
+            cmd += '=3.5'
 
         pkglist = pkgsInVariant(pkglist, variant, self.osname)
         chl = extractChannel(pkglist)

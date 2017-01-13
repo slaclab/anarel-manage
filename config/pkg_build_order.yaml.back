@@ -1,0 +1,56 @@
+- pkg: szip
+  paths: 
+  - external/szip
+
+- pkg: dbg
+  paths: 
+  - system/dbg
+ 
+- pkg: gpu
+  paths: 
+  - system/gpu
+
+- pkg: openmpi
+  paths: 
+  - system/openmpi-1.10x
+  - system/openmpi-2x
+  
+- pkg: hdf5
+  paths:
+  - system/hdf5-1.8x
+  - system/hdf5-1.10x
+
+- pkg: mpi4py
+  paths:
+  - system/mpi4py
+  - system/mpi4py-py3
+
+- pkg: h5py
+  paths:
+  - system/h5py
+  - system/h5py-py3
+  - system/h5py-hdf5_1.10
+  - system/h5py-hdf5_1.10_py3
+
+- pkg: tables
+  paths:
+  - system/tables
+  - system/tables-py3
+  - system/tables-hdf5_1.10
+  - system/tables-hdf5_1.10-py3
+
+- pkg: psana-conda
+  paths:
+  - psana/psana-conda-opt
+
+- pkg: tensorflow
+  paths:
+  - external/tensorflow
+  - external/tensorflow-gpu
+  - external/tensorflow-py3
+  limit_os: rhel7
+  
+- pkg: keras
+  paths:
+  - external/keras
+  - external/keras-py3

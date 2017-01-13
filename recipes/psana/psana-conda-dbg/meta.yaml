@@ -13,7 +13,7 @@ source:
 
 requirements:
   build:
-    - python
+    - python   ==2.7.12
     - scons
     - cython
     - boost    ==1.57.0
@@ -24,23 +24,22 @@ requirements:
     - matplotlib
     - scipy
     - pyzmq
-    - openmpi  ==1.10.3 lsf_verbs_101
-    - hdf5     ==1.8.17 openmpi_101
-    - h5py     ==2.5.0 py27_101
-    - mpi4py   ==2.0.0 py27_openmpi_101
-    - tables   ==3.3.0 py27_100
+    - openmpi  ==2.0.1 lsf_verbs_1
+    - hdf5     ==1.8.18 openmpi_1
+    - h5py     ==2.7.0rc py27_1
+    - mpi4py   ==2.0.0 py27_openmpi_102
+    - tables   ==3.3.0 py27_101
 
   run:
-    - python  >=2.7,<3
+    - python  >=2.7,<2.7.13
     - boost   ==1.57.0
     - mysql    
     - qt       >=4,<5
     - numpy
-    - openmpi  ==1.10.3 lsf_verbs_101
-    - hdf5     ==1.8.17 openmpi_101
-    - h5py     ==2.5.0 py27_101
-    - mpi4py   ==2.0.0 py27_openmpi_101
-    - tables   ==3.3.0 py27_100
+    - openmpi  >=2,<3
+    - h5py
+    - mpi4py
+    - tables
     - matplotlib
     - scipy
     - pyzmq

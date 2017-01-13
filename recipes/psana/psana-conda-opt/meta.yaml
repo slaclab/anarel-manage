@@ -1,5 +1,6 @@
 {% set pkg = 'psana-conda' %}
-{% set version = '1.0.8' %}
+# bump from 1.0.x to 1.1.x for the openmpi 2.x series
+{% set version = '1.1.0' %}
 {% set build = 1 %}
 
 package:
@@ -13,7 +14,7 @@ source:
 
 requirements:
   build:
-    - python
+    - python  ==2.7.12
     - scons
     - cython
     - boost    ==1.57.0
@@ -24,23 +25,22 @@ requirements:
     - matplotlib
     - scipy
     - pyzmq
-    - openmpi  ==1.10.3 lsf_verbs_101
-    - hdf5     ==1.8.17 openmpi_101
-    - h5py     ==2.5.0 py27_101
-    - mpi4py   ==2.0.0 py27_openmpi_101
-    - tables   ==3.3.0 py27_100
+    - openmpi  ==2.0.1 lsf_verbs_1
+    - hdf5     ==1.8.18 openmpi_1
+    - h5py     ==2.7.0rc2 py27_1
+    - mpi4py   ==2.0.0 py27_openmpi_102
+    - tables   ==3.3.0 py27_101
 
   run:
-    - python  >=2.7,<3
+    - python  >=2.7,<2.7.13
     - boost   ==1.57.0
     - mysql    
     - qt       >=4,<5
     - numpy
-    - openmpi  ==1.10.3 lsf_verbs_101
-    - hdf5     ==1.8.17 openmpi_101
-    - h5py     ==2.5.0 py27_101
-    - mpi4py   ==2.0.0 py27_openmpi_101
-    - tables   ==3.3.0 py27_100
+    - openmpi  >=2,<3
+    - h5py
+    - mpi4py
+    - tables
     - matplotlib
     - scipy
     - pyzmq
@@ -55,31 +55,14 @@ build:
     - SIT_ARCH
     - SIT_ROOT
 
-#test:
-#  commands:
-#    - psana -h
-#    - xtclinedump -h
-#    - detnames -h
-#    - det_ndarr_average -h
-#    - parCorAnaDriver -h
-#    - psocake -h
+test:
+  commands:
+    - psana -h
 
-#  imports:
-#    - CSPadPixCoords  
-#    - ImgAlgos  
-#    - ParCorAna   
-#    - Translator   
-#    - LusiTime
-#    - XtcInput
-#    - psana
-#    - psana_examples  
-#    - psocake  
-#    - pypsalg
-#    - Detector        
-#    - PSCalib   
-#    - TimeTool 
-#    - psana_test
-#
+  imports:
+    - ImgAlgos  
+    - XtcInput
+    - psana
 
 # build/run notes:
 
@@ -146,3 +129,11 @@ build:
 
 # adding psparallel, which has circular dependency on psana
 # add tables as a build and run dependency, otherwise, I don't think psana will import
+
+# jan 2017 - make run dependendencies more leniant
+
+# jan 2017 - I tried to build ana-1.1.0 and picked up python 2.7.13 and could not
+#            import psana. I found my way in the build environment, downgraded python
+#            to 2.7.12 and it worked? now strict on python - pin to 2.7.12
+  
+  
