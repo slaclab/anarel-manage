@@ -1,7 +1,8 @@
 # https://github.com/conda-forge/keras-feedstock/blob/master/recipe/meta.yaml
 
-{% set version = "1.2.0" %}
+{% set version = "1.2.1" %}
 {% set build = "1" %}
+
 package:
     name: keras
     version: {{ version }}
@@ -17,7 +18,7 @@ build:
 
 requirements:
     build:
-        - python
+        - python ==3.5
         - setuptools
         - six
         - pyyaml
@@ -28,7 +29,7 @@ requirements:
         - numpy
         - setuptools
         - scipy
-        - python
+        - python >=3.5,<4
         - pyyaml
         - six
         - theano

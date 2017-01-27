@@ -145,6 +145,15 @@
   pyyaml:
     ver: latest
 
+  curl:
+    ver: latest
+
+  git:
+    ver: latest
+
+  cmake:
+    ver: latest
+
   jupyter:
     ver: latest
 
