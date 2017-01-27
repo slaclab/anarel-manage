@@ -19,7 +19,6 @@ instead of 'conda_setup' To see conda_setup options, add -h.
 fi
 
 if [[ $_CONDA_SETUP_ACTIVE ]]; then
-    echo "conda_setup is being re-run - restoring old environment first"
     undo_conda
 fi
 

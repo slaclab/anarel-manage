@@ -17,16 +17,20 @@ except ImportError:
 
 ######## logging #############
 VERBOSE=False
+QUIET=False
 CONDA_SETUP_ACTIVE_EVAR='_CONDA_SETUP_ACTIVE'
 CONDA_SETUP_ACTIVE_VALUE='1'
 
 def info(msg):
+    if QUIET:
+        return
     sys.stdout.write("%s\n" % msg)
     sys.stdout.flush()
 
 def vprint(msg):
     global VERBOSE
-    if VERBOSE:
+    global QUIET
+    if VERBOSE and not QUIET:
         sys.stdout.write("%s\n" % msg)
         sys.stdout.flush()
 
@@ -59,6 +63,7 @@ def set_conda_setup_active(newenv):
     newenv[CONDA_SETUP_ACTIVE_EVAR]=CONDA_SETUP_ACTIVE_VALUE
 
 def write_env_file(args, oldenv, newenv):
+    global QUIET
     fout = open(args.file, 'w')
     write_newenv(fout, newenv)
     if is_conda_test_release_dir(args) and args.prompt.lower() != 'none' :
@@ -71,7 +76,8 @@ def write_env_file(args, oldenv, newenv):
         for evar in ['SIT_ARCH', 'SIT_DATA', 'SIT_ROOT']:
             if evar in newenv and newenv[evar] not in [None, '', 'None']:
                 fout.write("export %s=%s\n" % (evar, newenv[evar]))
-    fout.write('echo "environment setup. Type: undo_conda  [return] at the prompt to undo."\n')
+    if not QUIET:
+        fout.write('echo "environment setup. Type: undo_conda  [return] at the prompt to undo."\n')
 
 def write_newenv(fout, newenv):
     for evar, val in newenv.items():
@@ -129,7 +135,8 @@ def write_activate_condaenv(fout, args):
     prod_or_dev = 'production'
     if args.dev:
         prod_or_dev = 'devel'
-    fout.write('echo "activating a %s conda environment with command %s"\n' % (prod_or_dev, activate_line))
+    if not QUIET:
+        fout.write('echo "activating a %s conda environment with command %s"\n' % (prod_or_dev, activate_line))
     fout.write("%s\n\n\n" % activate_line)
 
 def put_release_bin_in_front_of_conda(args, fout, sit_arch):
@@ -464,6 +471,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description=DESCR)
     parser.add_argument('-v','--verbose',action='store_true', help='verbose messages')
+    parser.add_argument('-q', '--quiet', action='store_true', help='quiet, no output (except fatal errors)')
     parser.add_argument('--noenv', action='store_true', help='do not activate a conda environment')
     parser.add_argument('--dev', action='store_true', help="use development miniconda installation, not production")
     parser.add_argument('--rhel5', action='store_true', help="use rhel5 miniconda installation. def=%s"%def_rhel5)
@@ -501,6 +509,7 @@ if __name__ == '__main__':
         fatal("internal error: could not determine which of rhel5/rhel6/rhel7 this is")
     
     VERBOSE=args.verbose
+    QUIET=args.quiet
     oldenv, newenv = undo_sit_setup()
     # oldenv has current PATH, LD_LIBRARY_PATH,  PYTHONPATH, and any SIT_* evars
     # releated to rpm installation
