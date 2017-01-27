@@ -245,6 +245,12 @@ def addPkg(args):
             branch = user_specified_branch
         else:
             if user_specified_tag:
+                if anarel_tag and anarel_tag=='conda_branch':
+                    warning(("You have specified a tag=%s for "
+                             "a pkg which is on the conda branch, "
+                             "you probably want to work with the package "
+                             "on the conda branch (you can commit to it)") % user_specified_tag)
+                                                                            
                 tag = user_specified_tag
                 branch = None
             elif anrel_tag:
