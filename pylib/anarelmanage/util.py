@@ -565,11 +565,9 @@ def diffEnvs(envA, envB, basedir):
         stdout = run_command(cmd, stderr_in_stdout=True, quiet=True)
         pkgsList = json.loads(stdout)
         assert isinstance(pkgsList, list), "error running command:\n%s,json is not list, it is:\n%s" % (cmd, str(pkgsList))
-        for pkg in pkgsList:
-            pkgName, pkgVer, buildstr = pkg.rsplit('-',2)
-            channel = None
-            if '::' in pkgName:
-                channel, pkgName = pkgName.rsplit('::',1)            
+        for pkgDict in pkgsList:
+            pkgName, pkgVer, buildstr = pkgDict['name'], pkgDict['version'], pkgDict['build_string']
+            channel = pkgDict['channel']
             if pkgName in envPkgs:
                 warning("json output for env=%s has this package twice: %s, overwritting last=%s" % (envName, pkgName, envPkgs[pkgName]))
             envPkgs[pkgName]={'name':pkgName, 'channel':channel, 'version':pkgVer, 'buildstr':buildstr}
