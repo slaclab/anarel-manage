@@ -15,6 +15,8 @@ except ImportError:
     sys.path.append(for_old_python)
     import argparse
 
+PY3 = sys.version_info[0] == 3
+
 ######## logging #############
 VERBOSE=False
 QUIET=False
@@ -48,7 +50,7 @@ def run_command(cmdList, shell):
     vprint("run_command: %s" % ' '.join(cmdList))
     p = sb.Popen(cmdList, shell=shell, stdout=sb.PIPE, stderr=sb.PIPE)
     stdout, stderr = p.communicate()
-    if isinstance(stdout, bytes):
+    if PY3 and isinstance(stdout, bytes):
         # py2/py3 compatibility
         stdout = stdout.decode('utf-8')
         stderr = stderr.decode('utf-8')
