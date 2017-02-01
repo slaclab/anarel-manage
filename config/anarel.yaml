@@ -45,8 +45,11 @@
     ver: latest
     only_in_variant: gpu
 
+  # with the cudnn now built against cuda 8.5, conda we need to
+  # specify the build string
   cudnn:
     ver: '=5.1'
+    gpu: '1' 
     only_in_variant: gpu
   
   openmpi:
@@ -142,6 +145,9 @@
   scikit-learn:
     ver: latest
 
+  anaconda-client:
+    ver: latest
+
   pyyaml:
     ver: latest
 
@@ -160,9 +166,10 @@
   virtualenv:
     ver: latest
 
-  # requests 2.12 brakes conda < 2.3, so maybe we'll be careful with this
+  # requests 2.12 brakes conda < 2.3, so maybe we'll be careful with this, used to
+  # have ver: '=2.11'
   requests:
-    ver: '=2.11'
+    ver: latest
 
   simplejson:
     ver: latest
@@ -278,7 +285,7 @@
     py3: skip
 
   psana-conda:
-    ver: '=1.1.0'
+    ver: '=1.2.0'
     py3: skip
 
   opencv:
@@ -416,4 +423,5 @@
 #-
 #  cbf:
 #    ver: latest
-#    chl: paulscherrerinstitute 
+#    chl: paulscherrerinstitute
+ 

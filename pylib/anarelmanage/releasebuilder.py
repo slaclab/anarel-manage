@@ -132,7 +132,9 @@ class ReleaseBuilder(object):
         logfile = self.getLogFilename()
         if logfile:
             cmd += " | tee %s" % logfile
+        sys.stderr.flush()
         print(cmd)
+        sys.stdout.flush()
         return cmd
 
     def getLogFilename(self):
@@ -198,6 +200,8 @@ class ReleaseBuilder(object):
             assert relname in envs, "relname=%s not in envs=%s" % (relname, envs)
             envDir = os.path.join(envRoot, relname)
             util.createSitVarsCondaEnv(dbg= variant=='dbg', force=True, envDir=envDir)
+            util.manageJhubConfigKernel(cmd='create', envName=relname, 
+                                        basedir=self.basedir, force=self.force)
             if variant == 'gpu':
                 util.addToActivateDeactivateGPUVariables(envDir=envDir)
             self.logAndPrint("--- checking/fixing any permission issues ---")
@@ -236,7 +240,10 @@ class ReleaseBuilder(object):
                         (pkg, stageNum, pkginfo['only_in_variant'])
 
     def logAndPrint(self, msg):
+        sys.stdout.flush()
+        sys.stderr.flush()
         print(msg)
+        sys.stdout.flush()
 
     def makePackageString(self, pkg, pkginfo, variant):
         '''assumed pkg lives in this variant.

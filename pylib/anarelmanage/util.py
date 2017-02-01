@@ -580,5 +580,67 @@ def diffEnvs(envA, envB, basedir):
 
     print(htmlEnvDiffReports(envA, envB, pkgsReport, psanaReport))
 
+def manageJhubConfigKernel(cmd, envName, basedir, force):
+    assert cmd in ['remove','create'], "cmd must be one of 'remove','create', not %s" % cmd
+    assert envName, "envName invalid"
+    assert basedir and os.path.exists(basedir), "--basedir does not specify path that exists, it is %s" % basedir
+    jhubConfigDir = os.path.join(basedir, 'jhub_config')
+    assert os.path.exists(jhubConfigDir), "The jhub config dir doesn't exist, tried: %s" % jhubConfigDir
+
+    condaInstall = whichCondaInstall(basedir)
+    assert condaInstall.startswith('miniconda2-'), "expected condaInstall=%s to start with miniconda2-" % condaInstall
+    shortInstall = condaInstall.split('miniconda2-')[1]
+
+    kernelEnvDir = jhubConfigDir
+    for subdir in [shortInstall, 'kernels', envName]:
+        kernelEnvDir = os.path.join(kernelEnvDir, subdir)
+        if not os.path.exists(kernelEnvDir):
+            if cmd == 'remove': 
+                print("manageJhubConfigKernel cmd==remove but dir=%s doesn't exist, not deleting anything" % kernelEnvDir)
+                return
+            print("Creating path: %s" % kernelEnvDir)
+            os.mkdir(kernelEnvDir)
+
+    outFilename = os.path.join(kernelEnvDir, 'kernel.json')
+    if cmd == 'remove':
+        if os.path.exists(outFilename):
+            os.unlink(outFilename)
+            print("removed %s" % outFilename)
+        else:
+            print("file %s doesn't exist" % outFilename)
+        return
+
+    if os.path.exists(outFilename) and not force:
+        error("The jhub kernel file: %s already exists. Use --force to overwrite" % outFilename)
+
+    pyVer = 2
+    if envName.endswith('-py3'): 
+        pyVer = 3
+
+    envDir = getEnvRootDir(os.path.join(basedir, 'inst', condaInstall), envName)
+    assert os.path.exists(envDir), "dir %s doesn't exist - not going to setup jhub kernel for environment that doesn't exist" % envDir
+
+    pyBin = os.path.join(envDir, 'bin', 'python')
+    assert os.path.exists(pyBin), "jhub config - python binary %s doesn't exist" % pyBin
+
+    sit_data = ':'.join([os.path.join(envDir, 'data'),
+                         '/reg/g/psdm/data'])
+
+    data = {"display_name": "Python %d %s" % (pyVer, envName), 
+            "language": "python", 
+            "argv": [pyBin,
+                     "-m", 
+                     "ipykernel", 
+                     "-f", 
+                     "{connection_file}"],
+            "env": {"SIT_DATA": sit_data,
+                    "SIT_ROOT": "/reg/g/psdm", "LD_LIBRARY_PATH": ""}
+        }
+
+    with open(outFilename,'w') as fout:
+        json.dump(data, fout, sort_keys=True,
+                  indent=4, separators=(',', ': '))
+    print("Wrote %s" % outFilename)
+
 if __name__ == '__main__':
     diffEnvs('ana-1.0.3','ana-1.0.5', '/reg/g/psdm/sw/conda')

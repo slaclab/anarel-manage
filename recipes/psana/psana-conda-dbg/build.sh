@@ -57,11 +57,25 @@ if [ ! -e "$mkanarel" ]; then
    return
 fi
 
-# first we run mkanarel to make the ana release information
-# package as a new source level package. This will let
-# scons find it and install it in arch, then the conda-install
-# target will pick it up and put it in conda site-packages.
+# first we run mkanarel. This creates a new package called
+# anarelinfo. It will be a python module with the psana-conda
+# version and tag information, it will also copy psana-conda-tags
+# into the data subdir.
+
+# after running scons, we run it again, but know with the 
+# copy_depends argument. This will copy the '.pkg_tree.pkl'
+# file into anarelinfo/data so that it will get installed 
+# in conda.
+
 python $mkanarel 
 scons 
-scons test
+python $mkanarel copy_depends
+
+if [[ $SIT_ARCH = *-rhel5-* ]]
+then
+	echo "Skipping testing on rhel5 due to MPI issues with the build machine"
+else
+	scons test
+fi
+
 scons conda-install

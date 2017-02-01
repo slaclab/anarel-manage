@@ -151,7 +151,7 @@ def makePsanaCondaSrc(args):
         
 def envSetup(args):
     assert not (args.opt and args.dbg), "only one of arg.opt and args.dbg can be true when adding environment variables"
-    assert args.name is not None, "use -n to specifiy the environment (even if it is activated, todo, fix this)"
+    assert args.name is not None, "use --name to specifiy the environment (even if it is activated, todo, fix this)"
     condaInstall = util.whichCondaInstall(args.basedir)
     envDir = util.getEnvRootDir(os.path.join(args.basedir, 'inst', condaInstall), args.name)
     assert os.path.exists(envDir), "dir %s doesn't exist" % envDir
@@ -277,6 +277,8 @@ def buildAllPkgs(args):
             cmd = 'ana-rel-admin --cmd bld-pkg --recipe %s --warn-if-exists' % recipeDir
             if args.force:
                 cmd += ' --force'
+            sys.stdout.flush()
+            sys.stderr.flush()
             print(cmd)
             sys.stdout.flush()
             assert 0 == os.system(cmd), "problem with cmd=%s" % cmd
@@ -307,10 +309,14 @@ def rmRel(args):
         if args.force:
             cmd += ' -y -q'
         print(cmd)
+        sys.stdout.flush()
         exitcode = os.system(cmd)
         sys.stdout.flush()
         sys.stderr.flush()
         assert exitcode == 0, "command failed: %s, exitcode=%d" % (cmd, exitcode)
+        util.manageJhubConfigKernel(cmd='remove', envName=env, 
+                                        basedir=args.basedir, force=args.force)
+            
 
     envRoot, condaEnvs = util.condaEnvs()
     for env in toRemove:
@@ -322,6 +328,14 @@ def automateNewRel(args):
 def envReport(args):
     assert args.fileA and args.fileB, "specify environment names in fileA and fileB arguments."
     util.diffEnvs(args.fileA, args.fileB, args.basedir)
+
+def jhubCreateConfig(args):
+    util.manageJhubConfigKernel(cmd="create", envName=args.name, basedir=args.basedir, 
+                                force=args.force)
+
+def jhubRmConfig(args):
+    util.manageJhubConfigKernel(cmd="remove", envName=args.name, basedir=args.basedir, 
+                                force=args.force)
 
 def dummy(args):
     user = os.environ.get('USER','???')
@@ -406,6 +420,14 @@ commandHelpFuncList = [
     ('env-report',
      'report on differences between two environments. Use --fileA --fileB to name the two environments.',
      envReport),
+
+    ('jhub',
+     'generate jhub_config file for one environment. Use --name for environment name',
+     jhubCreateConfig),
+
+    ('jhub-rm',
+     'remove jhub_config file for one environment. Use --name for environment name',
+     jhubRmConfig),
 
     ('dummy',
      'dummy for testing',

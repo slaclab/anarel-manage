@@ -70,5 +70,12 @@ fi
 python $mkanarel 
 scons 
 python $mkanarel copy_depends
-scons test
+
+if [[ $SIT_ARCH = *-rhel5-* ]]
+then
+	echo "Skipping testing on rhel5 due to MPI issues with the build machine"
+else
+	scons test
+fi
+
 scons conda-install
