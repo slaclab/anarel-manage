@@ -171,6 +171,9 @@
 
   cmake:
     ver: latest
+    
+  notebook:
+    ver: latest
 
   jupyter:
     ver: latest
