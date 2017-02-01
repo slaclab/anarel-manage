@@ -156,6 +156,18 @@
 
   git:
     ver: latest
+    
+  gunicorn:
+    ver: latest
+    
+  lxml:
+    ver: latest
+    
+  cssselect:
+    ver: latest
+    
+  APScheduler:
+    ver: latest
 
   cmake:
     ver: latest
