@@ -431,6 +431,7 @@
 # also want bug fixes in later version of gunicorn than what defaults has
   gunicorn:
     ver: latest
+    chl: conda-forge
 
 # Chuck is using cbf from this channel, note, an earlier build was only against
 # numpy 1.9 and we couldn't install it, but now it seems to introduce no 
