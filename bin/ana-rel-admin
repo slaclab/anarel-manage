@@ -171,6 +171,9 @@ def anacondaUpload(args):
     assert current_os in all_os, "unexpected - os=%s not in all_os" % current_os
     all_os.remove(current_os)
     
+    if args.skip:
+        return
+
     for next_os in all_os:
         args.os = next_os
         pkgBuilder = makePackageBuilderFromArgs(args)
@@ -402,7 +405,7 @@ commandHelpFuncList = [
      compareCheckPointFiles),
 
     ('anaconda-upload',
-     'upload all of a given package to anaconda - using appropriate labels, does rhel5/6/7, start with a recipe dir for one of them',
+     'upload to anaconda - default: rhel5/6/7, use --recipe dir for one of them. Use --skip to only do rhel7 (or native os)',
      anacondaUpload),
 
     ('change-ana-current',
@@ -449,7 +452,7 @@ for cmdHelpFunc in commandHelpFuncList:
 
 if __name__ == '__main__':
     conda_basedir_default = '/reg/g/psdm/sw/conda'
-    def_email = 'davidsch@slac.stanford.edu'
+    def_email = 'pcds-ana-l@slac.stanford.edu'
     osName, platform = util.getOsAndPlatform()
     tagfile='psana-conda-svn-pkgs'
     parser = argparse.ArgumentParser(description=description,
@@ -496,6 +499,8 @@ if __name__ == '__main__':
                         help='no log file (for auto and bld-pkg.')
     parser.add_argument('--dev', action='store_true', 
                         help='develop mode, for auto.')
+    parser.add_argument('--skip', action='store_true', 
+                        help='skip default for various, used for anaconda-upload.')
     parser.add_argument('--tagsfile', type=str, 
                         help="alternate svn tags file. if relative path doesn't exist, will look in basedir/manage/config. default=%s" % tagfile, default=tagfile) 
     parser.add_argument('--clean', action='store_true', default=False, help='for auto, dont pickup where last succeeded, clean build.')
