@@ -219,6 +219,10 @@
   psutil:
     ver: latest
 
+  # looks useful, uses psutil, in defaults
+  memory_profiler:
+    ver: latest
+    
   # for Jason
   xarray:
     ver: latest
