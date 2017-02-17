@@ -123,7 +123,12 @@ class AutoReleaseBuilder(object):
         test_user = os.environ.get('SUDO_USER',build_user)
         if test_user == build_user:
             test_user = os.environ.get('USER',build_user)
-        assert test_user != build_user, "cannot find a test_user differnt than build user=%s. Tried SUDO_USER and USER." % build_user
+        assert test_user != build_user, ("cannot find a test_user differnt than " + \
+               "build user=%s. Tried SUDO_USER and USER. Ordinarily, you sudo as " + \
+               "psreldev (the build user) but this script uses the environment " + \
+               "variable SUDO_USER to figure out who you really are, and that is " + \
+               "who is used to test built installations. To fix, set SUDO_USER to " + \
+               "your username") % build_user
 
         print("--- AUTO ----------")
         print("enter password for test_user: %s" % test_user)
