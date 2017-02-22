@@ -222,6 +222,10 @@
   # looks useful, uses psutil, in defaults
   memory_profiler:
     ver: latest
+
+  # for h5serv, if we want to try it, watchdog is on conda-forge
+  watchdog:
+    ver: latest
     
   # for Jason
   xarray:

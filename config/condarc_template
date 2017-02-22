@@ -15,6 +15,7 @@ channels:
   - defaults
   - conda-forge
   - kalefranz    # for guppy
+  - jjhelmus     # for latest protocol buffer
   - file://{{ CONDA_ROOT }}/channels/testing-{{ OS }}
 
 always_yes: False
