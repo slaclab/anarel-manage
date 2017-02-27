@@ -49,7 +49,7 @@
   # specify the build string
   cudnn:
     ver: '=5.1'
-    gpu: '1' 
+    gpu: 'cuda8.0_2'
     only_in_variant: gpu
   
   openmpi:
@@ -305,7 +305,7 @@
     py3: skip
 
   psana-conda:
-    ver: '=1.2.0'
+    ver: '=1.2.1'
     py3: skip
 
   opencv:
@@ -390,22 +390,35 @@
   biopython:
     ver: latest
 
-#-
-#  protobuf:
+  # for lc2-hdf5 work, C++ interface to yaml, this is in our local channel,
+  # need c++11 for this
+  yaml-cpp:
+    ver: latest
+    limit_os: rhel7
+    
+  # For Mikhail, Chris, Timur, binary distribution from http://www.roentdek.com/
+  # in our local channel, now people can develop against it
+  # it is only tested in rhel7, we'll put in rhel6 rhel5 for now, but it probably 
+  # doesn't run there
+  hexanode-proxy:
+    ver: latest
+
+-
+  protobuf:
 # I think tensorflow will pickup what it needs in its dependencies
-# tensorflow v12 however needs protobuf 3.1.0 which is not (as of dec/29) in conda-forge
-# but it is in jjhelmus
+# tensorflow v1.0.0 and v0.12.0 needs protobuf 3.1.0 which is not (as of Feb/17) 
+# in conda-forge but it is in jjhelmus
   
-#    ver: '=3.0.0b2'
-#    chl: conda-forge
+    ver: '=3.1.0'
+    chl: jjhelmus
 
-
+-
 # We will use our own channel for tensorflow to get the latest version and a 
 # gpu version - this should pick up the appropriate protobuf from defaults or conda-forge
 # note rev10 gpu is against cuda 7.5, but rev 11 and higher is against cuda 8
 
   tensorflow:
-    ver: '=0.10.0'
+    ver: '=1.0.0'
     gpu: py27_gpu_1
     py3: py35_1
     limit_os: rhel7

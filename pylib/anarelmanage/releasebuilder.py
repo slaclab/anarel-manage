@@ -47,7 +47,7 @@ def extractChannel(pkglist):
     for pkg, pkginfo in pkglist.iteritems():
         chl = pkginfo.get('chl',None)
         chl2pkgs[chl].append(pkg)
-    assert len(chl2pkgs)==1, "There is more than one channel specified in this pkglist, pkglist=%r, chl2pkgs=%r" % (pkglist, chll2pkgs)
+    assert len(chl2pkgs)==1, "There is more than one channel specified in this pkglist, pkglist=%r, chl2pkgs=%r" % (pkglist, chl2pkgs)
     return chl2pkgs.keys()[0]
 
 

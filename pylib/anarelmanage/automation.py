@@ -257,18 +257,6 @@ class AutoReleaseBuilder(object):
         self.masterLog.write("<h1>AUTO %s</h1>\n" % self.version_str)
         self.masterLog.write("starting log: %s<br>\n" % (datetime.datetime.now()))
         self.masterLog.close()
-        cmd = 'NOREMOTE=1 firefox file://%s' % self.logFname
-        start_firefox = False
-        if not os.environ.get('NOASK',False):
-            res = raw_input("Should I run the command:\n%s\nSo that you can view the master log?" %
-                            cmd)
-            if res.strip().lower()=='y':
-                start_firefox = True
-        if start_firefox:
-            print("--- AUTO: running: %s" % cmd)
-            os.system("%s & \n" % cmd)
-        else:
-            print("Run %s\n to view build progress, if not running" % cmd)
 
     def identifySteps(self, all_steps):
         def singleHostStep(self, name, fn, steps_todo):

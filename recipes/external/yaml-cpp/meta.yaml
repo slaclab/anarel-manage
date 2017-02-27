@@ -1,0 +1,30 @@
+ # currently using master branch, later than 0.5.3
+
+{% set version = "0.5.3" %} 
+{% set build = "0" %}
+
+package:
+  name: yaml-cpp
+  version: {{ version }}
+
+source:
+  fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/yaml-cpp-0.5.3.master738.tar.gz
+
+# if getting right from github, a tagged release, would do this
+# git_url: https://github.com/jbeder/yaml-cpp.git
+#  git_tag: yaml-cpp-0.5.3
+
+build:
+  number: {{build}}
+  string: master738_{{build}}  
+
+requirements:
+  build:
+  - cmake
+  - git
+
+about:
+  home: https://github.com/jbeder/yaml-cpp
+  license: "Custom - but do anything AS IS: https://github.com/jbeder/yaml-cpp/blob/master/LICENSE"
+  summary: "C++ API for working with yaml files"
+

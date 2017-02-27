@@ -38,9 +38,9 @@
   - system/tables-py3
   # tables doesn't support hdf5 1.10
   
-- pkg: psana-conda
-  paths:
-  - psana/psana-conda-opt
+#- pkg: psana-conda
+#  paths:
+#  - psana/psana-conda-opt
 
 - pkg: tensorflow
   paths:
@@ -53,3 +53,13 @@
   paths:
   - external/keras
   - external/keras-py3
+
+- pkg: hexanode-proxy
+  paths:
+  - external/hexanode_proxy
+
+- pkg: yaml-cpp
+  paths:
+  - external/yaml-cpp
+  limit_os: rhel7
+

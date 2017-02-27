@@ -4,10 +4,14 @@ echo "######## env ############"
 env
 echo "#########################"
 
-cd ..
+# should be in cuda dir
 pwd
 ls
 
-cp -r cuda $PREFIX
+mkdir --parents $PREFIX/include
+mkdir --parents $PREFIX/lib
+
+cp include/cudnn.h $PREFIX/include/cudnn.h
+cp lib64/lib* $PREFIX/lib/
 
 

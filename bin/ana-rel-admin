@@ -336,6 +336,10 @@ def jhubCreateConfig(args):
     util.manageJhubConfigKernel(cmd="create", envName=args.name, basedir=args.basedir, 
                                 force=args.force)
 
+def updateConda(args):
+    pass
+    # need to automate testing the new conda
+    # create a new miniconda installation, 
 def jhubRmConfig(args):
     util.manageJhubConfigKernel(cmd="remove", envName=args.name, basedir=args.basedir, 
                                 force=args.force)
@@ -431,6 +435,10 @@ commandHelpFuncList = [
     ('jhub-rm',
      'remove jhub_config file for one environment. Use --name for environment name',
      jhubRmConfig),
+
+    ('update-conda',
+     '*in progress* test and update conda in all the installations.',
+     updateConda),
 
     ('dummy',
      'dummy for testing',

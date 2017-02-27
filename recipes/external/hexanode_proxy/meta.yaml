@@ -1,0 +1,17 @@
+{% set version = "0.0.1" %} 
+{% set build = "1" %}
+
+package:
+  name: hexanode-proxy
+  version: {{ version }}
+
+source:
+  fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/hexanode-proxy-{{version}}.tar.gz
+
+build:
+  number: {{build}}
+
+about:
+  summary: "This is a binary distribution from Achim Czasch <czasch@atom.uni-frankfurt.de>
+, received through email with Mikhail and Timur, for working with a detector discussed here: http://www.roentdek.com/, see the email-czachim.txt file in the source distribution. We're only going to take the static lib and header file and put it in the conda release.  This is distinct from the hexanode package within psana, that is the main wrapper to deal with this lib, so we are calling this package hexanode_proxy since it "
+

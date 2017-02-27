@@ -2,7 +2,7 @@
 
 package:
   name: tensorflow
-  version: "0.10.0"
+  version: "1.0.0"
 
 build:
   number: {{build}}
@@ -18,9 +18,9 @@ requirements:
   build:
     - python >=2.7,<3
     - pip
-    - numpy >=1.8.2
+    - numpy >=1.11.0
     - mock >=2.0.0
-    - protobuf ==3.0.0b2
+    - protobuf >=3.1.0
     - wheel
     - six >=1.10.0
     - funcsigs >=1
@@ -29,9 +29,9 @@ requirements:
 
   run:
     - python >=2.7,<3
-    - numpy >=1.8.2
+    - numpy >=1.11.0
     - mock >=2.0.0
-    - protobuf ==3.0.0b2
+    - protobuf >=3.1.0
     - six >=1.10.0
     - funcsigs >=1
     - pbr >=0.11

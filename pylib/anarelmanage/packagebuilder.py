@@ -146,7 +146,6 @@ class PackageBuilder(object):
             cmd += ' --numpy=%s' % (self.numpy_ver,)
         
         cmd += ' --output %s' % self.recipe_path
-
         stdout, stderr = util.run_command(cmd)
         stderr_no_warnings = util.strip_warnings_and_harmless_messages(stderr)
         assert len(stderr_no_warnings)==0, "channel=%s pkg=%s problem with cmd=%s: stderr=%s" % \
