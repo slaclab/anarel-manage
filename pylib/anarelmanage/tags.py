@@ -21,9 +21,9 @@ def getLatestTagGit(tagurl):
         if match:
             prod_tags.append(match.group(1))
     prod_tags.sort()
-    if len(prod_tags)==0: 
-        import IPython
-        IPython.embed()
+    if len(prod_tags) == 0:
+        print('Could not find any production tag')
+        print(tagurl)
         return None
     return prod_tags[-1]
 
@@ -44,7 +44,7 @@ def updateWithLatestTags(anaTags):
     repodict = {'psdm':"https://github.com/lcls-psana",
                 'pcds':"file:///afs/slac/g/pcds/svn",
                 'user':"https://pswww.slac.stanford.edu/svn/userrepo"}
-    
+
     print("querying svn repos for latest tags of %d packages" % len(anaTags))
     print("make sure this account has access to repos (kinit username where username has read access)")
     sys.stdout.flush()
@@ -52,7 +52,7 @@ def updateWithLatestTags(anaTags):
         repo = pkgdict['repo']
         assert repo in repodict.keys(), "pkg=%s, don't understand repo=%s" % (pkg, repo)
         if repo == 'psdm':
-            tagsurl = repodict[repo] + '/' + pkg 
+            tagsurl = repodict[repo] + '/' + pkg
             tag = getLatestTagGit(tagsurl)
         else:
             tagsurl = repodict[repo] + '/' + pkg + '/tags'
@@ -63,7 +63,7 @@ def updateWithLatestTags(anaTags):
         anaTags[pkg]['tag']=tag
         print("pkg=%s latest tag=%s" % (pkg,tag))
         sys.stdout.flush()
-                
+
 
 def checkoutCode(anaTags):
     repodict = {'psdm':"https://github.com/lcls-psana",
@@ -78,19 +78,22 @@ def checkoutCode(anaTags):
         assert repo in repodict.keys(), "pkg=%s, don't understand repo=%s" % (pkg, repo)
         assert 'tag' in pkgdict, "no tag defined for pkg=%s, not branches/conda" % pkg
         dest = pkg
+        if pkgdict['subdir']:
+            dest = '%s/%s' % (pkgdict['subdir'], pkg)
+        # get repos from github
         if repo == 'psdm':
             pkgurl = repodict[repo] + '/' + pkg
-            cmd = 'git clone --branch %d --depth 1 %s %s' %(pkgdict['tag'], pkgurl, dest)
+            cmd = 'git clone --branch %s --depth 1 %s %s' %(pkgdict['tag'], pkgurl, dest)
+        # get repos from svn
         else:
             pkgurl = repodict[repo] + '/' + pkg
             pkgurl += '/tags/%s' % pkgdict['tag']
-            if pkgdict['subdir']:
-                dest = '%s/%s' % (pkgdict['subdir'], pkg)
             cmd = 'svn co %s %s' %(pkgurl, dest)
         print("----- %s ----" % cmd)
         sys.stdout.flush()
         stdout, stderr=run_command(cmd)
-        assert stderr=='', "error with cmd: %s\n  stderr=%s" % (cmd, stderr)
+        if repo != 'psdm':
+            assert stderr=='', "error with cmd: %s\n  stderr=%s" % (cmd, stderr)
         print(stdout)
         sys.stdout.flush()
 
