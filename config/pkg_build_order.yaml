@@ -62,4 +62,3 @@
   paths:
   - external/yaml-cpp
   limit_os: rhel7
-

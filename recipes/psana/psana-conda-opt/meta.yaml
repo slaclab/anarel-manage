@@ -1,5 +1,5 @@
 {% set pkg = 'psana-conda' %}
-{% set version = '1.2.1' %}
+{% set version = '1.2.2' %}
 {% set build = 1 %}
 
 package:
@@ -24,11 +24,11 @@ requirements:
     - matplotlib
     - scipy
     - pyzmq
-    - openmpi  ==2.0.1 lsf_verbs_1
-    - hdf5     ==1.8.18 openmpi_1
-    - h5py     ==2.7.0rc2 py27_1
-    - mpi4py   ==2.0.0 py27_openmpi_102
-    - tables   ==3.3.0 py27_101
+    - openmpi  ==2.0.2 lsf_verbs_1
+    - hdf5     ==1.8.18 openmpi_2
+    - h5py     ==2.7.0rc2 py27_2
+    - mpi4py   ==2.0.0 py27_openmpi_103
+    - tables   ==3.3.0 py27_102
 
   run:
     - python  >=2.7,<2.7.13
@@ -36,7 +36,8 @@ requirements:
     - mysql    
     - qt       >=4,<5
     - numpy
-    - openmpi  >=2,<3
+# see note below
+#    - openmpi  >=2,<3
     - h5py
     - mpi4py
     - tables
@@ -134,5 +135,8 @@ test:
 # jan 2017 - I tried to build ana-1.1.0 and picked up python 2.7.13 and could not
 #            import psana. I found my way in the build environment, downgraded python
 #            to 2.7.12 and it worked? now strict on python - pin to 2.7.12
-  
+
+# Mar 2017 - we want to be able to install psana-conda on top of NERC's mpicc, mpi4py
+#            and h5py, so we'll remove the openmpi runtime dependency. Just don't run
+#            Translator since it is compiled against openmpi
   
