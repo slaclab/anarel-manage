@@ -46,12 +46,13 @@ ana-rel-admin --cmd anaconda-upload --recipe {psanaCondaRecipeDir}
 to upload psana-conda={version} to the lcls channels.
 '''
 class AutoReleaseBuilder(object):
-    def __init__(self, name, force, clean, tagsfile, basedir, dev, email, variant):
+    def __init__(self, name, force, clean, tagsfile, basedir, manageSubDir, dev, email, variant):
         self.version_str = name
         self.force = force
         self.clean = clean
         self.tagsfile = util.getTagsFile(tagsfile)
         self.basedir = os.path.abspath(basedir)
+        self.manageSubDir = manageSubDir
         self.variant = variant
         self.email = email
         self.dev = dev
@@ -349,8 +350,9 @@ class AutoReleaseBuilder(object):
         cmds = 'unset PYTHONPATH; export PYTHONPATH'
         cmds += '; unset LD_LIBRARY_PATH; export LD_LIBRARY_PATH'
         cmds += '; export PATH=%s' % util.condaPath(devel=devel, 
-                                                   osname=osname,
-                                                   basedir=self.basedir)
+                                                    osname=osname,
+                                                    basedir=self.basedir,
+                                                    manageSubDir=self.manageSubDir)
         cmds += '; sleep 1; source activate %s; sleep 1' % env
         return cmds
 
@@ -643,6 +645,7 @@ def automateReleaseBuildFromArgs(args):
 
     return AutoReleaseBuilder(name=args.name,
                               basedir=args.basedir,
+                              manageSubDir=args.manage,
                               clean=args.clean,
                               tagsfile=args.tagsfile,
                               variant=args.variant,

@@ -460,6 +460,7 @@ for cmdHelpFunc in commandHelpFuncList:
 
 if __name__ == '__main__':
     conda_basedir_default = '/reg/g/psdm/sw/conda'
+    manage_default = 'manage'
     def_email = 'pcds-ana-l@slac.stanford.edu'
     osName, platform = util.getOsAndPlatform()
     tagfile='psana-conda-svn-pkgs'
@@ -481,6 +482,9 @@ if __name__ == '__main__':
     parser.add_argument('--basedir', type=str, 
                         help="basedir for conda system. (def=%s)" % \
                         conda_basedir_default, default=conda_basedir_default)
+    parser.add_argument('--manage', type=str, 
+                        help="subdirectory for manage code, (def=%s)" % manage_default, \
+                        default=conda_basedir_default)
     parser.add_argument('--force', action='store_true', 
                         help="overwrite existing files.", default=False)
     parser.add_argument('--warn-if-exists', action='store_true', 
