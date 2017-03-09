@@ -53,7 +53,7 @@
     only_in_variant: gpu
   
   openmpi:
-    ver: '=2.0.1'
+    ver: '=2.0.2'
 
   szip:
     ver: '=2.1'
@@ -162,7 +162,11 @@
     
   cssselect:
     ver: latest
-    
+
+  # we usually get sphinx anyways, but just be explicit
+  sphinx:
+    ver: latest
+      
   APScheduler:
     ver: latest
 
@@ -178,8 +182,6 @@
   virtualenv:
     ver: latest
 
-  # requests 2.12 brakes conda < 2.3, so maybe we'll be careful with this, used to
-  # have ver: '=2.11'
   requests:
     ver: latest
 
@@ -305,7 +307,7 @@
     py3: skip
 
   psana-conda:
-    ver: '=1.2.1'
+    ver: '=1.2.2'
     py3: skip
 
   opencv:

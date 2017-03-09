@@ -1,7 +1,7 @@
 # start with a high build number=100 to get conda to choose our builds 
 # over those found in defaults or other channels 
 {% set build = 1 %}
-{% set version = '2.0.1' %}
+{% set version = '2.0.2' %}
 
 package:
   name: openmpi
@@ -16,11 +16,12 @@ requirements:
   conflicts:
     - mpich
     - mpich2
+    - mpich3
 
 source:
   fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/openmpi-{{version}}.tar.gz
 #  url: http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-{{version}}.tar.gz
-  md5: bfd298d833fd2f3394c0e5ae831017be
+  md5: 886698becc5bea8c151c0af2074b8392
 
 build:
   number: {{build}}
