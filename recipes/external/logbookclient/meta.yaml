@@ -1,10 +1,10 @@
 package:
   name: logbookclient
-  version: "0.0.2"
+  version: "0.0.3"
 
 source:
-  svn_url: https://pswww.slac.stanford.edu/svn/psdmrepo/LogBookClient/tags/0.0.2
-  svn_ignore_externals: True
+  git_url: https://github.com/slaclab/LogBookClient.git
+  git_tag: "0.0.3"
 
 build:
   script:
@@ -26,6 +26,6 @@ requirements:
     - qt
 
 about:
-  home: https://pswww.slac.stanford.edu/svn/psdmrepo/LogBookClient
+  home: https://github.com/slaclab/LogBookClient
   license: EPICS
 
