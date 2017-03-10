@@ -65,33 +65,36 @@ def fatal(msg):
 
 ##### ARGUMENTS #############
 
+pcds_pkgs = ','.join(PCDS_EXTPKGS)
+
 DESCR = '''manage development of psana-conda package. Typical cycle:
 
 1. condarel --newrel --name myrel   # creates new release based on current conda environment.
-2. condarel --addpkg --name pkgname [--tag HEAD] [--branch xx] [--user]
-   if pkgname is part of psana-conda, checks out the tag used to build psana-conda.
-   --tag and --branch allow one to specify a different tag or branch. Use --tag HEAD to get
-   latest in trunk. If package is already checked out, does svn switch, not checkout.
+2. condarel --addpkg --name pkgname [--tag HEAD] [--user]
+   if pkgname is part of psana-conda, checks out the tag used to build psana-conda. All packages
+   are cloned from github, except %s which come from an afs hosted svn at SLAC.
+   --tag allows one to checkout a specific tag or branch. Use --tag HEAD to get
+   latest in trunk. If package is already checked out, just does the git checkout, not the clone.
 
    If the package is SConsTools, links the SConstruct. If the package is one of %s, creates
    an 'extpkgs' subdir and checks out the package there.
 
 3. condarel --chenv
    change the conda environment that this release is built against. (like sit_setup relupgrade)
-''' % ','.join(PCDS_EXTPKGS)
+''' % (pcds_pkgs, pcds_pkgs)
 
 parser = argparse.ArgumentParser(description=DESCR,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
 
-SVN_ANA_DEF='https://pswww.slac.stanford.edu/svn/psdmrepo'
+SVN_ANA_DEF='https://github.com/lcls-psana'
 SVN_USER_ANA_DEF='https://pswww.slac.stanford.edu/svn/userrepo'
 SVN_PCDS_DEF='file:///afs/slac/g/pcds/svn'
 SIT_RELDIR_DEF='/reg/g/psdm/sw/releases'
-SVN_ANA_DEF=os.environ.get('SIT_SVN',SVN_ANA_DEF)
+SVN_ANA_DEF=os.environ.get('SIT_GITURL',SVN_ANA_DEF)
 SVN_USER_ANA_DEF=os.environ.get('SIT_SVN_USER',SVN_USER_ANA_DEF)
 
 parser.add_argument('--name', type=str, help="name of new release, or package to add/create.", default=None)
-parser.add_argument('--svn_ana', type=str, help="ana SVN repo, where psana and all its packages come from. default=%s" % SVN_ANA_DEF, default=SVN_ANA_DEF)
+parser.add_argument('--git_ana', type=str, help="ana git url, where psana and all its packages come from. default=%s" % SVN_ANA_DEF, default=SVN_ANA_DEF)
 parser.add_argument('--svn_user_ana', type=str, help="ana user SVN repo, default=%s" % SVN_USER_ANA_DEF, default=SVN_USER_ANA_DEF)
 parser.add_argument('--svn_pcds', type=str, help="SVN for pcds packages, default=%s" % SVN_PCDS_DEF, default=SVN_PCDS_DEF)
 parser.add_argument('--verbose', action='store_true', help='verbose')
@@ -103,7 +106,6 @@ parser.add_argument('--chenv', action='store_true', help='change conda environme
 parser.add_argument('--relinfo', action='store_true', help='release info, compare checked out tags to psana-conda tags')
 parser.add_argument('--tag', type=str, help="name of new release, or package to add, depending on other arguments.", default=None)
 parser.add_argument('--user', action='store_true', help='used with addpkg, get package from user repo')
-parser.add_argument('--branch', type=str, help="name of new release, or package to add, depending on other arguments.", default=None)
 parser.add_argument('--convert2rpm', action='store_true', help="converts conda release to rpm. Use --name to specify ana release")
 parser.add_argument('--convert2conda', action='store_true', help="converts a rpm release to a conda release. Uses currently active conda environment.")
 parser.add_argument('--sit_reldir', type=str, help="rpm sit release directory, for convert2rpm command, defaults to %s" % SIT_RELDIR_DEF, default=SIT_RELDIR_DEF)
@@ -239,58 +241,29 @@ def addPkg(args):
             return 'switch'
         return 'checkout'
 
-    def set_tag_branch(user_specified_branch, user_specified_tag, anrel_tag):
-        if user_specified_branch:
-            tag = None
-            branch = user_specified_branch
-        else:
-            if user_specified_tag:
-                if anarel_tag and anarel_tag=='conda_branch':
-                    warning(("You have specified a tag=%s for "
-                             "a pkg which is on the conda branch, "
-                             "you probably want to work with the package "
-                             "on the conda branch (you can commit to it)") % user_specified_tag)
-                                                                            
-                tag = user_specified_tag
-                branch = None
-            elif anrel_tag:
-                if anarel_tag == 'conda_branch':
-                    tag = None
-                    branch = 'conda'
-                else:
-                    branch = None
-                    tag = anarel_tag
-            else:
-                tag = 'HEAD'
-                branch = None
-        return tag, branch
-
-    def get_repo(user, in_pcds, anarel_tag, args):
+    def get_repo_and_vcs_system(user, in_pcds, anarel_tag, args):
         if in_pcds:
             if user:
                 warning("addpkg: ignoring --user for pkg=%s, it is a pcds external package" % args.name) 
-            return args.svn_pcds
+            return args.svn_pcds, 'svn'
         if anarel_tag:
             if user:
                 warning("addpkg: ignoring --user for pkg=%s, it is a ana release package" % args.name) 
-            return args.svn_ana
+            return args.git_ana, 'git'
         if user:
-            return args.svn_user_ana
-        return args.svn_ana        
+            return args.svn_user_ana, 'svn'
+        return args.git_ana, 'git'        
         
-    def get_pkg_url(repo, pkg, tag, branch):
+    def get_svn_pkg_url(repo, pkg, tag):
         url = "%s/%s" % (repo, pkg)
         if tag == 'HEAD':
             url += '/trunk'
         elif tag:
             url += '/tags/%s' % tag
-        elif branch:
-            url += '/branches/%s' % branch
         return url
 
     ##########
     if not args.name: fatal("must use --name to specify package names with --addpkg")
-    if args.tag and args.branch: fatal("only specify none, or one, of --tag --branch with --addpkg")
     global PCDS_EXTPKGS
     pkg = args.name
     pkgtags = anarelinfo.pkgtags
@@ -302,33 +275,44 @@ def addPkg(args):
         in_localrel = os.path.exists(pkg)
     vprint("addPkg: pkg=%s anarel_tag=%s in_localrel=%s in_pcds=%s user=%s" % 
            (pkg, anarel_tag, in_localrel, pcdsext, args.user))
-    repo = get_repo(user=args.user, in_pcds=pcdsext, anarel_tag=anarel_tag, args=args) 
-    tag, branch = set_tag_branch(user_specified_branch=args.branch, 
-                                 user_specified_tag=args.tag, 
-                                 anrel_tag=anarel_tag)
-    pkg_url = get_pkg_url(repo=repo, pkg=pkg, tag=tag, branch=branch)
-
-    cmd = 'svn %s' % switch_or_checkout(in_localrel)
-    cmd += ' %s' % pkg_url
-    cmd += ' %s' % pkg
+    repo, vcs = get_repo_and_vcs_system(user=args.user, in_pcds=pcdsext, anarel_tag=anarel_tag, args=args)
+    assert vcs in ['git','svn']
+    if vcs == 'git': assert not pcdsext, "haven't updated git commands to checkout into ext area for pcds packages"
     
-    if pcdsext:
-        if not os.path.exists('extpkgs'):
-            os.mkdir('extpkgs')
-            if not os.path.exists('extpkgs'): fatal("addpkg: could not make directory extpkgs")
-            info("addpkg: pkg=%s is a pcds external, created subdirectory extpkgs, will checkout into there" % pkg)
-        os.chdir('extpkgs')
-        vprint("chdir into extpkgs")
-    if not anarel_tag:
-        info("addpkg: pkg %s is not in anarel." % pkg)
-    info("addpkg: about to run: %s" % cmd)
-    if 0 != os.system(cmd): fatal("addpkg: command failed: %s" % cmd)
-    if pcdsext:
-        os.chdir('..')
-        # The user really needs the proxy package as well
-        proxy_name = args.name + '_ext'
-        if not os.path.exists(proxy_name):
-            warning("You will also need to do --addpkg %s to build %s which has been checked out in extpkgs" % (proxy_name, args.name))
+    if not in_localrel and vcs == 'git':
+        cmd = 'git clone %s %s' (repo, pkg)
+        info("addpkg: about to run  %s" % cmd)
+        if 0 != os.system(cmd): fatal("addpkg: command failed: %s" % cmd)
+
+    if vcs == 'git':
+        if tag and tag != 'HEAD':
+            os.chdir(pkg)
+            cmd = 'git checkout %s' % tag
+            info("addpkg about to run  %s (from subdir %s)" % (cmd, pkg))
+            if 0 != os.system(cmd): fatal("addpkg: command failed: %s" % cmd)
+            os.chdir("..")
+    else:
+        cmd = 'svn %s' % switch_or_checkout(in_localrel)
+        cmd += ' %s' % get_svn_pkg_url(repo=repo, pkg=pkg, tag=tag)
+        cmd += ' %s' % pkg
+        
+        if pcdsext:
+            if not os.path.exists('extpkgs'):
+                os.mkdir('extpkgs')
+                if not os.path.exists('extpkgs'): fatal("addpkg: could not make directory extpkgs")
+                info("addpkg: pkg=%s is a pcds external, created subdirectory extpkgs, will checkout into there" % pkg)
+            os.chdir('extpkgs')
+            vprint("chdir into extpkgs")
+        if not anarel_tag:
+            info("addpkg: pkg %s is not in anarel." % pkg)
+        info("addpkg: about to run: %s" % cmd)
+        if 0 != os.system(cmd): fatal("addpkg: command failed: %s" % cmd)
+        if pcdsext:
+            os.chdir('..')
+            # The user really needs the proxy package as well
+            proxy_name = args.name + '_ext'
+            if not os.path.exists(proxy_name):
+                warning("You will also need to do --addpkg %s to build %s which has been checked out in extpkgs" % (proxy_name, args.name))
 
     if pkg == 'SConsTools':
         spdir = get_site_packages_path(args)
@@ -356,7 +340,7 @@ def newPkg(args):
           "codegen -o %s -l ChangeLog %s ChangeLog" % (docsub, pkg)]
     for cmd in cmds:
         if 0 != os.system(cmd):
-            warning("newrel: command failed: %s" % cmd)
+            warning("newpkg: command failed: %s" % cmd)
     
 
 def changeEnv(args):
