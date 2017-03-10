@@ -280,7 +280,7 @@ def addPkg(args):
     if vcs == 'git': assert not pcdsext, "haven't updated git commands to checkout into ext area for pcds packages"
     
     if not in_localrel and vcs == 'git':
-        cmd = 'git clone %s %s' % (repo, pkg)
+        cmd = 'git clone %s/%s %s' % (repo, pkg, pkg)
         info("addpkg: about to run  %s" % cmd)
         if 0 != os.system(cmd): fatal("addpkg: command failed: %s" % cmd)
 
