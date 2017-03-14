@@ -240,17 +240,6 @@ def addPkg(args):
             return 'switch'
         return 'checkout'
 
-    def get_repo_and_vcs_system(user, in_pcds, args):
-        if user:
-            if in_pcds:
-                warning("addpkg: getting package from user repo, even though it is also a pcds svn package")
-            return args.svn_user_ana, 'svn'
-
-        if in_pcds:
-            return args.svn_pcds, 'svn'
-
-        return args.git_ana, 'git'        
-        
     def get_svn_pkg_url(repo, pkg, tag):
         url = "%s/%s" % (repo, pkg)
         if tag is None or tag == 'HEAD':
@@ -272,9 +261,6 @@ def addPkg(args):
 
     tag = None
     if user_specified_tag:
-        if anarel_tag:
-            warning("You have specified the tag: %s, but this package is also tagged in the release as %s. Using your tag=%s" %
-                    (user_specified_tag, anarel_tag, user_specified_tag))
         if user_specified_tag != 'HEAD':
             tag = user_specified_tag
     elif anarel_tag:
@@ -303,15 +289,18 @@ def addPkg(args):
         if 0 != os.system(cmd): fatal("addpkg: command failed: %s" % cmd)
 
     if vcs == 'git':
-        if tag:
-            os.chdir(pkg)
-            cmd = 'git checkout %s' % tag
-            info("addpkg about to run  %s (from subdir %s)" % (cmd, pkg))
-            if 0 != os.system(cmd): fatal("addpkg: command failed: %s" % cmd)
-            os.chdir("..")
+        os.chdir(pkg)
+        cmd = 'git checkout %s'
+        if tag and tag != 'HEAD':
+            cmd %= tag
+        else:
+            cmd %= 'master'
+        info("addpkg about to run  %s (from subdir %s)" % (cmd, pkg))
+        if 0 != os.system(cmd): fatal("addpkg: command failed: %s" % cmd)
+        os.chdir("..")
     else:
         cmd = 'svn %s' % svn_switch_or_checkout(in_localrel)
-        cmd += ' %s' % get_svn_pkg_url(repo=repo, pkg=pkg, tag=args.tag)
+        cmd += ' %s' % get_svn_pkg_url(repo=repo, pkg=pkg, tag=tag)
         cmd += ' %s' % pkg
         
         if pcdsext:
