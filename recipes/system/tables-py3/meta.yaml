@@ -1,6 +1,6 @@
 {% set pkg = 'tables' %}
 {% set version = '3.3.0' %}
-{% set build = 102 %}
+{% set build = 103 %}
 
 package:
   name: {{ pkg }}
@@ -24,8 +24,8 @@ requirements:
   - zlib 1.2.*
   - lzo 2.06  # [linux]
   - bzip2 1.0.*
-  - hdf5 ==1.8.18 openmpi_2
-  - openmpi ==2.0.2 lsf_verbs_1
+  - hdf5 ==1.8.18 openmpi_3
+  - openmpi ==1.10.6 lsf_verbs_1
   - numexpr
 
   run:

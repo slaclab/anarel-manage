@@ -1,4 +1,4 @@
-{% set build = 2 %}
+{% set build = 3 %}
 {% set version = '1.10.0' %}
 {% set pkg = 'hdf5' %}
 
@@ -20,11 +20,11 @@ source:
 requirements:
   build:
     - szip ==2.1
-    - openmpi ==2.0.2 lsf_verbs_1
+    - openmpi ==1.10.6 lsf_verbs_1
 
   run:
     - szip ==2.1
-    - openmpi >=2,<3
+    - openmpi >=1.8,<2
 
 build:
   number: {{ build }}

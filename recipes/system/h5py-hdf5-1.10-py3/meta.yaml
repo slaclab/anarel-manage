@@ -1,4 +1,4 @@
-{% set build = 2 %}
+{% set build = 3 %}
 {% set version = '2.7.0rc2' %}
 {% set mpi = 'openmpi' %}
 
@@ -13,9 +13,9 @@ requirements:
   build:
     - python ==3.5
     - numpy
-    - openmpi ==2.0.2 lsf_verbs_1
-    - mpi4py ==2.0.0 py35_openmpi_103
-    - hdf5 ==1.10.0 openmpi_2
+    - openmpi ==1.10.6 lsf_verbs_1
+    - mpi4py ==2.0.0 py35_openmpi_104
+    - hdf5 ==1.10.0 openmpi_3
     - cython
     - six
     - pkgconfig
@@ -23,7 +23,7 @@ requirements:
   run:
     - python >=3.5,<4
     - numpy
-    - openmpi >=2,<3
+    - openmpi >=1.8,<2
     - mpi4py >=2.0.0,<3
     - hdf5 ==1.10.0
     - six
