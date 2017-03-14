@@ -31,12 +31,15 @@ which g++
 echo "#########################"
 
 ./configure --prefix=$PREFIX \
-    --enable-build-mode=production \
+#    --enable-build-mode=production \
     --with-szlib=$PREFIX \
     --enable-threadsafe \
     --enable-unsupported \
     --enable-cxx \
-    --with-default-api-version=v18 \
+    --disable-production \
+    --enable-debug \
+    --enable-trace \
+#    --with-default-api-version=v18 \
     --enable-parallel 
 
 make -j$CPU_COUNT

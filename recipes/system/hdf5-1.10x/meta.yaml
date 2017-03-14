@@ -1,4 +1,4 @@
-{% set build = 3 %}
+{% set build = 4 %}
 {% set version = '1.10.0' %}
 {% set pkg = 'hdf5' %}
 
@@ -28,7 +28,7 @@ requirements:
 
 build:
   number: {{ build }}
-  string: openmpi_{{ build }}
+  string: openmpi_dbg_{{ build }}
   binary_relocation: true
   detect_binary_files_with_prefix: true
 
