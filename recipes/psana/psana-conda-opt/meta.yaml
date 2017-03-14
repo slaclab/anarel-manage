@@ -1,5 +1,5 @@
 {% set pkg = 'psana-conda' %}
-{% set version = '1.2.2' %}
+{% set version = '1.2.3' %}
 {% set build = 1 %}
 
 package:
@@ -24,11 +24,11 @@ requirements:
     - matplotlib
     - scipy
     - pyzmq
-    - openmpi  ==2.0.2 lsf_verbs_1
-    - hdf5     ==1.8.18 openmpi_2
-    - h5py     ==2.7.0rc2 py27_2
-    - mpi4py   ==2.0.0 py27_openmpi_103
-    - tables   ==3.3.0 py27_102
+    - openmpi  ==1.10.6 lsf_verbs_1
+    - hdf5     ==1.8.18 openmpi_3
+    - h5py     ==2.7.0rc2 py27_3
+    - mpi4py   ==2.0.0 py27_openmpi_104
+    - tables   ==3.3.0 py27_103
 
   run:
     - python  >=2.7,<2.7.13
@@ -36,8 +36,6 @@ requirements:
     - mysql    
     - qt       >=4,<5
     - numpy
-# see note below
-#    - openmpi  >=2,<3
     - h5py
     - mpi4py
     - tables
