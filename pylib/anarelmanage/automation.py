@@ -153,7 +153,7 @@ class AutoReleaseBuilder(object):
         print("-- AUTO: ssh build and test connections have been made, password deleted.")
 
     def updateRecipe(self):
-        recipeDir = util.psanaCondaRecipeDir(self.basedir)
+        recipeDir = util.psanaCondaRecipeDir(self.basedir, self.manageSubDir)
         renderedMetaFile = os.path.join(self.logDir, 'psana-conda-rendered.yaml.txt')
         cmd = 'conda-render -f %s %s' % (renderedMetaFile, recipeDir)
         if os.path.exists(os.path.join(self.logDir, 'recipe.success')):
@@ -312,7 +312,7 @@ class AutoReleaseBuilder(object):
         msg = msg.format(version=self.version_str,
                          anaVer=self.anaRelName,
                          master_log_file=self.logFname,
-                         psanaCondaRecipeDir=util.psanaCondaRecipeDir(self.basedir),
+                         psanaCondaRecipeDir=util.psanaCondaRecipeDir(self.basedir, self.manageSubDir),
                          step=step)
 
         msg=MIMEText(msg)
@@ -524,7 +524,7 @@ class AutoReleaseBuilder(object):
         if self.dev:
             cmd += ' --recipe %s/manage/recipes/external/szip' % self.basedir
         else:
-            cmd += ' --recipe %s' % util.psanaCondaRecipeDir(self.basedir)
+            cmd += ' --recipe %s' % util.psanaCondaRecipeDir(self.basedir, self.manageSubDir)
         cmd = self.add_opts(cmd)
         # we want to capture all conda build output to our own file
         cmd += ' --nolog'

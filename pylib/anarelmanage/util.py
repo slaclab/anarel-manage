@@ -384,7 +384,7 @@ def psanaCondaSourceZipFilename(basedir, version_str):
     return outputFile
 
 def psanaCondaRecipeDir(basedir, manageSubDir):
-    path=os.path.join(basedir, managesubdir, 'recipes', 'psana', 'psana-conda-opt')
+    path=os.path.join(basedir, manageSubDir, 'recipes', 'psana', 'psana-conda-opt')
     assert os.path.exists(path), "psana conda recipe dir: %s doesn't exist" % path
     return path
 

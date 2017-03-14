@@ -62,3 +62,7 @@
   paths:
   - external/yaml-cpp
   limit_os: rhel7
+
+- pkg: logbookclient
+  paths:
+  - external/logbookclient
