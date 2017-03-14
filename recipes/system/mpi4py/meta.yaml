@@ -1,9 +1,8 @@
 {% set pkg = 'mpi4py' %}
 {% set version = '2.0.0' %}
-{% set build = 103 %}
+{% set build = 104 %}
 
 {% set mpi = 'openmpi' %}
-{% set mpi_version = '>=2,<3' %}
 
 package:
   name: {{ pkg }}
@@ -16,11 +15,11 @@ source:
 requirements:
   build:
     - python >=2.7,<3
-    - openmpi ==2.0.2 lsf_verbs_1
+    - openmpi ==1.10.6 lsf_verbs_1
 
   run:
     - python >=2.7,<3
-    - openmpi {{mpi_version}}
+    - openmpi >=1.8,<2
     - numpy
 
 build:

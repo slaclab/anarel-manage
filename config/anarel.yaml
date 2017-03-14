@@ -53,7 +53,7 @@
     only_in_variant: gpu
   
   openmpi:
-    ver: '=2.0.2'
+    ver: '=1.10.6'
 
   szip:
     ver: '=2.1'
@@ -119,8 +119,10 @@
   coverage:
     ver: latest
 
+  # pinning jinja2 since 2.9.5 brakes the DDL
+  # see https://github.com/slaclab/anarel-manage/issues/32
   jinja2:
-    ver: latest
+    ver: '=2.8.1'
 
   pandas:
     ver: latest
