@@ -379,8 +379,14 @@ def get_version_control_info(path, args):
     cmd = 'svn info --xml %s' % path
     stdout, stderr = run_command([cmd], shell=True)
     if stderr:
-        vprint("cmd: %s gave error: %s" % (cmd, stderr))
-        return None
+        cdir=os.getcwd()
+        os.chdir(path)
+        stdout, stderr = run_command(['git status'], shell=True)
+        os.chdir(cdir)
+        if stderr:
+            return None
+        raise Exception("implement parsing git here")
+    
     root=ET.fromstring(stdout)
     url = root.find('entry/url')
     if url is None:
@@ -483,6 +489,7 @@ def convert2conda(args):
     info("** will not function properly")
         
 def relInfo(args):
+    fatal("relInfo not implemented for git")
     cand_pkgs = os.listdir('.')
     pkgs = [pkg for pkg in cand_pkgs if os.path.exists(os.path.join(pkg, 'SConscript'))]
     if os.path.exists('extpkgs'):
