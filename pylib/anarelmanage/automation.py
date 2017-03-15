@@ -46,12 +46,13 @@ ana-rel-admin --cmd anaconda-upload --recipe {psanaCondaRecipeDir}
 to upload psana-conda={version} to the lcls channels.
 '''
 class AutoReleaseBuilder(object):
-    def __init__(self, name, force, clean, tagsfile, basedir, dev, email, variant):
+    def __init__(self, name, force, clean, tagsfile, basedir, manageSubDir, dev, email, variant):
         self.version_str = name
         self.force = force
         self.clean = clean
         self.tagsfile = util.getTagsFile(tagsfile)
         self.basedir = os.path.abspath(basedir)
+        self.manageSubDir = manageSubDir
         self.variant = variant
         self.email = email
         self.dev = dev
@@ -152,7 +153,7 @@ class AutoReleaseBuilder(object):
         print("-- AUTO: ssh build and test connections have been made, password deleted.")
 
     def updateRecipe(self):
-        recipeDir = util.psanaCondaRecipeDir(self.basedir)
+        recipeDir = util.psanaCondaRecipeDir(self.basedir, self.manageSubDir)
         renderedMetaFile = os.path.join(self.logDir, 'psana-conda-rendered.yaml.txt')
         cmd = 'conda-render -f %s %s' % (renderedMetaFile, recipeDir)
         if os.path.exists(os.path.join(self.logDir, 'recipe.success')):
@@ -311,7 +312,7 @@ class AutoReleaseBuilder(object):
         msg = msg.format(version=self.version_str,
                          anaVer=self.anaRelName,
                          master_log_file=self.logFname,
-                         psanaCondaRecipeDir=util.psanaCondaRecipeDir(self.basedir),
+                         psanaCondaRecipeDir=util.psanaCondaRecipeDir(self.basedir, self.manageSubDir),
                          step=step)
 
         msg=MIMEText(msg)
@@ -349,8 +350,9 @@ class AutoReleaseBuilder(object):
         cmds = 'unset PYTHONPATH; export PYTHONPATH'
         cmds += '; unset LD_LIBRARY_PATH; export LD_LIBRARY_PATH'
         cmds += '; export PATH=%s' % util.condaPath(devel=devel, 
-                                                   osname=osname,
-                                                   basedir=self.basedir)
+                                                    osname=osname,
+                                                    basedir=self.basedir,
+                                                    manageSubDir=self.manageSubDir)
         cmds += '; sleep 1; source activate %s; sleep 1' % env
         return cmds
 
@@ -522,7 +524,7 @@ class AutoReleaseBuilder(object):
         if self.dev:
             cmd += ' --recipe %s/manage/recipes/external/szip' % self.basedir
         else:
-            cmd += ' --recipe %s' % util.psanaCondaRecipeDir(self.basedir)
+            cmd += ' --recipe %s' % util.psanaCondaRecipeDir(self.basedir, self.manageSubDir)
         cmd = self.add_opts(cmd)
         # we want to capture all conda build output to our own file
         cmd += ' --nolog'
@@ -643,6 +645,7 @@ def automateReleaseBuildFromArgs(args):
 
     return AutoReleaseBuilder(name=args.name,
                               basedir=args.basedir,
+                              manageSubDir=args.manage,
                               clean=args.clean,
                               tagsfile=args.tagsfile,
                               variant=args.variant,

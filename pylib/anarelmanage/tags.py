@@ -5,9 +5,29 @@ from __future__ import print_function
 import os
 import sys
 import re
+import shlex
+import subprocess
 from  anarelmanage.util import run_command
 
-def getLatestTag(tagurl):
+def getLatestTagGit(tagurl):
+    cmd = 'git ls-remote --tags %s' %tagurl
+    output = subprocess.check_output(shlex.split(cmd))#, encoding='utf-8')
+    # check stderr
+    tags = [l.split('\t')[1] for l in output.splitlines()]
+    r = re.compile('.*?/(V\d\d-\d\d-\d\d)')
+    prod_tags = []
+    for tag in tags:
+        match = re.search(r, tag)
+        if match:
+            prod_tags.append(match.group(1))
+    prod_tags.sort()
+    if len(prod_tags) == 0:
+        print('Could not find any production tag')
+        print(tagurl)
+        return None
+    return prod_tags[-1]
+
+def getLatestTagSvn(tagurl):
     PRODUCTION_TAG = re.compile('^V\d\d-\d\d-\d\d')
     cmd = 'svn ls %s' % tagurl
     stdout, stderr = run_command(cmd, quiet=True)
@@ -21,33 +41,32 @@ def getLatestTag(tagurl):
     return tags[-1]
 
 def updateWithLatestTags(anaTags):
-    repodict = {'psdm':"https://pswww.slac.stanford.edu/svn/psdmrepo",
+    repodict = {'psdm':"https://github.com/lcls-psana",
                 'pcds':"file:///afs/slac/g/pcds/svn",
                 'user':"https://pswww.slac.stanford.edu/svn/userrepo"}
-    
+
     print("querying svn repos for latest tags of %d packages" % len(anaTags))
     print("make sure this account has access to repos (kinit username where username has read access)")
     sys.stdout.flush()
-
     for pkg, pkgdict in anaTags.iteritems():
         repo = pkgdict['repo']
         assert repo in repodict.keys(), "pkg=%s, don't understand repo=%s" % (pkg, repo)
-        if pkgdict['conda_branch']: 
-            print("pkg=%s is from branches/conda, not getting tag" % pkg)
-            sys.stdout.flush()
-            continue
-        tagsurl = repodict[repo] + '/' + pkg + '/tags'
-        tag = getLatestTag(tagsurl)
+        if repo == 'psdm':
+            tagsurl = repodict[repo] + '/' + pkg
+            tag = getLatestTagGit(tagsurl)
+        else:
+            tagsurl = repodict[repo] + '/' + pkg + '/tags'
+            tag = getLatestTagSvn(tagsurl)
         if tag.endswith('/'):
             tag = tag[0:-1]
         assert tag is not None, "pkg=%s url=%s got None" % (pkg, tagsurl)
         anaTags[pkg]['tag']=tag
         print("pkg=%s latest tag=%s" % (pkg,tag))
         sys.stdout.flush()
-                
+
 
 def checkoutCode(anaTags):
-    repodict = {'psdm':"https://pswww.slac.stanford.edu/svn/psdmrepo",
+    repodict = {'psdm':"https://github.com/lcls-psana",
                 'pcds':"file:///afs/slac/g/pcds/svn",
                 'user':"https://pswww.slac.stanford.edu/svn/userrepo"}
 
@@ -57,21 +76,24 @@ def checkoutCode(anaTags):
     for pkg, pkgdict in anaTags.iteritems():
         repo = pkgdict['repo']
         assert repo in repodict.keys(), "pkg=%s, don't understand repo=%s" % (pkg, repo)
-        pkgurl = repodict[repo] + '/' + pkg
-        if pkgdict['conda_branch']: 
-            pkgurl += '/branches/conda'
-        else:
-            assert 'tag' in pkgdict, "no tag defined for pkg=%s, not branches/conda" % pkg
-            pkgurl += '/tags/%s' % pkgdict['tag']
+        assert 'tag' in pkgdict, "no tag defined for pkg=%s, not branches/conda" % pkg
+        dest = pkg
         if pkgdict['subdir']:
             dest = '%s/%s' % (pkgdict['subdir'], pkg)
+        # get repos from github
+        if repo == 'psdm':
+            pkgurl = repodict[repo] + '/' + pkg
+            cmd = 'git clone --branch %s --depth 1 %s %s' %(pkgdict['tag'], pkgurl, dest)
+        # get repos from svn
         else:
-            dest = pkg
-        cmd = 'svn co %s %s' %(pkgurl, dest)
+            pkgurl = repodict[repo] + '/' + pkg
+            pkgurl += '/tags/%s' % pkgdict['tag']
+            cmd = 'svn co %s %s' %(pkgurl, dest)
         print("----- %s ----" % cmd)
         sys.stdout.flush()
         stdout, stderr=run_command(cmd)
-        assert stderr=='', "error with cmd: %s\n  stderr=%s" % (cmd, stderr)
+        if repo != 'psdm':
+            assert stderr=='', "error with cmd: %s\n  stderr=%s" % (cmd, stderr)
         print(stdout)
         sys.stdout.flush()
 

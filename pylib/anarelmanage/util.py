@@ -383,17 +383,17 @@ def psanaCondaSourceZipFilename(basedir, version_str):
     outputFile = os.path.join(basedir, 'downloads', 'anarel', basename)
     return outputFile
 
-def psanaCondaRecipeDir(basedir):
-    path=os.path.join(basedir, 'manage', 'recipes', 'psana', 'psana-conda-opt')
+def psanaCondaRecipeDir(basedir, manageSubDir):
+    path=os.path.join(basedir, manageSubDir, 'recipes', 'psana', 'psana-conda-opt')
     assert os.path.exists(path), "psana conda recipe dir: %s doesn't exist" % path
     return path
 
 def standardPath():
     return '/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/kerberos/bin'
 
-def anaRelManagePath(basedir):
+def anaRelManagePath(basedir, manageSubDir):
     path = standardPath()
-    managebin=os.path.join(basedir, 'manage', 'bin')
+    managebin=os.path.join(basedir, manageSubDir, 'bin')
     assert os.path.exists(managebin), "path wrong: %s" % managebin
     path = '%s:%s' % (managebin, path)
     return path
@@ -405,8 +405,8 @@ def testCondaPath(basedir):
     path = '%s:%s' % (testbin, path)
     return path
 
-def condaPath(devel, osname, basedir):
-    path = anaRelManagePath(basedir)
+def condaPath(devel, osname, basedir, manageSubDir):
+    path = anaRelManagePath(basedir, manageSubDir)
     conda=os.path.join(basedir, 'inst', 'miniconda2-')
     if devel:
         conda += 'dev-'

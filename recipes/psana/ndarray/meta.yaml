@@ -1,9 +1,10 @@
 package:
   name: ndarray
-  version: 1.1.5
+  version: 1.1.7
 
 source:
-  svn_url: https://pswww.slac.stanford.edu/svn/psdmrepo/ndarray/tags/V01-01-05
+  git_url: https://github.com/lcls-psana/ndarray.git
+  git_rev: 1.1.7
 
 build:
   number: 0
