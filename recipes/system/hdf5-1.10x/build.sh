@@ -22,7 +22,6 @@ if [ -z "$CPU_COUNT" ]; then
     echo "CPU_COUNT not set, setting to 2"
     CPU_COUNT=2
 fi
-#!/bin/bash -x
 
 echo "######## env ## and compilers ######"
 env
@@ -31,12 +30,12 @@ which g++
 echo "#########################"
 
 ./configure --prefix=$PREFIX \
-    --enable-build-mode=production \
     --with-szlib=$PREFIX \
     --enable-threadsafe \
     --enable-unsupported \
     --enable-cxx \
-    --with-default-api-version=v18 \
+    --enable-build-mode=debug \
+    --enable-trace \
     --enable-parallel 
 
 make -j$CPU_COUNT
