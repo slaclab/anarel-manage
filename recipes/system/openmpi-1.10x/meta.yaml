@@ -52,7 +52,7 @@ test:
     - mpicxx -show
     - mpicc  helloworld.c   -o helloworld_c
     - mpicxx helloworld.cxx -o helloworld_cxx
-    - export DYLD_LIBRARY_PATH=$PREFIX/lib # [osx]
-    - mpiexec -n 4 ./helloworld_c
-    - mpiexec -n 4 ./helloworld_cxx
+#    - export DYLD_LIBRARY_PATH=$PREFIX/lib # [osx]
+#    - mpiexec -n 4 ./helloworld_c
+#    - mpiexec -n 4 ./helloworld_cxx
 

@@ -36,8 +36,8 @@ test:
   files:
     - h5_cmprss.c
   commands:
-    - ls
-    - pwd
+#    - ls
+#    - pwd
     - command -v h5ls
     - command -v h5c++
     - command -v h5pcc
