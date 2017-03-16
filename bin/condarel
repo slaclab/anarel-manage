@@ -266,6 +266,10 @@ def addPkg(args):
     elif anarel_tag:
         tag = anarel_tag
 
+    if in_user_repo and anarel_tag:
+        warning("You have specified --user for pkg=%s, but it is also in the ana release" % pkg)
+        
+    vprint("pkg=%s anatag=%s usertag=%s user=%s pcdsext=%s tag=%s" % (pkg, anarel_tag, user_specified_tag, in_user_repo, pcdsext, tag))
     in_localrel = False
     if pcdsext and os.path.exists('extpkgs') and os.path.exists(os.path.join('extpkgs', pkg)):
         in_localrel = True
@@ -300,6 +304,12 @@ def addPkg(args):
         os.chdir("..")
     else:
         cmd = 'svn %s' % svn_switch_or_checkout(in_localrel)
+        if in_user_repo:
+            repo = args.svn_user_ana
+        elif pcdsext:
+            repo = args.svn_pcds
+        else:
+            fatal("unexpected - vcs is svn for addpkg, but pkg is neither from user repo or pcds") 
         cmd += ' %s' % get_svn_pkg_url(repo=repo, pkg=pkg, tag=tag)
         cmd += ' %s' % pkg
         
