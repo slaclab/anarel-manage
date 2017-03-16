@@ -484,7 +484,7 @@ if __name__ == '__main__':
                         conda_basedir_default, default=conda_basedir_default)
     parser.add_argument('--manage', type=str, 
                         help="subdirectory for manage code, (def=%s)" % manage_default, \
-                        default=conda_basedir_default)
+                        default=manage_default)
     parser.add_argument('--force', action='store_true', 
                         help="overwrite existing files.", default=False)
     parser.add_argument('--warn-if-exists', action='store_true', 

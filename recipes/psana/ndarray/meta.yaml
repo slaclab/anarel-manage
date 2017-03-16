@@ -1,10 +1,10 @@
 package:
   name: ndarray
-  version: 1.1.7
+  version: 1.1.8
 
 source:
   git_url: https://github.com/lcls-psana/ndarray.git
-  git_rev: 1.1.7
+  git_rev: V01-01-08
 
 build:
   number: 0
