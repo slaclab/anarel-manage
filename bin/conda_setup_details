@@ -457,6 +457,8 @@ run directly. It is used from the script conda_setup, that is sourced to change 
 environment.
 '''
 
+### TODO: change ana-current to ana and dm
+
 if __name__ == '__main__':
     def_sit_root='/reg/g/psdm'
     def_inst = '/reg/g/psdm/sw/conda/inst'

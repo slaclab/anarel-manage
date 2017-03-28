@@ -57,6 +57,7 @@ class ReleaseBuilder(object):
     def __init__(self, 
                  basedir,
                  logdir,
+                 swGroup,
                  operating_system,
                  platform,
                  checkpoint,
@@ -70,6 +71,7 @@ class ReleaseBuilder(object):
 
         self.basedir=basedir
         self.logdir=logdir
+        self.swGroup=swGroup
         self.osname = operating_system
         self.checkpoint = checkpoint
         self.platform = platform
@@ -80,13 +82,16 @@ class ReleaseBuilder(object):
         self.stage = stage
         self.dev = dev
         self.nolog = nolog
-        assert self.name, "must provide a base name for new anarel"
-        if not self.name.startswith('ana-'):
-            assert self.force, "The new ana release name does not start with 'ana-'. If you want to proceed with this non-standard name, add the --force option"
+        assert self.name, "must provide a base name for new %s-rel" % self.swGroup
+        if not self.name.startswith('%s-' % self.swGroup):
+            assert self.force, "The new %s release name does not start with '%s-'. If you want to proceed with this non-standard name, add the --force option" % (self.swGroup, self.swGroup)
                 
         assert self.stage >=1, "stages start at 1, but stage=%d" % self.stage
 
-        all_variants = ['', 'py3', 'gpu']
+        if self.swGroup == 'ana':
+            all_variants = ['', 'py3', 'gpu']
+        else:
+            all_variants = ['']
         if self.variant is not None:
             if self.variant == 'bld':
                 all_variants = ['']
@@ -115,7 +120,7 @@ class ReleaseBuilder(object):
         self.isProductionInstall = util.whichCondaInstall(self.basedir).find('-dev-rhel')<0
 
     def makeCommandWithLogging(self):
-        cmd = 'ana-rel-admin --cmd newrel --xx --basedir %s' % self.basedir
+        cmd = 'ana-rel-admin --cmd newrel --%s --xx --basedir %s' % (self.swGroup, self.basedir)
         if self.force:
             cmd += ' --force'
         cmd += ' --os %s' % self.osname
@@ -328,10 +333,20 @@ class ReleaseBuilder(object):
 def makeReleaseBuilderFromArgs(args):
     logDir = os.path.join(args.basedir, 'logs')
     assert os.path.exists(logDir), "log dir %s doesn't exist" % logDir
-    assert args.name, "must provide a name for ana release, like anarel-1.0.0."
 
+    assert args.ana or args.dm, "must specify one of --ana or --dm"
+    assert not (args.ana and args.dm), "can't specify both --ana and --dm"
+
+    if args.ana:
+        swGroup = 'ana'
+    elif args.dm:
+        swGroup = 'dm'
+
+    assert args.name, "must provide a name for ana release, like %s-1.0.0." % swGroup
+    
     relBuilder = ReleaseBuilder(basedir=args.basedir,
                                 logdir = logDir,
+                                swGroup = swGroup,
                                 operating_system=args.os,
                                 platform=args.platform,
                                 checkpoint=args.checkpoint,

@@ -37,7 +37,7 @@ prod py3 report: https://pswww.slac.stanford.edu/user/psreldev/builds/auto-{vers
 
 When ready, have admin account execute:
 
-ana-rel-admin --cmd change-ana-current --name {anaVer}
+ana-rel-admin --cmd change-current --%s --name {swVer}
 
 and 
 
@@ -46,16 +46,18 @@ ana-rel-admin --cmd anaconda-upload --recipe {psanaCondaRecipeDir}
 to upload psana-conda={version} to the lcls channels.
 '''
 class AutoReleaseBuilder(object):
-    def __init__(self, name, force, clean, tagsfile, basedir, manageSubDir, dev, email, variant):
+    def __init__(self, name, swGroup, force, clean, tagsfile, basedir, manageSubDir, dev, email, variant):
         self.version_str = name
+        self.swGroup = swGroup
         self.force = force
         self.clean = clean
-        self.tagsfile = util.getTagsFile(tagsfile)
+        self.tagsfile = util.getPsanaTagsFile(tagsfile)
         self.basedir = os.path.abspath(basedir)
         self.manageSubDir = manageSubDir
         self.variant = variant
         self.email = email
         self.dev = dev
+        self.needs_testing = None
 
         if dev:
             self.tagsfile += '-tst'
@@ -71,7 +73,7 @@ class AutoReleaseBuilder(object):
         self.steps = []
 
         self.psanaPkgName = None
-        self.anaRelName = None
+        self.relName = None
 
         self.ssh = {'rhel5':{'host':'psdev106',
                              'build':None,
@@ -88,7 +90,7 @@ class AutoReleaseBuilder(object):
         self.startLogDir() 
         self.updateRecipe()
 
-        all_steps=[
+        ana_all_steps=[
             # single host/ name/ function
             (True,  'source_tags',    self.source_tags),
             (False, 'build_psana',    self.build_psana),
@@ -103,9 +105,22 @@ class AutoReleaseBuilder(object):
             (False,  'release_notes_gpu_dev',  self.release_notes_gpu_dev),
         ]
 
+        dm_all_steps=[
+            # single host/ name/ function
+            (False, 'prod_envs',      self.prod_envs),
+            (False,  'release_notes_py27_prod',  self.release_notes_py27_prod),
+        ]
+
+        if swGroup == 'ana':
+            all_steps = ana_all_steps
+            self.needs_testing = True
+        elif swGroup == 'dm':
+            all_steps = dm_all_steps
+            self.needs_testing = False
+
         steps_todo = self.identifySteps(all_steps)
 
-        self.ssh_connections()
+        self.ssh_connections(self.needs_testing)
         self.executeSteps(steps_todo)
         self.successNotify()
 
@@ -119,22 +134,23 @@ class AutoReleaseBuilder(object):
         return cmd
 
         
-    def ssh_connections(self):
+    def ssh_connections(self, needs_testing):
         build_user = os.environ['USERNAME']
-        test_user = os.environ.get('SUDO_USER',build_user)
-        if test_user == build_user:
-            test_user = os.environ.get('USER',build_user)
-        assert test_user != build_user, ("cannot find a test_user differnt than " + \
-               "build user=%s. Tried SUDO_USER and USER. Ordinarily, you sudo as " + \
-               "psreldev (the build user) but this script uses the environment " + \
-               "variable SUDO_USER to figure out who you really are, and that is " + \
-               "who is used to test built installations. To fix, set SUDO_USER to " + \
-               "your username") % build_user
+        if needs_testing:
+            test_user = os.environ.get('SUDO_USER',build_user)
+            if test_user == build_user:
+                test_user = os.environ.get('USER',build_user)
+            assert test_user != build_user, ("cannot find a test_user differnt than " + \
+                   "build user=%s. Tried SUDO_USER and USER. Ordinarily, you sudo as " + \
+                   "psreldev (the build user) but this script uses the environment " + \
+                   "variable SUDO_USER to figure out who you really are, and that is " + \
+                   "who is used to test built installations. To fix, set SUDO_USER to " + \
+                   "your username") % build_user
 
-        print("--- AUTO ----------")
-        print("enter password for test_user: %s" % test_user)
-        print("this is not echoed to screen, but is stored in python string.")
-        test_user_password = getpass.getpass("The string will be deleted in a few seconds: ")
+            print("--- AUTO ----------")
+            print("enter password for test_user: %s" % test_user)
+            print("this is not echoed to screen, but is stored in python string.")
+            test_user_password = getpass.getpass("The string will be deleted in a few seconds: ")
         for osname, sshdict in self.ssh.iteritems():
             ssh_build = pm.SSHClient()
             ssh_test = pm.SSHClient()
@@ -144,13 +160,15 @@ class AutoReleaseBuilder(object):
 
             host = sshdict['host']
             ssh_build.connect(host, username=build_user)
-            ssh_test.connect(host, username=test_user, password=test_user_password)
+            if needs_testing:
+                ssh_test.connect(host, username=test_user, password=test_user_password)
 
             sshdict['build']=ssh_build
             sshdict['test']=ssh_test
 
-        del test_user_password
-        print("-- AUTO: ssh build and test connections have been made, password deleted.")
+        if needs_testing:
+            del test_user_password
+        print("-- AUTO: ssh build and test (if needed) connections have been made.")
 
     def updateRecipe(self):
         recipeDir = util.psanaCondaRecipeDir(self.basedir, self.manageSubDir)
@@ -176,26 +194,30 @@ class AutoReleaseBuilder(object):
         print("--- AUTO: psana-conda recipe has correct version.")
         sys.stdout.flush()
 
-    def checkThatReleaseIsNewerThanAnaCurrent(self):
+    def checkThatReleaseIsNewerThanCurrent(self):
         if self.variant is None:
-            variants = ['','gpu','py3']
+            if self.swGroup == 'ana':
+                variants = ['','gpu','py3']
+            elif self.swGroup == 'dm':
+                variants = ['']
         else:
             variants = ['']
         for variant in variants:
-            anacurrent_fname = os.path.join(self.basedir, 'ana-current', 'ana-current')
+            current_fname = os.path.join(self.basedir, 'current', self.swGroup, '%s-current' % self.swGroup)
             if variant:
-                anacurrent_fname += '-%s' % variant
-            anacurrent = file(anacurrent_fname).read().strip()
-            assert self.anaRelName.startswith('ana-')
-            assert anacurrent.startswith('ana-')
-            verCur = anacurrent.split('ana-')[1]
-            verNew = self.anaRelName.split('ana-')[1]
+                current_fname += '-%s' % variant
+            current = file(current_fname).read().strip()
+            assert self.relName.startswith('%s-' % self.swGroup)
+            assert current.startswith('%s-' % self.swGroup)
+            verCur = current.split('%s-' % self.swGroup)[1]
+            verNew = self.relName.split('%s-' % self.swGroup)[1]
             variantName = variant
             if not variantName: variantName = 'normal'
             assert util.versionGreater(verNew, verCur), "For variant: %s, " + \
-                "the ana version being build is not greater than what is in " + \
-                "ana-current. Aborting. Version requested=%s, but ana current " + \
-                "version (for this variant) is %s" %  (variantName, verNew, verCur)
+                "the %s version being build is not greater than what is in " + \
+                "%s-current. Aborting. Version requested=%s, but ana current " + \
+                "version (for this variant) is %s" %  (variantName, self.swGroup, self.swGroup, 
+                                                       verNew, verCur)
 
     def checkThatAnaRelYamlHasCorrectPsanaCondaVersion(self):
         if self.dev: return True
@@ -218,15 +240,19 @@ class AutoReleaseBuilder(object):
 
     def setNames(self):
         assert util.validVersionStr(self.version_str), "--name must specify valid version string, i.e, n.n.n or n.n.nxxx, but it is %s" % self.version_str
-        self.psanaPkgName = util.psanaCondaPackageName(self.version_str)
-        self.anaRelName = 'ana-%s' % self.version_str
+        self.relName = '%s-%s' % (self.swGroup, self.version_str)
 
-        self.checkThatReleaseIsNewerThanAnaCurrent()
-        self.checkThatAnaRelYamlHasCorrectPsanaCondaVersion()
+        self.checkThatReleaseIsNewerThanCurrent()
+        if swGroup == 'ana':
+            self.psanaPkgName = util.psanaCondaPackageName(self.version_str)
+            self.checkThatAnaRelYamlHasCorrectPsanaCondaVersion()
+        else:
+            self.psanaPkgName = None
 
         print("########## AutoReleaseBuilder ############")
-        print("psana pkg name: %s" % self.psanaPkgName)
-        print("ana release name: %s" % self.anaRelName)
+        if self.swGroup == 'ana':
+            print("psana pkg name: %s" % self.psanaPkgName)
+        print("%s release name: %s" % (self.swGroup, self.relName))
         if not os.environ.get('NOASK', False):
             res = raw_input("\nis this Ok? based on --name: ")
             if res.strip().lower() != 'y':
@@ -234,11 +260,13 @@ class AutoReleaseBuilder(object):
                 sys.exit(1)
 
     def startLogDir(self):
-        self.testerLogDir = os.path.join(self.basedir, "tester_logs")
-        assert os.path.exists(self.testerLogDir), "tester log dir: %s doesn't exist" % self.testerLogDir
+        if self.needs_testing:
+            self.testerLogDir = os.path.join(self.basedir, "tester_logs")
+            assert os.path.exists(self.testerLogDir), "tester log dir: %s doesn't exist" % self.testerLogDir
+
         baseLogDir = '/reg/neh/home/psreldev/public_html/builds'
         assert os.path.exists(baseLogDir), "logdir %s doesn't exist" % baseLogDir
-        logDir = os.path.join(baseLogDir, 'auto-%s' % self.version_str)
+        logDir = os.path.join(baseLogDir, 'auto-%s-%s' % (self.swGroup, self.version_str))
         if os.path.exists(logDir):
             if self.clean:
                 print("--- AUTO: old logDir exists, but --clean given, removing %s" % logDir)
@@ -255,7 +283,7 @@ class AutoReleaseBuilder(object):
             print("--- AUTO: deleting old file: %s" % self.logFname)
             os.unlink(self.logFname)
         self.masterLog = file(self.logFname,'w')
-        self.masterLog.write("<h1>AUTO %s</h1>\n" % self.version_str)
+        self.masterLog.write("<h1>AUTO %s-%s</h1>\n" % (self.swGroup, self.version_str))
         self.masterLog.write("starting log: %s<br>\n" % (datetime.datetime.now()))
         self.masterLog.close()
 
@@ -310,13 +338,13 @@ class AutoReleaseBuilder(object):
         
     def notify(self, hdr, msg, step=None):
         msg = msg.format(version=self.version_str,
-                         anaVer=self.anaRelName,
+                         anaVer=self.relName,
                          master_log_file=self.logFname,
                          psanaCondaRecipeDir=util.psanaCondaRecipeDir(self.basedir, self.manageSubDir),
                          step=step)
 
         msg=MIMEText(msg)
-        msg['Subject'] = 'ana-rel-admin AUTO %s *%s*' % (self.anaRelName, hdr)
+        msg['Subject'] = 'ana-rel-admin AUTO %s *%s*' % (self.relName, hdr)
         msg['From'] = '%s@slac.stanford.edu' %  os.environ.get('USERNAME','unknown')
         msg['To'] = self.email
         
@@ -536,14 +564,14 @@ class AutoReleaseBuilder(object):
                                     html=False)
     
     def _make_envs(self, name, devel):
-        clean_cmd = 'ana-rel-admin --cmd rmrel --name %s --force' % self.anaRelName
+        clean_cmd = 'ana-rel-admin --cmd rmrel --name %s --force' % self.relName
         self.execute_multihost_step(name="%s_clean" % name,
                                     devel=devel,
                                     env='manage',
                                     tester=False,
                                     cmd_or_cmddict=clean_cmd,
                                     html=False)
-        cmd = 'ana-rel-admin --cmd newrel --name %s --nolog' % self.anaRelName
+        cmd = 'ana-rel-admin --cmd newrel --%s --name %s --nolog' % (self.swGroup, self.relName)
         if self.dev:
             cmd += ' --dev'
         self.execute_multihost_step(name=name,
@@ -584,7 +612,7 @@ class AutoReleaseBuilder(object):
 #        cmddict = {'rhel7':'which python; %s --verbose --import' % testcmd}
         self.execute_multihost_step(name=name,
                                     devel=devel,
-                                    env=self.anaRelName,
+                                    env=self.relName,
                                     tester=True,
                                     cmd_or_cmddict=cmddict,
                                     html=False)
@@ -603,7 +631,7 @@ class AutoReleaseBuilder(object):
 
     def release_notes_variant(self, name, variant, devel, osnames=['rhel5', 'rhel6', 'rhel7']):
         basename = 'ana-current'
-        anaRelVariant = self.anaRelName
+        anaRelVariant = self.relName
         if variant:
             assert variant in ['gpu','py3'], "unknown variant=%s, should be 'gpu' or 'py3'" % variant
             basename += '-%s' % variant
@@ -642,8 +670,16 @@ class AutoReleaseBuilder(object):
     
 def automateReleaseBuildFromArgs(args):
     assert args.name, "must use --name to specify version."
+    assert args.ana or args.dm, "must specify one of --ana or --dm"
+    assert not (args.ana and args.dm), "can't specify both --ana and --dm"
+    
+    if args.ana:
+        swGroup = 'ana'
+    elif args.dm:
+        swGroup = 'dm'
 
     return AutoReleaseBuilder(name=args.name,
+                              swGroup=swGroup,
                               basedir=args.basedir,
                               manageSubDir=args.manage,
                               clean=args.clean,

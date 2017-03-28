@@ -1,0 +1,10 @@
+-
+  ipython:
+    ver: latest
+
+  nose:
+    ver: latest
+
+  numpy:
+    ver: latest
+

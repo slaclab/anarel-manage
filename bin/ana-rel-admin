@@ -61,12 +61,19 @@ def genCondaRcCommand(args):
         util.error("jinja2 not available - cannot generate condarc files")
         return
 
-    template_file = util.getFile('config', 'condarc_template')
-    template = jinja2.Template(file(template_file,'r').read())
-    print("Read in condarc template file: %s" % template_file)
+    template_file_rhel6_rhel7 = util.getFile('config', 'condarc_template')
+    template_file_rhel5 = util.getFile('config', 'condarc_template_rhel5')
+    template_rhel67 = jinja2.Template(file(template_file_rhel6_rhel7,'r').read())
+    template_rhel5 = jinja2.Template(file(template_file_rhel5,'r').read())
+    print("Read in condarc template file: %s" % template_file_rhel6_rhel7)
+    print("Read in condarc template file: %s" % template_file_rhel5)
     sys.stdout.flush()
 
     for OS in ['rhel5', 'rhel6', 'rhel7']:
+        if OS == 'rhel5':
+            template = template_rhel5
+        else:
+            template = template_rhel67
         for  BUILD in ['dev', 'prod']:
             miniconda_dir = os.path.join(args.basedir, 'inst', 'miniconda2-%s-%s' % (BUILD, OS))
             assert os.path.exists(miniconda_dir), "miniconda dir for OS=%s and build=%d doesn't exist, expected %s" % \
@@ -199,45 +206,56 @@ def newRel(args):
         exitcode = os.system(cmd)
         assert exitcode ==0, "newRel: FAILED: cmd=%s" % cmd
 
-def changeAnaCurrent(args):
-    ### helpder
-    def whichInstallationsHaveThisEnvironment(newAnaCurrent):
+def changeCurrent(args):
+    ### helper
+    def whichInstallationsHaveThisEnvironment(newCurrent):
         present=[]
         for inst in ['prod','dev']:
             for osname in ['rhel5', 'rhel6','rhel7']:
                 condainst = 'miniconda2-%s-%s' % (inst, osname)
                 instDir = os.path.join(args.basedir, 'inst', condainst)
                 envsDir = os.path.join(instDir, 'envs')
-                envDir = os.path.join(envsDir, newAnaCurrent)
+                envDir = os.path.join(envsDir, newCurrent)
                 if os.path.exists(envDir):
                     present.append('%s-%s: Yes' % (inst, osname))
                 else:
                     present.append('%s-%s: No' % (inst, osname))
-        print("==== Which installations have environment: %s ====" % newAnaCurrent)
+        print("==== Which installations have environment: %s ====" % newCurrent)
         print('\n'.join(present))
         sys.stdout.flush()
 
     assert args.name, "must provide a name for new ana-current"
-    for variantExt, variantName in zip(['', '-gpu', '-py3'],
-                                       ['standard', 'gpu', 'python3']):
-        print("Changing ana-current, variant=%s" % variantName)
+    assert args.ana or args.dm, "must specify one of --ana or --dm"
+    assert not (args.ana and args.dm), "can't specify both --ana and --dm"
+
+    if args.ana:
+        swGroup = 'ana'
+        variantInfo = zip(['', '-gpu', '-py3'], ['standard', 'gpu', 'python3'])
+    elif args.dm:
+        swGroup = 'dm'
+        variantInfo = zip([''], ['standard'])
+
+    assert args.name.startswith(swGroup+'-'), "expect the name to start with %s-, but it is" % (swGroup, name)
+
+    for variantExt, variantName in variantInfo:
+        print("Changing %s-current, variant=%s" % (swGroup, variantName))
         sys.stdout.flush()
-        anaCurrentFname = 'ana-current' + variantExt
-        anaCurrentEnv = args.name + variantExt
-        output = os.path.join(args.basedir, 'ana-current', anaCurrentFname)
+        currentFname = ('%s-current' % swGroup) + variantExt
+        currentEnv = args.name + variantExt
+        output = os.path.join(args.basedir, 'current', swGroup, currentFname)
         assert os.path.exists(output), "file %s doesn't exist" % output
         print("current content of %s:\n%s" % (output, file(output,'r').read()))
         sys.stdout.flush()
-        whichInstallationsHaveThisEnvironment(anaCurrentEnv)
-        ans=raw_input("\n====\nGiven report on  %s - switch ana-current? (y/Y)" % anaCurrentEnv)
+        whichInstallationsHaveThisEnvironment(currentEnv)
+        ans=raw_input("\n====\nGiven report on  %s - switch %s-current? (y/Y)" % (currentEnv, swGroup))
         if ans.lower().strip()=='y':
             print("about to replace ana-current file: ")
             fout = file(output,'w')
-            fout.write(anaCurrentEnv)
+            fout.write(currentEnv)
             fout.close()
-            print("replaced ana-current file: %s" % output)
+            print("replaced %s-current file: %s" % (swGroup, output))
         else:
-            print("did NOT replace %s with %s" % (output, anaCurrentEnv))
+            print("did NOT replace %s with %s" % (output, currentEnv))
         sys.stdout.flush()
               
 def anaEnvLists(args):
@@ -412,16 +430,16 @@ commandHelpFuncList = [
      'upload to anaconda - default: rhel5/6/7, use --recipe dir for one of them. Use --skip to only do rhel7 (or native os)',
      anacondaUpload),
 
-    ('change-ana-current',
-     'set ana current to name, this updates files in the central install location that conda_setup uses.',
-     changeAnaCurrent),
+    ('change-current',
+     'Also specify --ana or --dm, along with --name. Changes ana-current, affects what conda_setup does.',
+     changeCurrent),
 
     ('ana-list',
      'create json lists of all new ana environments. Reports on diffs with existing, use --force to overwrite existing',
      anaEnvLists),
 
     ('auto',
-     'automate the building of a new release - starts interactively. options: --clean --name --force --tagsfile, env: NOASK',
+     'automate the building of a new release - starts interactively. options: --ana/--dm --clean --name --force --tagsfile, env: NOASK',
      automateNewRel),
 
     ('env-report',
@@ -511,6 +529,10 @@ if __name__ == '__main__':
                         help='no log file (for auto and bld-pkg.')
     parser.add_argument('--dev', action='store_true', 
                         help='develop mode, for auto.')
+    parser.add_argument('--ana', action='store_true', default=False, 
+                        help='for auto and change-current, specify modifying the ana environments')
+    parser.add_argument('--dm', action='store_true', default=False, 
+                        help='for auto and change-current, specify modifying the dm anvironments')
     parser.add_argument('--skip', action='store_true', 
                         help='skip default for various, used for anaconda-upload.')
     parser.add_argument('--tagsfile', type=str, 

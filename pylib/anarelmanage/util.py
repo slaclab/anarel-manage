@@ -36,7 +36,7 @@ def getRecipesDir():
         RECIPES = _getTopSubDir('recipes')
     return RECIPES
 
-def getTagsFile(tagsfile):
+def getPsanaTagsFile(tagsfile):
     if os.path.exists(tagsfile):
         return os.path.abspath(tagsfile)
     return getFile('config',tagsfile)
