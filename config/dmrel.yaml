@@ -1,0 +1,314 @@
+# Maintain the packages we want to install into a miniconda anarel environment.
+# support variants on a anarel, like anarel-py3 anarel-gpu
+
+# the format of this file is
+# -  list of stage 1 packages
+# -  list of stage 2 packages, ect
+#
+# after each stage, ana-rel-manage will test the new packages just installed, as well as
+# retest the previous packages installed. In this was we can see 
+# if installing some later package causes problems for an earlier package.
+
+# each stage is a list of packages. We can specify a version, and then a full package
+# build string for different variants, or specify that we should skip a package for
+# a given variant. We can also specify a channel for channels not in the condarc files
+
+# ana-rel-manage will add the appropriate python version when creating, so we don't
+# list python below.
+
+# syntax for a package
+#  packagename:
+#    ver: '=1.0.0'  or '>=1.0' or latest, note we need '' around the specification, and
+#         we need to start numbers with = or >, latest means just let conda get the latest
+#         version of the package
+#    py3ver: '=1.0.1' if for some reason the python three installation requires a different
+#                     version, specify it here 
+#    bld: lfs_verbs_100   full package build string, for the default py27 opt anarelease
+#    dbg: blah            likewise for the py27 debug release
+#    gpu: blah            likewise for the gpu py27 opt release
+#    py3: blah            likwise fot eh py3 opt release
+#                     you can also put the string skip here, important for py3
+#    chl: the channel to find the package in, fully qualified file urls, or off of anaconda for things
+#         like conda-forge, ect, only needed if channel is not in condarc
+                   
+-
+    # I couldn't import psana with python=2.7.13
+  python:
+    ver: '=2.7.12'
+  
+  openmpi:
+    ver: '=1.10.6'
+
+  szip:
+    ver: '=2.1'
+
+  hdf5:
+    ver: '=1.8.18'
+
+  ipython:
+    ver: latest
+
+  nose:
+    ver: latest
+
+  numpy:
+    ver: latest
+
+  scipy:
+    ver: latest
+
+  h5py:
+    ver: '=2.7.0'
+
+  mpi4py:
+    ver: '=2.0.0'
+
+  tables:
+    ver: '=3.3.0'
+
+  scons:
+    ver: latest
+    py3: skip
+
+  cython:
+    ver: latest
+
+  boost:
+    ver: '=1.57.0'
+    py3ver: '=1.60.0'
+    # moving to 1.60.0 got the boost_python lib to load, but there
+    # are still other boost libraries that don't load
+
+  mysql:
+    ver: latest
+
+  ndarray:
+    ver: latest
+
+  # we build psana with 4.8.5, I don't think building with 4.8.7 works
+  # but spyder doesn't work with 4.8.5, however psana seems to run  with 4.8.7
+  qt:
+    ver: '=4.8.7'
+
+  matplotlib:
+    ver: latest
+
+  pyzmq:
+    ver: latest
+
+# generally good things, most users might expect want, some part of psana uses
+  pylint:
+    ver: latest
+
+  coverage:
+    ver: latest
+
+  # pinning jinja2 since 2.9.5 brakes the DDL
+  # see https://github.com/slaclab/anarel-manage/issues/32
+  jinja2:
+    ver: '=2.8.1'
+
+  pandas:
+    ver: latest
+  
+  pillow:
+    ver: latest
+
+  pyqt:
+    ver: '=4.11.4'
+
+  pyqtgraph:
+    ver: latest
+
+  # 2.6.0 is the latest, but it crashes pandas 0.19.0 and 0.19.1
+  # https://github.com/pandas-dev/pandas/issues/14621
+  python-dateutil:
+    ver: '=2.5.3'
+
+  scikit-beam:
+    ver: latest
+
+  scikit-learn:
+    ver: latest
+
+  anaconda-client:
+    ver: latest
+
+  pyyaml:
+    ver: latest
+
+  curl:
+    ver: latest
+
+  git:
+    ver: latest
+    
+  lxml:
+    ver: latest
+    
+  cssselect:
+    ver: latest
+
+  # we usually get sphinx anyways, but just be explicit
+  sphinx:
+    ver: latest
+      
+  APScheduler:
+    ver: latest
+
+  cmake:
+    ver: latest
+    
+  notebook:
+    ver: latest
+
+  jupyter:
+    ver: latest
+
+  virtualenv:
+    ver: latest
+
+  requests:
+    ver: latest
+
+  simplejson:
+    ver: latest
+
+  # looks like this is not in py3
+  MySQL-python:
+    ver: latest
+    py3: skip
+
+  # Murali says this is the better, more standard interface for mysql python programming
+  mysql-connector-python:
+    ver: latest
+
+  # zmq.backend.cffi won't import without this, still doesn't seem to import with it?
+  cffi:
+    ver: latest
+
+  # also a zmq backend?
+  gevent:
+    ver: latest
+
+  # for the zmq.test module
+  pytest:
+    ver: latest
+
+  # for ipykernel.test, and tensorflow
+  mock:
+    ver: latest
+
+  # for pyPsanaMonit
+  psutil:
+    ver: latest
+
+  # looks useful, uses psutil, in defaults
+  memory_profiler:
+    ver: latest
+
+  # for h5serv, if we want to try it, watchdog is on conda-forge
+  watchdog:
+    ver: latest
+    
+  # for Jason
+  xarray:
+    ver: latest
+
+  dask:
+    ver: latest
+
+  bottleneck:
+    ver: latest
+
+  seaborn:
+    ver: latest  
+
+  # based on Marco's environments
+  joblib:
+    ver: latest
+
+  bokeh:
+    ver: latest
+
+  # from Marco - pseudo terminal
+  ptyprocess:
+    ver: latest
+
+  # for jason, from conda-forge
+  cyordereddict:
+    ver: latest
+
+
+  # add web stuff for Chris O' Grady - hashtag interface
+  click:
+    ver: latest
+
+  Flask:
+    ver: latest
+
+  itsdangerous:
+    ver: latest
+
+  tzlocal:
+    ver: latest
+
+  werkzeug:
+    ver: latest
+
+  # pypi packaging recommend this, comes from condaforge
+  twine:
+    ver: latest
+
+  psana-conda:
+    ver: '=1.2.4'
+    py3: skip
+
+  logbookclient:
+    ver: latest
+    py3: skip
+
+  # Clemens suggests
+  numba:
+    ver: latest
+
+  # using python to run ssh commands in other places, Igor liked this 
+  paramiko:
+    ver: latest
+
+  # Object oriented SQL
+  sqlalchemy:
+    ver: latest
+
+  # sphinx 
+  numpydoc:
+    ver: latest
+
+  # Python multithreaded job distribution module
+  workerpool:
+    ver: latest
+
+  # Data compression software with high compression ratio
+  xz:
+    ver: latest
+
+  # Module for decorators, wrappers and monkey patching
+  wrapt:
+    ver: latest
+
+
+  # A system for controlling process state under UNIX, not on python 3
+  supervisor:
+    ver: latest
+    py3: skip
+
+  # A compiler that integrates C and C++ with a variety of languages 
+  swig:
+    ver: latest
+
+  readline:
+    ver: latest
+    
+  gunicorn:
+    ver: latest
+
