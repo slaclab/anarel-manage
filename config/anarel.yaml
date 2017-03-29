@@ -407,6 +407,9 @@
   hexanode-proxy:
     ver: latest
 
+  # for Wilko, Jacob, maintaining this in our channels to get later version from pypi
+  kafka-python:
+    ver: latest
 -
   protobuf:
 # I think tensorflow will pickup what it needs in its dependencies
