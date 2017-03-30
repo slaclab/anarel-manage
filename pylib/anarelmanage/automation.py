@@ -114,10 +114,8 @@ class AutoReleaseBuilder(object):
         # self.needs_testing above to True for 'dm'
         dm_all_steps=[
             # single host/ name/ function
-            (False, 'dev_envs',       self.dev_envs),
             (False, 'prod_envs',      self.prod_envs),
             (False,  'release_notes_py27_prod',  self.release_notes_py27_prod),
-            (False,  'release_notes_py27_dev',  self.release_notes_py27_dev),
         ]
 
         if self.swGroup == 'ana':
