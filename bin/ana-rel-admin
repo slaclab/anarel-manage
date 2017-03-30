@@ -235,7 +235,7 @@ def changeCurrent(args):
         swGroup = 'dm'
         variantInfo = zip([''], ['standard'])
 
-    assert args.name.startswith(swGroup+'-'), "expect the name to start with %s-, but it is" % (swGroup, name)
+    assert args.name.startswith(swGroup+'-'), "expect the name to start with %s-, but it is %s" % (swGroup, args.name)
 
     for variantExt, variantName in variantInfo:
         print("Changing %s-current, variant=%s" % (swGroup, variantName))
