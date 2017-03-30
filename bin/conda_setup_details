@@ -117,20 +117,31 @@ def write_activate_condaenv(fout, args):
     if args.noenv:
         return
     if None is args.env:
-        if not os.path.exists(args.anacur):
-            fatal("configuration directory with ana_current information doesn't exist, it is: %s" % args.ana_current)
+        if not os.path.exists(args.current):
+            fatal("configuration directory with current information doesn't exist, it is: %s" % args.ana_current)
+        swGroup = 'ana'
+        fname = 'ana-current'
+        if args.dm:
+            swGroup = 'dm'
+            fname = 'dm-current'
+            if args.dev + args.gpu + args.py3 > 0:
+                fatal("Cannot specify --dev --gpu or --py3 with --dm, there is presently only the py27 prod dm environment")
+
+        swCurrent = os.path.join(args.current, swGroup)
+        if not os.path.exists(swCurrent):
+            fatal("%s directory %s doesn't exist" % (swGroup, swCurrent))
+
         if args.gpu + args.py3 > 1:
             fatal("cannot specify both --gpu and --py3")
         if args.gpu:
-            fname = 'ana-current-gpu'
+            fname += '-gpu'
         elif args.py3:
-            fname = 'ana-current-py3'
-        else:
-            fname = 'ana-current'
-        path = os.path.join(args.anacur, fname)
+            fname += '-py3'
+
+        path = os.path.join(swCurrent, fname)
         if not os.path.exists(path):
-            fatal("The file %s doesn't exists, can't identify ana-current for given options (gpu=%s py3=%s)" %
-                  (path, args.gpu, args.py3))
+            fatal("The file %s doesn't exists, can't identify %s-current for given options (gpu=%s py3=%s)" %
+                  (swGroup, path, args.gpu, args.py3))
         args.env=file(path,'r').read()
 
     activate_line = 'source activate %s' % args.env
@@ -457,12 +468,10 @@ run directly. It is used from the script conda_setup, that is sourced to change 
 environment.
 '''
 
-### TODO: change ana-current to ana and dm
-
 if __name__ == '__main__':
     def_sit_root='/reg/g/psdm'
     def_inst = '/reg/g/psdm/sw/conda/inst'
-    def_ana_current = '/reg/g/psdm/sw/conda/ana-current'
+    def_current = '/reg/g/psdm/sw/conda/current'
     def_manage_bin = '/reg/g/psdm/sw/conda/manage/bin'
     def_test_release_prompt = '*tr*'
     osName, _ = getOsAndPlatform()
@@ -478,11 +487,12 @@ if __name__ == '__main__':
     parser.add_argument('-q', '--quiet', action='store_true', help='quiet, no output (except fatal errors)')
     parser.add_argument('--noenv', action='store_true', help='do not activate a conda environment')
     parser.add_argument('--dev', action='store_true', help="use development miniconda installation, not production")
+    parser.add_argument('--dm', action='store_true', help="activate latest data management environment", default=False)
     parser.add_argument('--rhel5', action='store_true', help="use rhel5 miniconda installation. def=%s"%def_rhel5)
     parser.add_argument('--rhel6', action='store_true', help="use rhel6 miniconda installation. def=%s"%def_rhel6)
     parser.add_argument('--rhel7', action='store_true', help="use rhel7 miniconda installation. def=%s"%def_rhel7)
     parser.add_argument('--instdir', type=str, help="overrides default directory for conda installations", default=def_inst)
-    parser.add_argument('--anacur', type=str, help="overrides default directory for ana current config", default=def_ana_current)
+    parser.add_argument('--current', type=str, help="overrides default directory for current (has ana and dm subdirs)", default=def_current)
     parser.add_argument('--conda', type=str, help="non standard path to conda installation (prefix with bin subdir)", default=None)
     parser.add_argument('--sitroot', type=str, help="set SIT_ROOT, default is %s" % def_sit_root, default=def_sit_root)
     parser.add_argument('--manage', type=str, help="non standard path to manage/bin default is %s" % def_manage_bin, default=def_manage_bin)

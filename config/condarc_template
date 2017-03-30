@@ -10,8 +10,9 @@ channels:
   - file://{{ CONDA_ROOT }}/channels/system-{{ OS }}
   - file://{{ CONDA_ROOT }}/channels/psana-{{ OS }}
   - file://{{ CONDA_ROOT }}/channels/external-{{ OS }}
-  - conda-forge
+  # would like to use conda-forge for rhel6/7, but not working yet.
   - defaults
+  - conda-forge
   - kalefranz    # for guppy
   - jjhelmus     # for latest protocol buffer
   - file://{{ CONDA_ROOT }}/channels/testing-{{ OS }}

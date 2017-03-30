@@ -17,34 +17,38 @@ from email.mime.text import MIMEText
 
 FAILURE_MSG='''
 ana-rel-admin AUTO command has *FAILED* for
-{anaVer} on step {step}.
+{relName} on step {step}.
 
 master log file at {master_log_file}
 
-link: https://pswww.slac.stanford.edu/user/psreldev/builds/auto-{version}/
+link: https://pswww.slac.stanford.edu/user/psreldev/builds/auto-{swVer}-{version}/
 '''
+
 SUCCESS_MSG='''
 ana-rel-admin AUTO command has *SUCCEEDED* for
-{anaVer}.
+{relName}.
 
 master log file at {master_log_file}
 
-link: https://pswww.slac.stanford.edu/user/psreldev/builds/auto-{version}/
+link: https://pswww.slac.stanford.edu/user/psreldev/builds/auto-{swVer}-{version}/
 
-prod py27 report: https://pswww.slac.stanford.edu/user/psreldev/builds/auto-{version}/release_notes_py27_prod-rhel7.html
+prod py27 report: https://pswww.slac.stanford.edu/user/psreldev/builds/auto-{swVer}-{version}/release_notes_py27_prod-rhel7.html
 
-prod py3 report: https://pswww.slac.stanford.edu/user/psreldev/builds/auto-{version}/release_notes_py3_prod-rhel7.html
+prod py3 report: https://pswww.slac.stanford.edu/user/psreldev/builds/auto-{swVer}-{version}/release_notes_py3_prod-rhel7.html
 
 When ready, have admin account execute:
 
-ana-rel-admin --cmd change-current --%s --name {swVer}
+ana-rel-admin --cmd change-current --name {swVer}-{version} --{swVer}
 
-and 
+and (if this is a ana release with a new psana-conda): 
 
 ana-rel-admin --cmd anaconda-upload --recipe {psanaCondaRecipeDir}
 
 to upload psana-conda={version} to the lcls channels.
+
+Also consider making the tag {swVer}-{version} of anarel-manage repo and pushing to github.  
 '''
+
 class AutoReleaseBuilder(object):
     def __init__(self, name, swGroup, force, clean, tagsfile, basedir, manageSubDir, dev, email, variant):
         self.version_str = name
@@ -57,7 +61,7 @@ class AutoReleaseBuilder(object):
         self.variant = variant
         self.email = email
         self.dev = dev
-        self.needs_testing = None
+        self.needs_testing = swGroup in ['ana']
 
         if dev:
             self.tagsfile += '-tst'
@@ -88,7 +92,8 @@ class AutoReleaseBuilder(object):
 
         self.setNames()
         self.startLogDir() 
-        self.updateRecipe()
+        if self.swGroup == 'ana':
+            self.updatePsanaCondaRecipe()
 
         ana_all_steps=[
             # single host/ name/ function
@@ -105,18 +110,20 @@ class AutoReleaseBuilder(object):
             (False,  'release_notes_gpu_dev',  self.release_notes_gpu_dev),
         ]
 
+        # note - if we add testing steps to dm_all_steps below, then set 
+        # self.needs_testing above to True for 'dm'
         dm_all_steps=[
             # single host/ name/ function
+            (False, 'dev_envs',       self.dev_envs),
             (False, 'prod_envs',      self.prod_envs),
             (False,  'release_notes_py27_prod',  self.release_notes_py27_prod),
+            (False,  'release_notes_py27_dev',  self.release_notes_py27_dev),
         ]
 
-        if swGroup == 'ana':
+        if self.swGroup == 'ana':
             all_steps = ana_all_steps
-            self.needs_testing = True
-        elif swGroup == 'dm':
+        elif self.swGroup == 'dm':
             all_steps = dm_all_steps
-            self.needs_testing = False
 
         steps_todo = self.identifySteps(all_steps)
 
@@ -170,7 +177,7 @@ class AutoReleaseBuilder(object):
             del test_user_password
         print("-- AUTO: ssh build and test (if needed) connections have been made.")
 
-    def updateRecipe(self):
+    def updatePsanaCondaRecipe(self):
         recipeDir = util.psanaCondaRecipeDir(self.basedir, self.manageSubDir)
         renderedMetaFile = os.path.join(self.logDir, 'psana-conda-rendered.yaml.txt')
         cmd = 'conda-render -f %s %s' % (renderedMetaFile, recipeDir)
@@ -213,10 +220,10 @@ class AutoReleaseBuilder(object):
             verNew = self.relName.split('%s-' % self.swGroup)[1]
             variantName = variant
             if not variantName: variantName = 'normal'
-            assert util.versionGreater(verNew, verCur), "For variant: %s, " + \
+            assert util.versionGreater(verNew, verCur), ("For variant: %s, " + \
                 "the %s version being build is not greater than what is in " + \
                 "%s-current. Aborting. Version requested=%s, but ana current " + \
-                "version (for this variant) is %s" %  (variantName, self.swGroup, self.swGroup, 
+                "version (for this variant) is %s") %  (variantName, self.swGroup, self.swGroup, 
                                                        verNew, verCur)
 
     def checkThatAnaRelYamlHasCorrectPsanaCondaVersion(self):
@@ -243,7 +250,7 @@ class AutoReleaseBuilder(object):
         self.relName = '%s-%s' % (self.swGroup, self.version_str)
 
         self.checkThatReleaseIsNewerThanCurrent()
-        if swGroup == 'ana':
+        if self.swGroup == 'ana':
             self.psanaPkgName = util.psanaCondaPackageName(self.version_str)
             self.checkThatAnaRelYamlHasCorrectPsanaCondaVersion()
         else:
@@ -338,7 +345,8 @@ class AutoReleaseBuilder(object):
         
     def notify(self, hdr, msg, step=None):
         msg = msg.format(version=self.version_str,
-                         anaVer=self.relName,
+                         relName=self.relName,
+                         swVer=self.swGroup,
                          master_log_file=self.logFname,
                          psanaCondaRecipeDir=util.psanaCondaRecipeDir(self.basedir, self.manageSubDir),
                          step=step)
@@ -550,7 +558,7 @@ class AutoReleaseBuilder(object):
     def build_psana(self, name):
         cmd = 'ana-rel-admin --cmd bld-pkg'
         if self.dev:
-            cmd += ' --recipe %s/manage/recipes/external/szip' % self.basedir
+            cmd += ' --force --recipe %s/manage/recipes/external/szip' % self.basedir
         else:
             cmd += ' --recipe %s' % util.psanaCondaRecipeDir(self.basedir, self.manageSubDir)
         cmd = self.add_opts(cmd)

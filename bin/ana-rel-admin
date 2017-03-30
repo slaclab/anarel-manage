@@ -135,7 +135,7 @@ def makePsanaCondaSrc(args):
         print("removed old scratch directory: %s" % scratchDir)
         sys.stdout.flush()
     os.makedirs(scratchDir)
-    tagsFile = util.getTagsFile(args.tagsfile)
+    tagsFile = util.getPsanaTagsFile(args.tagsfile)
     anaTags = tags.readAnaTags(tagsFile)
     tags.updateWithLatestTags(anaTags)
     os.chdir(scratchDir)
@@ -335,9 +335,11 @@ def rmRel(args):
         sys.stdout.flush()
         sys.stderr.flush()
         assert exitcode == 0, "command failed: %s, exitcode=%d" % (cmd, exitcode)
+        # note - there may not be a jhub config (like for dm envs) in which case below
+        # gives a warning
         util.manageJhubConfigKernel(cmd='remove', envName=env, 
-                                        basedir=args.basedir, force=args.force)
-            
+                                    basedir=args.basedir, force=args.force)
+                                    
 
     envRoot, condaEnvs = util.condaEnvs()
     for env in toRemove:

@@ -119,6 +119,7 @@ class ReleaseBuilder(object):
                 assert relname in envs, "can't start at stage %d, no conda environment named: %s, aborting" % (self.stage, relname)
         self.isProductionInstall = util.whichCondaInstall(self.basedir).find('-dev-rhel')<0
 
+
     def makeCommandWithLogging(self):
         cmd = 'ana-rel-admin --cmd newrel --%s --xx --basedir %s' % (self.swGroup, self.basedir)
         if self.force:
@@ -127,6 +128,8 @@ class ReleaseBuilder(object):
         if self.checkpoint:
             cmd += ' --checkpoint'
         cmd += ' --name %s' % self.name
+        if self.swGroup == 'dm':
+            cmd += ' --dm'
         if self.variant:
             cmd += ' --variant %s' % self.variant
         if self.dev:
@@ -141,6 +144,7 @@ class ReleaseBuilder(object):
         print(cmd)
         sys.stdout.flush()
         return cmd
+
 
     def getLogFilename(self):
         if self.nolog:
@@ -160,18 +164,21 @@ class ReleaseBuilder(object):
         print("############################")
         print("## Release Builder - name=%s\n" % self.name)
         print("## time: %s\n" % datetime.datetime.now())
-        basename = 'anarel.yaml'
+        if self.swGroup == 'ana':
+            basename = 'anarel.yaml'
+        elif self.swGroup == 'dm':
+            basename = 'dmrel.yaml'
         if self.dev:
             basename += '-tst'
-        anarelyaml = util.getFile('config',basename)
-        self.logAndPrint("reading in %s" % anarelyaml)
-        self.anaRelBuild = yaml.load(file(anarelyaml,'r'))
-        self.verifyAnaRelYaml(self.anaRelBuild)
+        relyaml = util.getFile('config',basename)
+        self.logAndPrint("reading in %s" % relyaml)
+        self.relBuild = yaml.load(file(relyaml,'r'))
+        self.verifyRelyaml(self.relBuild)
 
         self.logAndPrint("---------- yaml contents -------")
-        self.logAndPrint(str(self.anaRelBuild))
+        self.logAndPrint(str(self.relBuild))
 
-        stage01 = self.anaRelBuild.pop(0)
+        stage01 = self.relBuild.pop(0)
 
         for variant in self.variants:
             if variant == 'gpu' and self.osname != 'rhel7':
@@ -181,16 +188,16 @@ class ReleaseBuilder(object):
                 self.logAndPrint("--skipping variant %s since this is production install" % variant)
                 continue
             relname = self.relNameFromVariant(variant)
-            stageOnePkgs = self.createNewAnaRel(relname, stage01, variant)            
+            stageOnePkgs = self.createNewRel(relname, stage01, variant)            
             self.logAndPrint("------ relname=%s variant=%s stage 01 complete ---------" % (relname, variant))
             if self.checkpoint:
                 stage01_checkpoint_file, numStage1Files = util.checkPoint(self.basedir, relname, 'stage01')
                 self.logAndPrint("------ relname=%s variant=%s stage 01 checkpoint file = %s numfiles=%d---------" % (relname, variant, stage01_checkpoint_file, numStage1Files))
             if self.checkpoint:
                 prev_checkpoint_file = stage01_checkpoint_file
-            for idx, stage in enumerate(self.anaRelBuild):
+            for idx, stage in enumerate(self.relBuild):
                 stageNum = 2 + idx
-                self.addPkgsToAnaRel(relname, stage, variant)
+                self.addPkgsToRel(relname, stage, variant)
                 self.logAndPrint("------ relname=%s variant=%s stage %d complete ---------" % (relname, variant, stageNum))
                 if self.checkpoint:
                     current_checkpoint_file, numFiles = util.checkPoint(self.basedir, relname, 'stage%0.2d' % stageNum)
@@ -205,8 +212,9 @@ class ReleaseBuilder(object):
             assert relname in envs, "relname=%s not in envs=%s" % (relname, envs)
             envDir = os.path.join(envRoot, relname)
             util.createSitVarsCondaEnv(dbg= variant=='dbg', force=True, envDir=envDir)
-            util.manageJhubConfigKernel(cmd='create', envName=relname, 
-                                        basedir=self.basedir, force=self.force)
+            if self.swGroup == 'ana':
+                util.manageJhubConfigKernel(cmd='create', envName=relname, 
+                                            basedir=self.basedir, force=self.force)
             if variant == 'gpu':
                 util.addToActivateDeactivateGPUVariables(envDir=envDir)
             self.logAndPrint("--- checking/fixing any permission issues ---")
@@ -221,7 +229,7 @@ class ReleaseBuilder(object):
             relname = self.name
         return relname
 
-    def verifyAnaRelYaml(self, yamlContents):
+    def verifyRelyaml(self, yamlContents):
         assert isinstance(yamlContents, list), "yaml not a list"
         assert len(yamlContents)>0, "no stages in yaml"
 
@@ -274,7 +282,7 @@ class ReleaseBuilder(object):
             pkgstr += '=%s' % pkginfo[variant]
         return pkgstr
 
-    def createNewAnaRel(self, conda_env_name, pkglist, variant):
+    def createNewRel(self, conda_env_name, pkglist, variant):
         self.logAndPrint("----- %s -----" % conda_env_name)
 
         # create new environment with given name
@@ -303,7 +311,7 @@ class ReleaseBuilder(object):
         assert res == 0, "cmd %s failed, retcode=%d" % (cmd, res)
         time.sleep(.2)
 
-    def addPkgsToAnaRel(self, conda_env_name, pkglist, variant):
+    def addPkgsToRel(self, conda_env_name, pkglist, variant):
         pkglist = pkgsInVariant(pkglist, variant, self.osname)
         if len(pkglist)==0:
             self.logAndPrint("---- no pkgs for this step, variant=%s ---" % variant)
