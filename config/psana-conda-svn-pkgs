@@ -188,6 +188,8 @@ psocake              svn=psdm subdir=no conda_branch=no
 #pyfits              svn=psdm subdir=no conda_branch=no
 
 pyimgalgos          svn=psdm subdir=no conda_branch=no
+expmon              svn=psdm subdir=no conda_branch=no
+graphqt             svn=psdm subdir=no conda_branch=no
 
 pypsalg             svn=psdm subdir=no conda_branch=no
 
