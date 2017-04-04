@@ -1,5 +1,5 @@
 {% set pkg = 'psana-conda' %}
-{% set version = '1.2.5' %}
+{% set version = '1.2.6' %}
 {% set build = 1 %}
 
 package:
@@ -28,7 +28,7 @@ requirements:
     - hdf5     ==1.8.18 openmpi_3
     - h5py     ==2.7.0rc2 py27_3
     - mpi4py   ==2.0.0 py27_openmpi_104
-    - tables   ==3.3.0 py27_103
+    - pytables   ==3.3.0 py27_105
 
   run:
     - python  >=2.7,<2.7.13
@@ -38,7 +38,7 @@ requirements:
     - numpy
     - h5py
     - mpi4py
-    - tables
+    - pytables
     - matplotlib
     - scipy
     - pyzmq

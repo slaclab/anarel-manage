@@ -1,6 +1,7 @@
-{% set pkg = 'tables' %}
+{% set pkg = 'pytables' %}
+{% set src = 'tables' %}
 {% set version = '3.3.0' %}
-{% set build = 103 %}
+{% set build = 105 %}
 
 package:
   name: {{ pkg }}
@@ -12,7 +13,7 @@ about:
   license: 'BSD License'
 
 source:
-  fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/{{ pkg }}-{{ version }}.tar.gz
+  fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/{{ src }}-{{ version }}.tar.gz
   md5: 056c161ae0fd2d6e585b766adacf3b0b
 
 requirements:

@@ -447,20 +447,18 @@ def htmlPsanaDiffReports(psanaReport):
         html += OLD_NEW.format(old=oldVer, new=newVer)
     tags = psanaReport['tags']
     html += '<h3>tags</h3>\n'
-    names = tags['old']
+    names = [ elem['name'] for elem in tags['old']]
     names.sort()
     names = [name.strip() for name in names if name.strip()]
     if len(names)>0:
         html += '<h4>dropped</h4>\n'
         for name in names:
             html += '%s<br>\n' % name
-    names = tags['new']
-    names.sort()
-    names = [name.strip() for name in names if name.strip()]
-    if len(names)>0:
+
+    if len(tags['new'])>0:
         html += '<h4>new</h4>\n'
-        for name in names:
-            html += '%s<br>\n' % name
+        for new_tag in tags['new']:
+            html += '%s  %s<br>\n' % (new_tag['name'], new_tag['tag'])
 
     listOfChanged = tags['changed']
     if len(listOfChanged)>0:

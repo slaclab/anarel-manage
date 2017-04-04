@@ -28,7 +28,7 @@ requirements:
     - hdf5     ==1.8.18 openmpi_1
     - h5py     ==2.7.0rc py27_1
     - mpi4py   ==2.0.0 py27_openmpi_102
-    - tables   ==3.3.0 py27_101
+    - pytables   ==3.3.0 py27_105
 
   run:
     - python  >=2.7,<2.7.13
@@ -39,7 +39,7 @@ requirements:
     - openmpi  >=2,<3
     - h5py
     - mpi4py
-    - tables
+    - pytables
     - matplotlib
     - scipy
     - pyzmq

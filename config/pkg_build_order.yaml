@@ -32,11 +32,11 @@
   - system/h5py-hdf5-1.10
   - system/h5py-hdf5-1.10-py3
 
-- pkg: tables
+- pkg: pytables
   paths:
-  - system/tables
-  - system/tables-py3
-  # tables doesn't support hdf5 1.10
+  - system/pytables
+  - system/pytables-py3
+  # pytables doesn't support hdf5 1.10
   
 #- pkg: psana-conda
 #  paths:

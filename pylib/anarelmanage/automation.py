@@ -611,8 +611,8 @@ class AutoReleaseBuilder(object):
                    # that is /testing_new_env directory, and so the rhel6 can lock out the rhel7. We could
                    # create environments with os or hostname dependent names.
             
-                   #'rhel5':'%s --pkgs --pkglist psana-conda,openmpi,hdf5,mpi4py,h5py,numpy,conda' % testcmd,            
-                   'rhel6':'%s --soft --import --bins --libs --pkgs --pkglist psana-conda,openmpi,hdf5,mpi4py,h5py,numpy,scipy,pandas,tables' % testcmd,
+                   'rhel5':'echo do not test on rhel5',            
+                   'rhel6':'%s --soft --import --bins --libs --pkgs --pkglist psana-conda,openmpi,hdf5,mpi4py,h5py,numpy,scipy,pandas,pytables' % testcmd,
                    'rhel7':'%s --verbose --import --bins --libs --pkgs --pkglist all' % testcmd,
                }
 #        cmddict = {'rhel7':'which python; %s --verbose --import' % testcmd}
@@ -636,18 +636,17 @@ class AutoReleaseBuilder(object):
         self._test_envs(name, devel=False)
 
     def release_notes_variant(self, name, variant, devel, osnames=['rhel5', 'rhel6', 'rhel7']):
-        basename = 'ana-current'
-        anaRelVariant = self.relName
+        basename = '%s-current' % self.swGroup
+        relVariant = self.relName
         if variant:
             assert variant in ['gpu','py3'], "unknown variant=%s, should be 'gpu' or 'py3'" % variant
             basename += '-%s' % variant
-            anaRelVariant += '-%s' % variant
+            relVariant += '-%s' % variant
             
-        anaCurrentFname = os.path.join(self.basedir, 'ana-current', basename)
-        assert os.path.exists(anaCurrentFname), "release notes for variant=%s, path: %s doesn't exist" % (variant, anaCurrentFname)
-        anaCurrentVariant = file(anaCurrentFname).read().strip()
-
-        cmd = 'ana-rel-admin --cmd env-report --fileA %s --fileB %s' % (anaCurrentVariant, anaRelVariant)
+        currentFname = os.path.join(self.basedir, 'current', self.swGroup, basename)
+        assert os.path.exists(currentFname), "release notes for variant=%s, path: %s doesn't exist" % (variant, currentFname)
+        currentVariant = file(currentFname).read().strip()
+        cmd = 'ana-rel-admin --cmd env-report --fileA %s --fileB %s' % (currentVariant, relVariant)
         cmd_dict = {}
         for osname in osnames:
             cmd_dict[osname]=cmd

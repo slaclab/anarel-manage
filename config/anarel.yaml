@@ -79,7 +79,7 @@
   mpi4py:
     ver: '=2.0.0'
 
-  tables:
+  pytables:
     ver: '=3.3.0'
 
   scons:
@@ -309,7 +309,7 @@
     py3: skip
 
   psana-conda:
-    ver: '=1.2.5'
+    ver: '=1.2.6'
     py3: skip
 
   opencv:
@@ -442,14 +442,15 @@
     only_in_variant: py3
     limit_os: rhel7
 
+  blaze:
+    ver: latest
+
 # I was thinking about getting xgboost - wins a lot of kaggle competitions - 
 #but it is not standard, the channel creditx
 # has the latest version, but it also brings in libgcc 5.2.0, so I won't do it right now.
 
 # also want to get runipy to run ipython notebooks, but it brings in ipython-notebook, do we
 # need that or does it conflict with jupyter?
-
-# also wanted blaze, but it brings in pytables, but I already have tables - made anaconda issue
 
 -
 # Murali ran into this bug, https://github.com/conda-forge/conda-forge.github.io/issues/189​, in the py3 enviornment,
