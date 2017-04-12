@@ -1,4 +1,4 @@
-{% set build = 5 %}
+{% set build = 6 %}
 {% set version = '2.7.0' %}
 {% set mpi = 'openmpi' %}
 
@@ -15,7 +15,7 @@ requirements:
     - numpy
     - openmpi ==1.10.6 lsf_verbs_1
     - mpi4py ==2.0.0 py35_openmpi_104
-    - hdf5 ==1.10.0 openmpi_dbg_4
+    - hdf5 ==1.10.1 pre1_openmpi_dbg_4
     - cython
     - six
     - pkgconfig
@@ -25,7 +25,7 @@ requirements:
     - numpy
     - openmpi >=1.8,<2
     - mpi4py >=2.0.0,<3
-    - hdf5 ==1.10.0
+    - hdf5 >=1.10.0,<1.12
     - six
     - unittest2    #[py26]
 

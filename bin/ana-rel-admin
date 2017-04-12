@@ -356,6 +356,24 @@ def jhubCreateConfig(args):
     util.manageJhubConfigKernel(cmd="create", envName=args.name, basedir=args.basedir, 
                                 force=args.force)
 
+def cleanLocks(args):
+    install = os.path.join(args.basedir, 'inst', util.whichCondaInstall(args.basedir))
+    assert os.path.exists(install)
+    locks = os.path.join(install, 'locks')
+    if not os.path.exists(locks):
+        util.warning("cleanLocks - locks path %s doesn't exist" % locks)
+        return
+    lock_files = glob(os.path.join(locks, "*"))
+    if len(lock_files)==0:
+        print("No lock files in %s" % locks)
+        return
+    for lock_file in lock_files:
+        try:
+            os.unlink(lock_file)
+            print("deleted lock file %s" % lock_file)
+        except OSError:
+            print("*WARNING*: unable to delete lock file: %s" % lock_file)
+        
 def updateConda(args):
     pass
     # need to automate testing the new conda
@@ -455,6 +473,10 @@ commandHelpFuncList = [
     ('jhub-rm',
      'remove jhub_config file for one environment. Use --name for environment name',
      jhubRmConfig),
+
+    ('clean-locks',
+     'delete everything in conda/locks for this installation: https://github.com/conda/conda-build/issues/1883',
+     cleanLocks),
 
     ('update-conda',
      '*in progress* test and update conda in all the installations.',
