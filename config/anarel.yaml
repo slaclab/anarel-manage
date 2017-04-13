@@ -313,7 +313,7 @@
     py3: skip
 
   opencv:
-    ver: latest
+    ver: '>=3'
 
   theano:
     ver: latest
