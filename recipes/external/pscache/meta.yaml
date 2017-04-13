@@ -1,0 +1,29 @@
+package:
+  name: pscache
+  version: "0.0.1"
+
+source:
+  git_url: https://github.com/lcls-psana/pscache
+  git_tag: "v0.1"
+
+build:
+  script:
+    - pip install --no-deps --disable-pip-version-check .
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - redis
+    - numpy
+    - psana-conda
+
+  run:
+    - python
+    - redis
+    - numpy
+    - psana-conda
+
+about:
+  home: https://github.com/lcls-psana/pscache
+

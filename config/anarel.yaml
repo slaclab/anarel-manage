@@ -309,7 +309,7 @@
     py3: skip
 
   psana-conda:
-    ver: '=1.2.6'
+    ver: '=1.2.7'
     py3: skip
 
   opencv:
@@ -319,6 +319,10 @@
     ver: latest
 
   logbookclient:
+    ver: latest
+    py3: skip
+
+  pscache:
     ver: latest
     py3: skip
 

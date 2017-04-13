@@ -19,6 +19,7 @@
   paths:
   - system/hdf5-1.8x
   - system/hdf5-1.10x
+  - system/hdf5-1.10.1pre
 
 - pkg: mpi4py
   paths:
@@ -66,6 +67,10 @@
 - pkg: logbookclient
   paths:
   - external/logbookclient
+
+- pkg: pscache
+  paths:
+  - external/pscache
 
 - pkg: kafka-python
   paths:

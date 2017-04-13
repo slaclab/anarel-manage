@@ -1,5 +1,5 @@
 {% set pkg = 'psana-conda' %}
-{% set version = '1.2.6' %}
+{% set version = '1.2.7' %}
 {% set build = 1 %}
 
 package:
@@ -26,7 +26,7 @@ requirements:
     - pyzmq
     - openmpi  ==1.10.6 lsf_verbs_1
     - hdf5     ==1.8.18 openmpi_3
-    - h5py     ==2.7.0rc2 py27_3
+    - h5py     ==2.7.0 py27_4
     - mpi4py   ==2.0.0 py27_openmpi_104
     - pytables   ==3.3.0 py27_105
 
