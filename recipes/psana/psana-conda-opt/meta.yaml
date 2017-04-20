@@ -19,7 +19,7 @@ requirements:
     - boost    ==1.57.0
     - mysql
     - ndarray
-    - qt       ==4.8.5
+    - qt       >4.8.5,<5
     - numpy 
     - matplotlib
     - scipy
