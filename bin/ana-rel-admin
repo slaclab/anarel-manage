@@ -139,7 +139,7 @@ def makePsanaCondaSrc(args):
     anaTags = tags.readAnaTags(tagsFile)
     tags.updateWithLatestTags(anaTags)
     os.chdir(scratchDir)
-    tags.checkoutCode(anaTags)
+    tags.checkoutCode(anaTags, args.master)
     tags.writeTagsFile(anaTags, 'psana-conda-tags')
     f=file('.sit_release', 'w')
     f.write('%s\n' % relname)
@@ -549,6 +549,8 @@ if __name__ == '__main__':
                         help='name for ana release or environment', default=None)
     parser.add_argument('--email', type=str, 
                         help='email address for notifications. default=%s' % def_email, default=def_email)
+    parser.add_argument('--master', action='store_true', 
+                        help='check out code from master with the psana src command')
     parser.add_argument('--nolog', action='store_true', 
                         help='no log file (for auto and bld-pkg.')
     parser.add_argument('--dev', action='store_true', 

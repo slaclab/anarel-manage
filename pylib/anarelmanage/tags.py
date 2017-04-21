@@ -65,7 +65,7 @@ def updateWithLatestTags(anaTags):
         sys.stdout.flush()
 
 
-def checkoutCode(anaTags):
+def checkoutCode(anaTags, master):
     repodict = {'psdm':"https://github.com/lcls-psana",
                 'pcds':"file:///afs/slac/g/pcds/svn",
                 'user':"https://pswww.slac.stanford.edu/svn/userrepo"}
@@ -83,7 +83,10 @@ def checkoutCode(anaTags):
         # get repos from github
         if repo == 'psdm':
             pkgurl = repodict[repo] + '/' + pkg
-            cmd = 'git clone --branch %s --depth 1 %s %s' %(pkgdict['tag'], pkgurl, dest)
+            if master:
+                cmd = 'git clone %s %s' %(pkgurl, dest)
+            else:
+                cmd = 'git clone --branch %s --depth 1 %s %s' %(pkgdict['tag'], pkgurl, dest)
         # get repos from svn
         else:
             pkgurl = repodict[repo] + '/' + pkg

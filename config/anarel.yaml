@@ -309,7 +309,7 @@
     py3: skip
 
   psana-conda:
-    ver: '=1.2.7'
+    ver: '=1.2.8'
     py3: skip
 
   opencv:
