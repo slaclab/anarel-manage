@@ -64,6 +64,10 @@
   - external/yaml-cpp
   limit_os: rhel7
 
+- pkg: kerberos
+  paths:
+  - external/kerberos
+
 - pkg: logbookclient
   paths:
   - external/logbookclient
