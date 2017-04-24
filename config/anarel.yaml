@@ -322,6 +322,10 @@
     ver: latest
     py3: skip
 
+  kerberos:
+    ver: '=1.2.5'
+    py3: skip
+
   pscache:
     ver: latest
     py3: skip
@@ -467,6 +471,21 @@
     
 # also want bug fixes in later version of gunicorn than what defaults has
   gunicorn:
+    ver: latest
+    chl: conda-forge
+
+# eventlet is our default web service threading framework
+  eventlet:
+    ver: latest
+    chl: conda-forge
+
+# The batch processing and other push service use this
+  flask-socketio:
+    ver: latest
+    chl: conda-forge
+
+# Interesting bugs when you use subprocess and threading are fixed using subprocess32 instead of subprocess.
+  subprocess32:
     ver: latest
     chl: conda-forge
 

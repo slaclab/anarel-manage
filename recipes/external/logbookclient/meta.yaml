@@ -1,10 +1,10 @@
 package:
   name: logbookclient
-  version: "0.0.4"
+  version: "0.0.5"
 
 source:
   git_url: https://github.com/slaclab/LogBookClient.git
-  git_tag: "0.0.4"
+  git_tag: "0.0.5"
 
 build:
   script:
