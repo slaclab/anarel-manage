@@ -485,6 +485,7 @@
   subprocess32:
     ver: latest
     chl: conda-forge
+    py3: skip
 
 -
   opencv:
