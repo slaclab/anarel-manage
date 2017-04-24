@@ -470,6 +470,10 @@
     ver: latest
     chl: conda-forge
 
+-
+  opencv:
+    ver: '>=3'
+
 # Chuck is using cbf from this channel, note, an earlier build was only against
 # numpy 1.9 and we couldn't install it, but now it seems to introduce no 
 # changes to our environments, however it does add a .egg and .pth file,
