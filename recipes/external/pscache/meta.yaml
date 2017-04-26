@@ -14,13 +14,13 @@ requirements:
   build:
     - python
     - setuptools
-    - redis
+    - redis-py
     - numpy
     - psana-conda
 
   run:
     - python
-    - redis
+    - redis-py
     - numpy
     - psana-conda
 
