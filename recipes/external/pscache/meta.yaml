@@ -7,6 +7,7 @@ source:
   git_tag: "v0.1"
 
 build:
+  number: 2
   script:
     - pip install --no-deps --disable-pip-version-check .
 
