@@ -419,14 +419,15 @@
   # for Wilko, Jacob, maintaining this in our channels to get later version from pypi
   kafka-python:
     ver: latest
--
-  protobuf:
+#-
+# with tensorflow 1.1.0, it needs protobuf 3.2.0, but it is in defaults, Apr/17
+#  protobuf:
 # I think tensorflow will pickup what it needs in its dependencies
 # tensorflow v1.0.0 and v0.12.0 needs protobuf 3.1.0 which is not (as of Feb/17) 
 # in conda-forge but it is in jjhelmus
-  
-    ver: '=3.1.0'
-    chl: jjhelmus
+#  
+#    ver: '=3.1.0'
+#    chl: jjhelmus
 
 -
 # We will use our own channel for tensorflow to get the latest version and a 
@@ -434,7 +435,7 @@
 # note rev10 gpu is against cuda 7.5, but rev 11 and higher is against cuda 8
 
   tensorflow:
-    ver: '=1.0.1'
+    ver: '=1.1.0'
     gpu: py27_gpu_1
     py3: py35_1
     limit_os: rhel7
