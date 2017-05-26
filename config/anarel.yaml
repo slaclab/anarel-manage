@@ -309,7 +309,7 @@
     py3: skip
 
   psana-conda:
-    ver: '=1.2.9'
+    ver: '=1.2.10'
     py3: skip
 
   theano:

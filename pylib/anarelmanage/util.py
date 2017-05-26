@@ -369,8 +369,8 @@ def versionGreater(verNew, verCur):
     assert matchNew, "verNew=%s doesn't match %s"  % (verNew, REGEXP_VERSION_STR)
     assert matchCur, "verCur=%s doesn't match %s"  % (verCur, REGEXP_VERSION_STR)
     for gr in [1,2,3,4]:
-        if matchNew.group(gr) > matchCur.group(gr): return True
-        if matchNew.group(gr) < matchCur.group(gr): return False
+        if int(matchNew.group(gr)) > int(matchCur.group(gr)): return True
+        if int(matchNew.group(gr)) < int(matchCur.group(gr)): return False
     return False
 
 def psanaCondaPackageName(version_str):
