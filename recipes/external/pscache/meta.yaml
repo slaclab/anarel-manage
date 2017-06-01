@@ -1,13 +1,13 @@
 package:
   name: pscache
-  version: "0.0.1"
+  version: "0.2"
 
 source:
   git_url: https://github.com/lcls-psana/pscache
-  git_tag: "v0.1"
+  git_tag: "v0.2"
 
 build:
-  number: 2
+  number: 3
   script:
     - pip install --no-deps --disable-pip-version-check .
 
