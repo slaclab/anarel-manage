@@ -157,6 +157,9 @@ def put_release_bin_in_front_of_conda(args, fout, sit_arch):
     relbin = os.path.join(test_release_root, 'arch', sit_arch, 'bin')
     fout.write("export PATH=%s:$PATH\n" % relbin)
     
+    rellib = os.path.join(test_release_root, 'arch', sit_arch, 'lib')
+    fout.write("export LD_LIBRARY_PATH=%s:$LD_LIBRARY_PATH\n" %rellib)
+    
 ########### undo sit_setup ###################
 def is_sitsetup_arch_subdir(path, subdir_to_arch):
     '''return True if path ends with
@@ -402,7 +405,6 @@ def update_newenv_for_test_release(args, newenv):
     newenv['PYTHONPATH']=os.path.pathsep.join(paths)
 
     paths = newenv.get('LD_LIBRARY_PATH','').split(os.path.pathsep)
-    paths.insert(0,os.path.join(test_release_root_dir, 'arch',sit_arch, 'lib'))
     newenv['LD_LIBRARY_PATH']=os.path.pathsep.join(paths)
 
     conda_prefix = get_conda_prefix_for_test_release(args)
