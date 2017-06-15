@@ -327,6 +327,10 @@
     ver: latest
     py3: skip
 
+  psgeom:
+    ver: latest
+    py3: skip
+
   # Clemens suggests
   numba:
     ver: latest

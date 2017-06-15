@@ -1,0 +1,27 @@
+package:
+  name: psgeom
+  version: "0.1"
+
+source:
+  git_url: https://github.com/slaclab/psgeom
+  git_tag: "v0.1"
+
+build:
+  number: 1
+  script:
+    - pip install --no-deps --disable-pip-version-check .
+
+requirements:
+  build:
+    - python
+    - setuptools
+
+  run:
+    - python
+    - psana-conda
+    - matplotlib
+    
+
+about:
+  home: https://github.com/slablab/psgeom
+

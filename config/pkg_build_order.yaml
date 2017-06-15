@@ -76,6 +76,10 @@
   paths:
   - external/pscache
 
+- pkg: psgeom
+  paths:
+  - external/psgeom
+
 - pkg: kafka-python
   paths:
   - external/kafka-python
