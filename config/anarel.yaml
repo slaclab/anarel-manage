@@ -123,9 +123,10 @@
   # see https://github.com/slaclab/anarel-manage/issues/32
   jinja2:
     ver: '=2.8.1'
-
+  # forcing newer pandas version, this now comes from conda forge, because default channel stopped building against numpy 1.11.
+  # To fix this issuse we have to update to qt5 to get a recent version of matplotlib and a recent version of numpy
   pandas:
-    ver: latest
+    ver: '=0.20.2'
   
   pillow:
     ver: latest
