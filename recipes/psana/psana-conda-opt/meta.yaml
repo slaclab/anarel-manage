@@ -1,5 +1,5 @@
 {% set pkg = 'psana-conda' %}
-{% set version = '1.2.11' %}
+{% set version = '1.2.12' %}
 {% set build = 1 %}
 
 package:
@@ -13,7 +13,7 @@ source:
 
 requirements:
   build:
-    - python  ==2.7.12
+    - python 2.7.*
     - scons
     - cython
     - boost    ==1.57.0
@@ -31,7 +31,7 @@ requirements:
     - pytables   ==3.3.0 py27_105
 
   run:
-    - python  >=2.7,<2.7.13
+    - python 2.7.*
     - boost   ==1.57.0
     - mysql    
     - qt       >=4,<5
