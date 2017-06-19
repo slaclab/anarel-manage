@@ -14,13 +14,19 @@ def update():
 	# Take version number from package
 	#v = [int(s) for s in search.split() if s.isdigit()]
 
+	print(search)
+
 	v = search.split(".")
 
 	lastLine = v[len(v)-1]
 
+	print("lastLine is: " +lastLine + "\n")
+
 	oldVersionNumber = int(lastLine.split()[0]) 
 
 	newVer = oldVersionNumber + 1
+
+	print("Old version is: " + str(oldVersionNumber) + "\nNew version number is: " + newVer + "\n")
 
 	f = open("/reg/g/psdm/sw/conda/manage/recipes/psana/psana-expdb/meta.yaml","r")
 
