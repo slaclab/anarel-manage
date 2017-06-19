@@ -7,7 +7,7 @@ def update():
 	@author: Ian
 	"""
 	# Automatically updates and uploads packages to the cloud
-	import os, sys, subprocess, conda
+	import os, sys, subprocess 
 	# Search for the package
 	search = subprocess.check_output(['conda', 'search', 'gladio'])
 
