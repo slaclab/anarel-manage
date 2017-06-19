@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#Change meta.yaml
+fileName = $(expdb_recipe_update) 
+
+#Commence Building Operation
+conda build /reg/g/psdm/sw/conda/manage/recipes/psana/psana-expdb
+
+temp = "/reg/neh/home/hblair/conda-bld/linux-64/"
+
+filePath = $temp$fileName
+
+#Initializing Upload to Anaconda.org
+anaconda upload $filePath
