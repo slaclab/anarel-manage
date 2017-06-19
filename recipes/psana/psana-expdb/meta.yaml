@@ -1,13 +1,13 @@
 package: 
-  name: toconda
-  version: "0.4"
+  name: psana-expdb
+  version: "0.1"
 
 source: 
   git_url: https://github.com/lcls-psana/psana-expdb.git 
   git_tag: "v0.1" 
 
 build: 
-  number: 5
+  number: 1
 
 requirements:
   build:
