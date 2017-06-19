@@ -1,10 +1,14 @@
 #!/bin/bash
 
 #Change meta.yaml
-python AutomatedExpUpload.py
+fileName = $(expdb_recipe_update) 
 
 #Commence Building Operation
-conda build reg/g/psdm/sw/conda/manage/recipie/psana/psana-expdb
+conda build /reg/g/psdm/sw/conda/manage/recipes/psana/psana-expdb
+
+temp = "/reg/neh/home/hblair/conda-bld/linux-64/"
+
+filePath = $temp$fileName
 
 #Initializing Upload to Anaconda.org
-anaconda upload Path/to/package/.tar.bz2
+anaconda upload $filePath
