@@ -12,7 +12,7 @@ def update():
 	###SUPER IMPORANTE' 
 	###Change package name from gladio to psana-expdb when
 	###the first version of the conda package goes live
-	search = subprocess.check_output(['conda', 'search', 'scipy'])
+	search = subprocess.check_output(['conda', 'search','--channel','laurentroque', 'expnamedb'])
 
 	# Take version number from package
 	#v = [int(s) for s in search.split() if s.isdigit()]
