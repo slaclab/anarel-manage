@@ -6,6 +6,6 @@ mkdir -p $PREFIX/lib
 
 python dataPress.py
 gcc -std=c99 -c -fpic updatedCFile.c
-gcc -shared -o clib.so updatedCFile.o > $PREFIX/lib/clib.so
+gcc -shared -o $PREFIX/lib/expnamedata.so updatedCFile.o 
 
 pip install --no-deps --disable-pip-version-check .

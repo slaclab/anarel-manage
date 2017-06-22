@@ -1,14 +1,18 @@
 #!/bin/bash
 
 #Change meta.yaml
-FileName = $(expdb_recipe_update) 
+FileName=$(expdb_recipe_update) 
 
 #Commence Building Operation
 conda build /reg/g/psdm/sw/conda/manage/recipes/psana/psana-expdb
 
-Temp = "/reg/neh/home/hblair/conda-bld/linux-64/"
 
-FilePath = ${Temp}${FileName}
+#File path name needs to be corrected before conda upload can work.
+Temp="/reg/g/psdm/sw/conda/inst/miniconda2-dev-rhel5/conda-bld/linux-64/"
+
+FilePath=${Temp}${FileName}
 
 #Initializing Upload to Anaconda.org
-anaconda upload $TilePath
+anaconda upload -u lcls-rhel5 $FilePath
+anaconda upload -u lcls-rhel6 $FilePath
+anaconda upload -u lcls-rhel7 $FilePath
