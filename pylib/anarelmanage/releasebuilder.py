@@ -292,8 +292,8 @@ class ReleaseBuilder(object):
         cmd += ' -n %s' % conda_env_name
 
         # do this branch for releases that start from clones
-        if len(pkglist) == 1 and 'clone release' in pkglist:
-            clone_info = pkglist['clone release']
+        if len(pkglist) == 1 and 'clone_release' in pkglist:
+            clone_info = pkglist['clone_release']
             if variant == 'py3':
                 try:
                     clone_ver = clone_info['py3ver']
