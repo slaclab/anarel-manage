@@ -4,7 +4,7 @@ package:
 
 source: 
   git_url: https://github.com/lcls-psana/psana-expdb.git 
-  git_tag: "v0.4" 
+  git_branch: master
 
 build: 
   number: 1
