@@ -10,6 +10,7 @@ channels:
   - file://{{ CONDA_ROOT }}/channels/system-{{ OS }}
   - file://{{ CONDA_ROOT }}/channels/psana-{{ OS }}
   - file://{{ CONDA_ROOT }}/channels/external-{{ OS }}
+  - file://{{ CONDA_ROOT }}/channels/ctrl-{{ OS }}
   # would like to use conda-forge for rhel6/7, but not working yet.
   - defaults
   - conda-forge
