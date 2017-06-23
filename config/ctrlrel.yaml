@@ -32,10 +32,12 @@
 #         like conda-forge, ect, only needed if channel is not in condarc
                    
 -
+# Start by cloning most recent ana
   clone_release:
     ver: '=ana-1.2.12'
   
 -
+# Add basic packages
   flake8:
     ver: latest
 
@@ -55,22 +57,30 @@
     ver: latest
 
 -
+# Add epics and epics utils
   epics-base:
-    ver: latest
-
-  epics-v4:
-    ver: latest
-
-  pcaspy:
-    ver: latest
-
-  pyepics:
     ver: latest
 
   pyca:
     ver: latest
+    py3: skip
+
+  pyepics:
+    ver: latest
+    chl: newville
+
+  pcaspy:
+    ver: latest
+    chl: paulscherrerinstitute
+
+  epics-v4:
+    ver: latest
+
+  pvapy:
+    ver: latest
 
 -
+# Add py3-only nsls2 modules
   bluesky:
     ver: latest
     chl: lightsource2-tag
