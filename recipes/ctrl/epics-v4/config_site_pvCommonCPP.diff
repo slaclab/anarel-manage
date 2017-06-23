@@ -1,0 +1,11 @@
+--- pvCommonCPP/configure/CONFIG_SITE   2016-09-18 10:22:31.000000000 -0700
++++ pvCommonCPP/configure/CONFIG_SITE   2017-03-09 15:59:06.909402400 -0800
+@@ -18,7 +18,7 @@
+
+ # To install files into a location other than $(TOP) define
+ #   INSTALL_LOCATION here.
+-#INSTALL_LOCATION=</path/name/to/install/top>
++INSTALL_LOCATION=$(PREFIX)/epics-v4/pvCommonCPP
+
+ # Uncomment these to enable:
+ #WITH_MICROBENCH = 1

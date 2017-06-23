@@ -1,0 +1,14 @@
+--- Makefile	2016-09-18 10:22:25.000000000 -0700
++++ Makefile	2017-03-09 18:32:57.756756018 -0800
+@@ -146,9 +146,9 @@
+ # Generic config rules
+ $(CONFIG_TARGETS): config.% : %/configure/$(RELEASE)
+ %/configure/$(RELEASE): | $(RELEASE)
+-	$(PERL) tools/genRelease.pl -o $@ -B $(EPICS_BASE) $($*_DEPENDS_ALL)
++	$(PERL) tools/genRelease.pl -4 $(PREFIX)/epics-v4 -o $@ -B $(EPICS_BASE) $($*_DEPENDS_ALL)
+ $(RELEASE):
+-	$(PERL) tools/genRelease.pl -o $@ -B $(EPICS_BASE)
++	$(PERL) tools/genRelease.pl -4 $(PREFIX)/epics-v4 -o $@ -B $(EPICS_BASE)
+ $(DECONF_TARGETS): deconf.% :
+ 	$(RM) $*/configure/$(RELEASE)
+ 

@@ -1,0 +1,11 @@
+--- EPICS-CPP-4.6.0/pvaPy/src/pvaccess/PyPvDataUtility.cpp	2016-09-18 10:22:36.000000000 -0700
++++ EPICS-CPP-4.6.0/pvaPy/src/pvaccess/PyPvDataUtility.cpp	2017-03-03 15:12:33.777015500 -0800
+@@ -1951,7 +1951,7 @@
+ //
+ // Conversion PV Scalar Array => NumPy Array
+ //
+-boost::numpy::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
++boost::python::numpy::ndarray getScalarArrayFieldAsNumPyArray(const std::string& fieldName, const epics::pvData::PVStructurePtr& pvStructurePtr)
+ {
+     epics::pvData::ScalarType scalarType = getScalarArrayType(fieldName, pvStructurePtr);
+     epics::pvData::PVScalarArrayPtr pvScalarArrayPtr = pvStructurePtr->getSubField<epics::pvData::PVScalarArray>(fieldName);

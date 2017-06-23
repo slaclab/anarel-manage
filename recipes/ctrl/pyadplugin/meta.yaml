@@ -1,0 +1,28 @@
+package:
+  name: pyadplugin
+  version: 'v1.1.0'
+
+source:
+  git_url: https://github.com/slaclab/pyadplugin
+  git_rev: 'v1.1.0'
+
+build:
+  number: 1
+
+requirements:
+  build:
+    - python {{PY_VER}}*,>=3
+
+  run:
+    - python {{PY_VER}}*,>=3
+    - pypvserver
+    - pyepics
+
+test:
+  imports:
+    - pyadplugin
+
+about:
+  home: https://github.com/slaclab/pyadplugin
+  licence: SLAC Open Licence
+  summary: Python IOC Schema for Rapid Prototyping of AreaDetector Plugins

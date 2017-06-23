@@ -1,0 +1,35 @@
+# epics-v4 minus pvaPy, which will be built separately and linked to a
+# specific numpy release.
+{% set BASE = "3.14.12.6" %}
+package:
+  name: epics-v4
+  version: "4.6.0"
+
+source:
+  url: https://sourceforge.net/projects/epics-pvdata/files/4.6.0/EPICS-CPP-4.6.0.tar.gz
+  fn: EPICS-CPP-4.6.0.tar.gz
+  patches:
+    - config_site_normativeTypesCPP.diff
+    - config_site_pvAccessCPP.diff
+    - config_site_pvaClientCPP.diff
+    - config_site_pvaSrv.diff
+    - config_site_pvCommonCPP.diff
+    - config_site_pvDatabaseCPP.diff
+    - config_site_pvDataCPP.diff
+    - makefile.diff
+
+build:
+  number: 1
+  string: base{{ BASE }}_{{ PKG_BUILDNUM }}
+
+requirements:
+  build:
+    - epics-base {{ BASE }}
+
+  run:
+    - epics-base {{ BASE }}
+
+about:
+  home: epics-pvdata.sourceforge.net
+  license: EPICS Open License
+  summary: EPICS V4 Library

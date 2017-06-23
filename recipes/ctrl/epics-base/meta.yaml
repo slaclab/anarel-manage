@@ -1,0 +1,25 @@
+package:
+    name: epics-base
+    version: "3.14.12.6"
+
+source:
+    fn: baseR3.14.12.6.tar.gz
+    url: http://www.aps.anl.gov/epics/download/base/baseR3.14.12.6.tar.gz
+    patches:
+        - config_site.diff [not win]
+        - config_common.diff [not win]
+        - config_readline.diff [linux]
+
+build:
+  number: 1
+
+requirements:
+  build:
+    - m2w64-make [win]
+    - perl [win]
+    - patch [win]
+
+about:
+    home: http://www.aps.anl.gov/epics
+    license: Epics Open License
+    summary: EPICS Base Library

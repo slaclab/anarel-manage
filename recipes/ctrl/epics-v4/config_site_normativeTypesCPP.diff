@@ -1,0 +1,11 @@
+--- normativeTypesCPP/configure/CONFIG_SITE     2016-09-18 10:22:28.000000000 -0700
++++ normativeTypesCPP/configure/CONFIG_SITE     2017-03-09 15:58:41.436051200 -0800
+@@ -22,7 +22,7 @@
+
+ # If you don't want to install into $(TOP) then
+ # define INSTALL_LOCATION here
+-#INSTALL_LOCATION=<fullpathname>
++INSTALL_LOCATION=$(PREFIX)/epics-v4/normativeTypesCPP
+
+ ifeq ($(EPICS_TEST_COVERAGE),1)
+ USR_CPPFLAGS += --coverage

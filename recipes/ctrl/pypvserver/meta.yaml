@@ -1,0 +1,42 @@
+package:
+  name: pypvserver
+  version: '0.0.1'
+
+
+source:
+  git_url: https://github.com/klauer/pypvserver
+
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - python
+    - setuptools
+  run:
+    - python
+    - numpy
+    - pyepics
+    - six
+    - pcaspy >=v0.6.0
+
+test:
+  imports:
+    - pypvserver
+
+  #commands:
+    # You can put test commands to be run here.  Use this to test that the
+    # entry points work.
+
+
+  # You can also put a file called run_test.py in the recipe that will be run
+  # at test time.
+
+  # requires:
+    # Put any additional test requirements here.  For example
+    # - nose
+
+about:
+  home: https://github.com/klauer/pypvserver
+  license: BSD
