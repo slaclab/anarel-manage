@@ -38,6 +38,7 @@ requirements:
     - numpy
     - openmpi  >=2,<3
     - h5py
+    - psana-expdb
     - mpi4py
     - pytables
     - matplotlib

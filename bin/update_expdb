@@ -1,5 +1,13 @@
 #!/bin/bash
 
+#Check that we build on the oldest possible machine for conda compatibility
+rhel_version=$(less /etc/redhat-release | grep -o -E '[0-9]+' | head -1)
+
+if [[ $rhel_version != "5" ]]; then
+  echo "Error: need to build on rhel5"
+  exit 1
+fi
+
 #Change meta.yaml
 FileName=$(expdb_recipe_update) 
 

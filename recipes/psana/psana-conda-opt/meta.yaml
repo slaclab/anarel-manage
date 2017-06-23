@@ -37,6 +37,7 @@ requirements:
     - qt       >=4,<5
     - numpy
     - h5py
+    - psana-expdb
     - mpi4py
     - pytables
     - matplotlib
