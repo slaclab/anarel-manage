@@ -73,6 +73,16 @@
     ver: latest
     chl: paulscherrerinstitute
 
+  pypvserver:
+    ver: latest
+    only_in_variant: py3
+
+  pyadplugin:
+    ver: latest
+    only_in_variant: py3
+
+-
+# Add epics v4 (experimental)
   epics-v4:
     ver: latest
 
