@@ -301,6 +301,7 @@ class ReleaseBuilder(object):
                     clone_ver = clone_info['ver'] + '-py3'
             else:
                 clone_ver = clone_info['ver']
+            clone_ver = clone_ver.strip("=")
             cmd += ' --clone %s' % clone_ver
         # do this branch for a pure create releases
         else:
