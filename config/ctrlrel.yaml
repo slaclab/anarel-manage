@@ -1,0 +1,87 @@
+# Maintain the packages we want to install into a miniconda anarel environment.
+# support variants on a anarel, like anarel-py3 anarel-gpu
+
+# the format of this file is
+# -  list of stage 1 packages
+# -  list of stage 2 packages, ect
+#
+# after each stage, ana-rel-manage will test the new packages just installed, as well as
+# retest the previous packages installed. In this was we can see 
+# if installing some later package causes problems for an earlier package.
+
+# each stage is a list of packages. We can specify a version, and then a full package
+# build string for different variants, or specify that we should skip a package for
+# a given variant. We can also specify a channel for channels not in the condarc files
+
+# ana-rel-manage will add the appropriate python version when creating, so we don't
+# list python below.
+
+# syntax for a package
+#  packagename:
+#    ver: '=1.0.0'  or '>=1.0' or latest, note we need '' around the specification, and
+#         we need to start numbers with = or >, latest means just let conda get the latest
+#         version of the package
+#    py3ver: '=1.0.1' if for some reason the python three installation requires a different
+#                     version, specify it here 
+#    bld: lfs_verbs_100   full package build string, for the default py27 opt anarelease
+#    dbg: blah            likewise for the py27 debug release
+#    gpu: blah            likewise for the gpu py27 opt release
+#    py3: blah            likwise fot eh py3 opt release
+#                     you can also put the string skip here, important for py3
+#    chl: the channel to find the package in, fully qualified file urls, or off of anaconda for things
+#         like conda-forge, ect, only needed if channel is not in condarc
+                   
+-
+  clone_release:
+    ver: '=ana-1.2.12'
+  
+-
+  flake8:
+    ver: latest
+
+  versioneer:
+    ver: latest
+
+  periodictable:
+    ver: latest
+
+  pymongo:
+    ver: latest
+  
+  pyfiglet:
+    ver: latest
+
+  mongomock:
+    ver: latest
+
+-
+  epics-base:
+    ver: latest
+
+  epics-v4:
+    ver: latest
+
+  pcaspy:
+    ver: latest
+
+  pyepics:
+    ver: latest
+
+  pyca:
+    ver: latest
+
+-
+  bluesky:
+    ver: latest
+    chl: lightsource2-tag
+    only_in_variant: py3
+
+  ophyd:
+    ver: latest
+    chl: lightsource2-tag
+    only_in_variant: py3
+
+  databroker:
+    ver: latest
+    chl: lightsource2-tag
+    only_in_variant: py3
