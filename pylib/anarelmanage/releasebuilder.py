@@ -291,19 +291,32 @@ class ReleaseBuilder(object):
             cmd += ' -y -q'
         cmd += ' -n %s' % conda_env_name
 
-        # add python, check if python 3
-        cmd += ' python'
-        if variant == 'py3':
-            cmd += '=3.5'
+        # do this branch for releases that start from clones
+        if len(pkglist) == 1 and 'clone release' in pkglist:
+            clone_info = pkglist['clone release']
+            if variant == 'py3':
+                try:
+                    clone_ver = clone_info['py3ver']
+                except KeyError:
+                    clone_ver = clone_info['ver'] + '-py3'
+            else:
+                clone_ver = clone_info['ver']
+            cmd += ' --clone %s' % clone_ver
+        # do this branch for a pure create releases
+        else:
+            # add python, check if python 3
+            cmd += ' python'
+            if variant == 'py3':
+                cmd += '=3.5'
 
-        pkglist = pkgsInVariant(pkglist, variant, self.osname)
-        chl = extractChannel(pkglist)
-        assert chl is None, "no special channel for first stage, but chl=%s" % chl
+            pkglist = pkgsInVariant(pkglist, variant, self.osname)
+            chl = extractChannel(pkglist)
+            assert chl is None, "no special channel for first stage, but chl=%s" % chl
 
-        # add packages in pkglist
-        for pkg, pkginfo in pkglist.iteritems():
-            pkgString = self.makePackageString(pkg, pkginfo, variant)
-            cmd += ' %s' % pkgString
+            # add packages in pkglist
+            for pkg, pkginfo in pkglist.iteritems():
+                pkgString = self.makePackageString(pkg, pkginfo, variant)
+                cmd += ' %s' % pkgString
         self.logAndPrint(cmd)
 
         # run conda command to create environment
