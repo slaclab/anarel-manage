@@ -1,24 +1,27 @@
+{% set BASE="3.14.12.6" %}
+{% set VERSION="2.3.1" %}
 package:
   name: pyca
-  version: "2.3.1"
+  version: {{ VERSION }}
 
 source:
   git_url: https://github.com/slaclab/pyca.git
-  git_rev: "2.3.1"
+  git_rev: {{ VERSION }}
 
 build:
   number: 1
+  string: base{{ BASE }}np{{ np }}py{{ py }}_{{ PKG_BUILDNUM }}
 
 requirements:
   build:
     - python {{PY_VER}}*,<3
-    - epics-base
-    - numpy
+    - epics-base {{ BASE }}
+    - numpy {{ np }}
 
   run:
     - python {{PY_VER}}*,<3
-    - epics-base
-    - numpy
+    - epics-base {{ BASE }}
+    - numpy {{ np }}
 
 about:
   home: https://github.com/slaclab/pyca

@@ -4,9 +4,10 @@
 # should be be linked to a numpy release at build.
 {% set BASE = "3.14.12.6" %}
 {% set BOOST = "1.57.0" %}
+{% set VERSION = "4.6.0" %}
 package:
   name: pvapy
-  version: "4.6.0"
+  version: {{ VERSION }}
 
 source:
   # Full source to make sure we get the associated release of pvaPy
@@ -28,7 +29,7 @@ build:
 
 requirements:
   build:
-    - epics-v4 4.6.0
+    - epics-v4 {{ VERSION }}
     - epics-base {{ BASE }}
     - python
    # - numpy
@@ -36,7 +37,7 @@ requirements:
     - boost {{ BOOST }},<1.63
 
   run:
-    - epics-v4 4.6.0
+    - epics-v4 {{ VERSION }}
     - epics-base {{ BASE }}
     - python
    # - numpy
