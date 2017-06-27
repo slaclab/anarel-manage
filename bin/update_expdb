@@ -24,3 +24,12 @@ FilePath=${Temp}${FileName}
 anaconda upload -u lcls-rhel5 $FilePath
 anaconda upload -u lcls-rhel6 $FilePath
 anaconda upload -u lcls-rhel7 $FilePath
+
+cp $FilePath /reg/g/psdm/sw/conda/channels/system-rhel7/linux-64
+conda index /reg/g/psdm/sw/conda/channels/system-rhel7/linux-64
+
+cp $FilePath /reg/g/psdm/sw/conda/channels/system-rhel6/linux-64
+conda index /reg/g/psdm/sw/conda/channels/system-rhel6/linux-64
+
+cp $FilePath /reg/g/psdm/sw/conda/channels/system-rhel5/linux-64
+conda index /reg/g/psdm/sw/conda/channels/system-rhel5/linux-64
