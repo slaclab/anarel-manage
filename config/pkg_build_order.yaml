@@ -80,6 +80,10 @@
   paths:
   - external/psgeom
 
+- pkg: psocake
+  paths:
+  - external/psocake
+
 - pkg: kafka-python
   paths:
   - external/kafka-python

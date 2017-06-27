@@ -176,8 +176,6 @@ psdisplay           svn=psdm subdir=no conda_branch=no
 
 psmon                svn=psdm subdir=no conda_branch=no
 
-psocake              svn=psdm subdir=no conda_branch=no
-
 #pyana               svn=psdm subdir=no conda_branch=no
 #pyana_examples      svn=psdm subdir=no conda_branch=no
 #pyasn1              svn=psdm subdir=no conda_branch=no
