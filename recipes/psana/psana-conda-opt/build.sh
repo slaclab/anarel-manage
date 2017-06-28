@@ -79,3 +79,19 @@ else
 fi
 
 scons conda-install
+
+# generate config file to export psana environment variables when activating the conda environment
+mkdir -p $PREFIX/etc/conda/activate.d
+mkdir -p $PREFIX/etc/conda/deactivate.d
+
+cat <<EOF > $PREFIX/etc/conda/activate.d/env_vars.sh
+export SIT_DATA=$PREFIX/data:/reg/g/psdm/data
+export SIT_ARCH=x86_64-rhel7-gcc48-opt
+export SIT_ROOT=/reg/g/psdm
+EOF
+
+cat <<EOF > $PREFIX/etc/conda/deactivate.d/env_vars.sh
+unset SIT_DATA
+unset SIT_ARCH
+unset SIT_ROOT
+EOF
