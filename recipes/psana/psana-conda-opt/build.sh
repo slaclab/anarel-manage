@@ -86,7 +86,7 @@ mkdir -p $PREFIX/etc/conda/deactivate.d
 
 cat <<EOF > $PREFIX/etc/conda/activate.d/env_vars.sh
 export SIT_DATA=$PREFIX/data:/reg/g/psdm/data
-export SIT_ARCH=x86_64-rhel7-gcc48-opt
+export SIT_ARCH=$SIT_ARCH
 export SIT_ROOT=/reg/g/psdm
 EOF
 
