@@ -112,21 +112,21 @@ cp -r /reg/g/psdm/sw/conda/manage/recipes/psana/psana-conda-opt .
 # Make some changes to the yaml files
 echo "$PREFIX Editing meta.yaml..."
 # Get the yaml files for creating the envs
-cp "/reg/g/psdm/sw/conda/manage/ana-env-py2.yml" .
-cp "/reg/g/psdm/sw/conda/manage/ana-env-py3.yml" .
+cp "/reg/g/psdm/sw/conda/manage/jenkins/ana-env-py2.yaml" .
+cp "/reg/g/psdm/sw/conda/manage/jenkins/ana-env-py3.yaml" .
 # Change names
 if [ $RELEASE == "false" ]; then
 	sed -i "s/{% set pkg =.*/{% set pkg = 'psana-conda-nightly' %}/" psana-conda-opt/meta.yaml
-	sed -i "/^name:/ s/$/-nightly-${DATE}-py2/" ana-env-py2.yml
-	sed -i "/^name:/ s/$/-nightly-${DATE}-py3/" ana-env-py3.yml
+	sed -i "/^name:/ s/$/-nightly-${DATE}-py2/" ana-env-py2.yaml
+	sed -i "/^name:/ s/$/-nightly-${DATE}-py3/" ana-env-py3.yaml
 else
-	sed -i "/^name:/ s/$/-${VERSION}/" ana-env-py2.yml
-	sed -i "/^name:/ s/$/-${VERSION}-py3/" ana-env-py3.yml
+	sed -i "/^name:/ s/$/-${VERSION}/" ana-env-py2.yaml
+	sed -i "/^name:/ s/$/-${VERSION}-py3/" ana-env-py3.yaml
 fi
 # These 3 packages are only on RHEL7, so remove them if this build isn't RHEL7
 if [ ! $RHEL_VER == 7 ]; then
-	sed -i "/yaml-cpp\|tensorflow\|jupyterhub/d" ana-env-py2.yml
-	sed -i "/yaml-cpp\|tensorflow\|jupyterhub/d" ana-env-py3.yml
+	sed -i "/yaml-cpp\|tensorflow\|jupyterhub/d" ana-env-py2.yaml
+	sed -i "/yaml-cpp\|tensorflow\|jupyterhub/d" ana-env-py3.yaml
 fi
 # Change version and source directory to what it should be
 sed -i "s/{% set version =.*/{% set version = '$VERSION' %}/" psana-conda-opt/meta.yaml
@@ -147,15 +147,15 @@ if [ $RELEASE == "false" ]; then
 	conda index
 	# Create the environments based on the yaml files
 	echo "$PREFIX Creating env for ${CHANNEL_DIR}/${TAR} in ${BASE_DIR}/ana-nightly-${DATE}..."
-	conda env create -q -f $CONDA_DIR/ana-env-py2.yml
-	conda env create -q -f $CONDA_DIR/ana-env-py3.yml
+	conda env create -q -f $CONDA_DIR/ana-env-py2.yaml
+	conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
 else
 	# Don't rename the tarball (also duh)
 	TAR=$(ls psana-conda-${VERSION}*)
 	# Create the environments based on the yaml files
 	echo "$PREFIX Creating env for ${CHANNEL_DIR}/${TAR} in ${BASE_DIR}/ana-${VERSION}"
-	conda env create -q -f $CONDA_DIR/ana-env-py2.yml
-	conda env create -q -f $CONDA_DIR/ana-env-py3.yml
+	conda env create -q -f $CONDA_DIR/ana-env-py2.yaml
+	conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
 fi
 
 # Remove things not needed
