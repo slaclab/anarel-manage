@@ -201,7 +201,9 @@ if [ $RELEASE == "false" ]; then
 
 		echo "$PREFIX Removing $NUM_ENVS_TO_REMOVE env(s):"
 		echo $ENVS_TO_REMOVE
-		rm -rf $ENVS_TO_REMOVE
+		for ENV in ${ENVS_TO_REMOVE[@]}; do
+		    conda remove --name $ENV --all
+		done
 	else
 		echo "$PREFIX There are less than or equal to $MAX_BUILDS envs..."
 		echo "$PREFIX No envs to remove..."
@@ -223,5 +225,6 @@ if [ $RELEASE == "false" ]; then
 
 	echo "$PREFIX Finished building for $HOSTNAME as $BUILDER..."
 else
-	echo "$PREFIX Finished building official ana release version $VERSION for $HOSTNAME as $BUILDER..."
+    anaconda upload -u lcls-rhel${RHEL_VER} $(ls $CHANNEL_DIR/linux-64 | grep $VERSION)
+    echo "$PREFIX Finished building official ana release version $VERSION for $HOSTNAME as $BUILDER..."
 fi
