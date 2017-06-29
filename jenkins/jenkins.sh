@@ -225,6 +225,6 @@ if [ $RELEASE == "false" ]; then
 
 	echo "$PREFIX Finished building for $HOSTNAME as $BUILDER..."
 else
-    anaconda upload -u lcls-rhel${RHEL_VER} ${CHANNEL_DIR}/linux-64$(ls $CHANNEL_DIR/linux-64 | grep $VERSION)
+    anaconda upload --no-progress -u lcls-rhel${RHEL_VER} ${CHANNEL_DIR}/linux-64/$(ls $CHANNEL_DIR/linux-64 | grep $VERSION)
     echo "$PREFIX Finished building official ana release version $VERSION for $HOSTNAME as $BUILDER..."
 fi
