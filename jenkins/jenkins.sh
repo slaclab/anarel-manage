@@ -156,6 +156,9 @@ else
 	echo "$PREFIX Creating env for ${CHANNEL_DIR}/${TAR} in ${BASE_DIR}/ana-${VERSION}"
 	conda env create -q -f $CONDA_DIR/ana-env-py2.yaml
 	conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
+	# generates jupyter kernel config file in
+	# /reg/g/psdm/sw/conda/jhub_config/prod-rhel${RHEL_VER}/${VERSION}/kernel.json
+	ana-rel-admin --cmd jhub --name ana-$VERSION
 fi
 
 # Remove things not needed

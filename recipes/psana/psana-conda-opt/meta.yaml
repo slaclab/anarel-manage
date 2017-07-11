@@ -21,7 +21,7 @@ requirements:
     - ndarray
     - qt       >4.8.5,<5
     - numpy 
-    - matplotlib
+    - matplotlib ==1.5.1
     - scipy
     - pyzmq
     - openmpi  ==1.10.6 lsf_verbs_1
@@ -40,7 +40,7 @@ requirements:
     - psana-expdb
     - mpi4py
     - pytables
-    - matplotlib
+    - matplotlib ==1.5.1
     - scipy
     - pyzmq
 #    - pyqtgraph
