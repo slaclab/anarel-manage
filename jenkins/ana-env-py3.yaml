@@ -94,10 +94,10 @@ dependencies:
   - kafka-python
   - tensorflow=1.1.0
   - keras
-  - jupyterhub
   - blaze
   - readline
   - gunicorn
   - eventlet
   - flask-socketio
   - opencv>=3
+
