@@ -112,3 +112,4 @@ dependencies:
   - opencv>=3
   - psocake
   - glueviz
+  - pyfai
