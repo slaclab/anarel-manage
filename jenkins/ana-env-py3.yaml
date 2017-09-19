@@ -4,14 +4,14 @@ dependencies:
   - cudnn=5.1
   - openmpi=1.10.6
   - szip=2.1
-  - hdf5=1.8.18
+  - hdf5
   - ipython
   - nose
   - numpy
   - scipy
-  - h5py=2.7.0
+  - h5py
   - mpi4py=2.0.0
-  - pytables=3.3.0
+  - pytables
   - cython
   - boost=1.60.0
   - mysql
