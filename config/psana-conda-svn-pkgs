@@ -117,8 +117,6 @@ hdf5                svn=psdm subdir=no conda_branch=yes
 
 hdf5pp               svn=psdm subdir=no conda_branch=no
 
-hexanode             svn=psdm subdir=no conda_branch=no
-
 # should come from conda env
 #hdfview             svn=psdm subdir=no conda_branch=no
 
