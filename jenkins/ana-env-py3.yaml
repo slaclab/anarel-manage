@@ -57,7 +57,7 @@ dependencies:
   - bottleneck
   - seaborn
   - joblib
-  - bokeh
+  - bokeh=0.12.6
   - ptyprocess
   - mkl-service
   - spyder
