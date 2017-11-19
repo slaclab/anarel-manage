@@ -17,6 +17,7 @@ requirements:
     - scons
     - cython
     - boost    ==1.57.0
+    - icu      ==54.1
     - mysql
     - ndarray
     - qt       >4.8.5,<5
@@ -33,6 +34,7 @@ requirements:
   run:
     - python 2.7.*
     - boost   ==1.57.0
+    - icu     ==54.1
     - mysql    
     - qt       >=4,<5
     - numpy
