@@ -3,7 +3,6 @@ dependencies:
   - python=3.5
   - cudnn=5.1
   - openmpi=1.10.6
-  - szip=2.1
   - hdf5
   - ipython
   - nose
@@ -72,7 +71,6 @@ dependencies:
   - plotly
   - twine
   - eigen
-  - theano
   - numba
   - nltk
   - gensim
@@ -92,7 +90,7 @@ dependencies:
   - yaml-cpp
   - hexanode-proxy
   - kafka-python
-  - tensorflow=1.1.0
+  - tensorflow
   - keras
   - blaze
   - readline

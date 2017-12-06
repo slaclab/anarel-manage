@@ -3,7 +3,6 @@ dependencies:
   - python=2.7
   - cudnn=5.1
   - openmpi=1.10.6
-  - szip=2.1
   - hdf5
   - ipython
   - nose
@@ -76,7 +75,6 @@ dependencies:
   - eigen
   - guppy
   - psana-conda
-  - theano
   - logbookclient
   - kerberos=1.2.5
   - pscache
@@ -101,7 +99,7 @@ dependencies:
   - yaml-cpp
   - hexanode-proxy
   - kafka-python
-  - tensorflow=1.1.0
+  - tensorflow
   - keras
   - blaze
   - readline
