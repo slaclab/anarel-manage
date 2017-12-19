@@ -26,10 +26,10 @@ requirements:
     - scipy
     - pyzmq
     - openmpi  ==1.10.6 lsf_verbs_1
-    - hdf5     1.8.*
-    - h5py
+    - hdf5     ==1.8.18 openmpi_3
+    - h5py     ==2.7.0 py27_4
     - mpi4py   ==2.0.0 py27_openmpi_104
-    - pytables
+    - pytables   ==3.3.0 py27_105
 
   run:
     - python 2.7.*

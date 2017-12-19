@@ -3,14 +3,14 @@ dependencies:
   - python=2.7
   - cudnn=5.1
   - openmpi=1.10.6
-  - hdf5
+  - hdf5=1.8.18
   - ipython
   - nose
   - numpy
   - scipy
-  - h5py
+  - h5py=2.7.0
   - mpi4py=2.0.0
-  - pytables
+  - pytables=3.3.0
   - scons
   - cython
   - boost
