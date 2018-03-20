@@ -4,10 +4,10 @@ package:
 
 source:
   git_url: https://github.com/lcls-psana/psocake
-  git_tag: "v0.2.3"
+  git_tag: "v0.2.11"
 
 build:
-  number: 2
+  number: 3
   script:
     - pip install --no-deps --disable-pip-version-check .
 
@@ -26,5 +26,3 @@ requirements:
     - scikit-learn
     - mpi4py
     - scikit-image
-
-
