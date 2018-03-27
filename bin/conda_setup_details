@@ -98,7 +98,7 @@ REHASH='''
 # this borrows from virtualenv activate script
 def write_undo_function(fout, oldenv, newenv):
     fout.write("undo_conda() {\n")
-    fout.write("  source deactivate\n")
+    fout.write("  conda deactivate\n")
     for evar in newenv:
         fout.write("  unset %s\n" % evar)
     for evar,val in oldenv.items():
@@ -144,7 +144,7 @@ def write_activate_condaenv(fout, args):
                   (swGroup, path, args.gpu, args.py3))
         args.env=file(path,'r').read()
 
-    activate_line = 'source activate %s' % args.env
+    activate_line = 'conda activate %s' % args.env
     prod_or_dev = 'production'
     if args.dev:
         prod_or_dev = 'devel'
