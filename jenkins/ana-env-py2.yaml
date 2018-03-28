@@ -112,3 +112,4 @@ dependencies:
   - glueviz
   - pyfai
   - hdbscan
+  - cudatoolkit

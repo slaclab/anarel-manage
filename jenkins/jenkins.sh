@@ -82,8 +82,9 @@ fi
 # Exit with an exit code if there is an error
 set -e
 
-# Activate conda
-source $conda_setup ""
+# Activate conda.  Use the base release to control the build.
+source /reg/g/psdm/etc/psconda.sh
+conda activate base
 
 # Remove old tmp directory and remake it
 cd $BASE_DIR
