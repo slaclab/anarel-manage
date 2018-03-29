@@ -441,7 +441,8 @@ def add_to_condaenv(args, newenv):
         fatal("The manage directory, where conda_setup, condarel are, cannot be found. specified is %s, use --manage to override" % args.manage)
     if args.manage not in paths:
         paths.insert(0, args.manage)
-    paths.insert(0, conda_bin)
+    # not necessary any more with new conda acitvate
+    #paths.insert(0, conda_bin)
     newenv['PATH'] = os.path.pathsep.join(paths)
     newenv['SIT_ROOT'] = args.sitroot
 
