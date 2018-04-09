@@ -113,3 +113,4 @@ dependencies:
   - pyfai
   - hdbscan
   - cudatoolkit
+  - eigen
