@@ -114,3 +114,4 @@ dependencies:
   - hdbscan
   - cudatoolkit
   - eigen
+  - smalldata_tools
