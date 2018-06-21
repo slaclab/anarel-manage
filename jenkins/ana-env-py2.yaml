@@ -107,7 +107,7 @@ dependencies:
   - eventlet
   - flask-socketio
   - subprocess32
-  - opencv>=3
+  - opencv=3.1.0
   - psocake
   - glueviz
   - pyfai
