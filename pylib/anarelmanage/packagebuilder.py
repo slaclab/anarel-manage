@@ -138,7 +138,7 @@ class PackageBuilder(object):
         '''Get the name of the output package file that will be produced from
         the conda build.
         '''
-        cmd = 'conda-build %s' % self.xtra_build_args
+        cmd = 'conda build %s' % self.xtra_build_args
 
         if self.python_ver:
             cmd += ' --python=%s' % (self.python_ver,)
@@ -160,7 +160,7 @@ class PackageBuilder(object):
             if self.dbg or self.recipe_path.endswith('dbg'):
                 dbgBuild = True
         sitvars = util.getSITvariables(debug=dbgBuild)
-        cmd = 'SIT_ARCH=%s conda-build' % sitvars['SIT_ARCH']
+        cmd = 'SIT_ARCH=%s conda build' % sitvars['SIT_ARCH']
         if self.python_ver:
             cmd += ' --python=%s' % self.python_ver
         if self.numpy_ver:

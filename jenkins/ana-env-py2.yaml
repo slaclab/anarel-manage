@@ -116,3 +116,6 @@ dependencies:
   - eigen
   - smalldata_tools
   - holoviews
+  - xtcav2
+  - gsl
+  - fftw
