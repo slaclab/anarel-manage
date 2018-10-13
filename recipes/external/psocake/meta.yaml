@@ -1,13 +1,13 @@
 package:
   name: psocake
-  version: "0.2"
+  version: "0.4.2"
 
 source:
   git_url: https://github.com/lcls-psana/psocake
-  git_tag: "v0.2.11"
+  git_tag: "v00-04-02"
 
 build:
-  number: 3
+  number: 1
   script:
     - pip install --no-deps --disable-pip-version-check .
 
