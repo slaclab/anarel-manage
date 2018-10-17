@@ -181,8 +181,8 @@ if [ $RELEASE == "false" ]; then
 	if [ $NUM_ENVS_PY2 -ne $NUM_ENVS_PY3 ]; then
 		echo "$PREFIX Number of nightly py2 builds ($NUM_ENVS_PY2) does not equal the number of nightly py3 builds ($NUM_ENVS_PY3)..."
 		echo "$PREFIX They should be equal..."
-		echo "$PREFIX Nothing will be deleted. Aborting..."
-		exit 1
+		#echo "$PREFIX Nothing will be deleted. Aborting..."
+		#exit 1
 	fi
 
 	cd $CHANNEL_DIR/linux-64
@@ -193,8 +193,8 @@ if [ $RELEASE == "false" ]; then
 	if [ $NUM_TARS -ne $((NUM_ENVS / 2)) ]; then
 		echo "$PREFIX There are $NUM_TARS tarballs and $((NUM_ENVS / 2)) py2/py3 envs..."
 		echo "$PREFIX They should be equal..."
-		echo "$PREFIX Nothing will be deleted. Aborting..."
-		exit 1
+		#echo "$PREFIX Nothing will be deleted. Aborting..."
+		#exit 1
 	fi
 
 	# If they are, determine which environment(s) to delete if there are any
