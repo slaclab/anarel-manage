@@ -149,14 +149,14 @@ if [ $RELEASE == "false" ]; then
 	# Create the environments based on the yaml files
 	echo "$PREFIX Creating env for ${CHANNEL_DIR}/${TAR} in ${BASE_DIR}/ana-nightly-${DATE}..."
 	conda env create -q -f $CONDA_DIR/ana-env-py2.yaml
-	conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
+	# conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
 else
 	# Don't rename the tarball (also duh)
 	TAR=$(ls psana-conda-${VERSION}*)
 	# Create the environments based on the yaml files
 	echo "$PREFIX Creating env for ${CHANNEL_DIR}/${TAR} in ${BASE_DIR}/ana-${VERSION}"
 	conda env create -q -f $CONDA_DIR/ana-env-py2.yaml
-	conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
+	# conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
 	# generates jupyter kernel config file in
 	# /reg/g/psdm/sw/conda/jhub_config/prod-rhel${RHEL_VER}/${VERSION}/kernel.json
 	# ana-rel-admin --cmd jhub --name ana-$VERSION
