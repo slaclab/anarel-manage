@@ -1,10 +1,10 @@
 package:
   name: psgeom
-  version: "0.5"
+  version: "0.6"
 
 source:
   git_url: https://github.com/slaclab/psgeom
-  git_tag: "v0.5"
+  git_tag: "v0.6"
 
 build:
   number: 1

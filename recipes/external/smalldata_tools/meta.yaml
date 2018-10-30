@@ -1,6 +1,6 @@
 package:
   name: smalldata_tools
-  version: "0.1"
+  version: "0.2"
 
 source:
   git_url: https://github.com/slac-lcls/smalldata_tools.git
