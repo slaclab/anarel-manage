@@ -1,0 +1,41 @@
+{% set version = "2.2.3" %}
+
+package:
+  name: matplotlib
+  version: {{ version }}
+
+source:
+  url: https://github.com/matplotlib/matplotlib/archive/v{{ version }}.tar.gz
+
+build:
+  number: 0
+  script: $PYTHON setup.py install --single-version-externally-managed --record record.txt
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+  host:
+    - python
+    - setuptools
+    - numpy >=1.10
+    - python-dateutil
+    - freetype
+    - cycler >=0.10
+    - pyparsing
+    - libpng
+    - pyqt <5
+  run:
+    - python
+    - setuptools
+    - {{ pin_compatible('numpy') }}
+    - cycler >=0.10
+    - python-dateutil
+    - freetype
+    - pyparsing
+    - libpng
+    - tornado
+    - pyqt <5
+    - kiwisolver
+    - backports
+    - backports.functools_lru_cache
