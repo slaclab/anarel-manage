@@ -84,7 +84,13 @@ set -e
 
 # Activate conda.  Use the base release to control the build.
 source /reg/g/psdm/etc/psconda.sh
+# when we activate the base env conda will unset these variables.
+# save a copy so we can restore them.
+export SIT_ROOT_SAVE=$SIT_ROOT
+export SIT_ARCH_SAVE=$SIT_ARCH
 conda activate base
+export SIT_ROOT=$SIT_ROOT_SAVE
+export SIT_ARCH=$SIT_ARCH_SAVE
 
 # Remove old tmp directory and remake it
 cd $BASE_DIR

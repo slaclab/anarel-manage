@@ -20,9 +20,9 @@ requirements:
     - icu      ==54.1
     - mysql
     - ndarray
-    - qt       >4.8.5,<5
+    - qt       ==4.8.7 4
     - numpy 
-    - matplotlib
+    - matplotlib ==2.2.3 py27hf484d3e_3
     - scipy
     - pyzmq
     - openmpi  ==1.10.6 lsf_verbs_1
@@ -36,13 +36,13 @@ requirements:
     - boost   ==1.57.0
     - icu     ==54.1
     - mysql    
-    - qt       >=4,<5
+    - qt       ==4.8.7 4
     - numpy
     - h5py
     - psana-expdb
     - mpi4py
     - pytables
-    - matplotlib ==1.5.1
+    - matplotlib ==2.2.3 py27hf484d3e_3
     - scipy
     - pyzmq
 #    - pyqtgraph
@@ -141,3 +141,6 @@ test:
 #            and h5py, so we'll remove the openmpi runtime dependency. Just don't run
 #            Translator since it is compiled against openmpi
   
+# Aug 2019 - Clemens pinned matplotlib because we need qt4 and had to build it ourselves (conda
+# didn't support the qt4 version).  The most modern version we could get from conda
+# was 1.5 (too old).  old matplotlib also had a dependency on an old numpy.
