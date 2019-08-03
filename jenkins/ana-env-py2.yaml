@@ -1,7 +1,6 @@
 name: ana
 dependencies:
   - python=2.7
-  - cudnn=5.1
   - openmpi=1.10.6
   - hdf5=1.8.18
   - ipython
@@ -73,7 +72,6 @@ dependencies:
   - plotly
   - twine
   - eigen
-  - guppy
   - psana-conda
   - logbookclient
   - kerberos=1.2.5
