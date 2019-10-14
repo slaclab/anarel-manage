@@ -137,7 +137,7 @@ if [ ! $RHEL_VER == 7 ]; then
 fi
 # Change version and source directory to what it should be
 sed -i "s/{% set version =.*/{% set version = '$VERSION' %}/" psana-conda-opt/meta.yaml
-sed -i "/source:/!b;n;c \ \ fn: $CONDA_DIR/downloads/anarel/{{ pkg }}-{{ version }}.tar.gz" psana-conda-opt/meta.yaml
+sed -i "/source:/!b;n;c \ \ url: file://$CONDA_DIR/downloads/anarel/{{ pkg }}-{{ version }}.tar.gz" psana-conda-opt/meta.yaml
 
 # Now build it
 echo "$PREFIX Building tarball into $CHANNEL_DIR..."

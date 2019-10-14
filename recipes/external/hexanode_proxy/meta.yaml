@@ -1,4 +1,4 @@
-{% set version = "0.0.1" %} 
+{% set version = "0.0.2" %} 
 {% set build = "1" %}
 
 package:
@@ -6,7 +6,7 @@ package:
   version: {{ version }}
 
 source:
-  fn: /reg/g/psdm/sw/conda/downloads/otherpkgs/hexanode-proxy-{{version}}.tar.gz
+  url: file:///reg/g/psdm/sw/conda/downloads/otherpkgs/hexanode-proxy-{{version}}.tar.gz
 
 build:
   number: {{build}}

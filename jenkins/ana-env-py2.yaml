@@ -53,7 +53,7 @@ dependencies:
   - memory_profiler
   - watchdog
   - xarray
-  - dask
+  - dask=1.2.0 # bug in 1.2.1, and more recent versions require newer numpy (https://github.com/dask/dask/issues/4846)
   - bottleneck
   - seaborn
   - joblib
@@ -112,7 +112,6 @@ dependencies:
   - hdbscan
   - cudatoolkit
   - eigen
-  - smalldata_tools
   - holoviews
   - xtcav2
   - gsl
