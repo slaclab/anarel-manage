@@ -13,7 +13,7 @@ source:
 
 requirements:
   build:
-    - python 2.7.*
+    - python 2.7.15
     - scons
     - cython
     - boost    ==1.57.0
@@ -30,9 +30,10 @@ requirements:
     - h5py     ==2.7.0 py27_4
     - mpi4py   ==2.0.0 py27_openmpi_104
     - pytables   ==3.3.0 py27_105
+    - curl
 
   run:
-    - python 2.7.*
+    - python 2.7.15
     - boost   ==1.57.0
     - icu     ==54.1
     - mysql    
@@ -45,6 +46,7 @@ requirements:
     - matplotlib ==2.2.3 py27hf484d3e_3
     - scipy
     - pyzmq
+    - curl
 #    - pyqtgraph
 #    - pandas
 

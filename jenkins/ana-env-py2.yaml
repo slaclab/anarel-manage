@@ -1,6 +1,6 @@
 name: ana
 dependencies:
-  - python=2.7
+  - python=2.7.15
   - openmpi=1.10.6
   - hdf5=1.8.18
   - ipython
@@ -15,7 +15,7 @@ dependencies:
   - boost
   - mysql
   - ndarray
-  - qt=4.8.7
+  - qt=4.8.7=4 # see comment in psana recipe meta.yaml
   - matplotlib
   - pyzmq
   - pylint
@@ -97,8 +97,6 @@ dependencies:
   - yaml-cpp
   - hexanode-proxy
   - kafka-python
-  - tensorflow
-  - keras
   - blaze
   - readline
   - gunicorn
@@ -110,7 +108,6 @@ dependencies:
   - glueviz
   - pyfai
   - hdbscan
-  - cudatoolkit
   - eigen
   - holoviews
   - xtcav2
@@ -120,3 +117,4 @@ dependencies:
   - pyepics
   - mongodb
   - pymongo
+  - krtc
