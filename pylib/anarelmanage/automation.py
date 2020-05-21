@@ -9,7 +9,7 @@ import time
 from collections import defaultdict
 import anarelmanage.util as util
 import yaml
-import paramiko as pm
+#import paramiko as pm
 import getpass
 import shutil
 import smtplib
