@@ -29,7 +29,7 @@ py3:psddl_psana
 py3:PyCSPadImage
 py3_cc:ImgAlgos
 py3:psmon
-py3:TimeTool
+py3_cc:TimeTool
 py3:psana
 py3:psalgos
 py3:xtcav
