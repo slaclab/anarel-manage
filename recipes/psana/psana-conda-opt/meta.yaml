@@ -46,6 +46,7 @@ requirements:
     - cython
     - boost=1.70.0
     - mysql
+    - mysqlclient
     - ndarray
     - qt
     - numpy
