@@ -1,31 +1,28 @@
-name: ana
+channels:
+  - lcls-i
+  - conda-forge
+  - defaults
 dependencies:
-  - python=2.7
-  - openmpi=1.10.6
-  - hdf5=1.8.18
+  - python=2.7.15
+  - psana-conda
   - ipython
   - nose
   - numpy
   - scipy
-  - h5py=2.7.0
-  - mpi4py=2.0.0
-  - pytables=3.3.0
   - scons
   - cython
   - boost
   - mysql
   - ndarray
-  - qt=4.8.7
   - matplotlib
   - pyzmq
   - pylint
   - coverage
-  - jinja2=2.8.1
-  - pandas=0.20.2
+  - pandas
   - pillow
-  - pyqt=4.11.4
+  - pyqt
   - pyqtgraph
-  - python-dateutil=2.5.3
+  - python-dateutil
   - scikit-beam
   - scikit-learn
   - anaconda-client
@@ -53,7 +50,7 @@ dependencies:
   - memory_profiler
   - watchdog
   - xarray
-  - dask=1.2.0 # bug in 1.2.1, and more recent versions require newer numpy (https://github.com/dask/dask/issues/4846)
+  - dask
   - bottleneck
   - seaborn
   - joblib
@@ -72,9 +69,8 @@ dependencies:
   - plotly
   - twine
   - eigen
-  - psana-conda
   - logbookclient
-  - kerberos=1.2.5
+  - kerberos
   - pscache
   - psgeom
   - numba
@@ -105,7 +101,7 @@ dependencies:
   - eventlet
   - flask-socketio
   - subprocess32
-  - opencv=3.1.0
+  - opencv
   - psocake
   - glueviz
   - pyfai

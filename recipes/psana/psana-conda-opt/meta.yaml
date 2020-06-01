@@ -1,13 +1,13 @@
 {% set pkg = 'psana-conda' %}
-{% set version = '2.0.3' %}
-{% set build = 1 %}
+{% set version = '2.0.4' %}
+{% set build = 2 %}
 
 package:
   name: {{ pkg }}
   version: {{ version }}
 
 source:
-  url: file:///reg/neh/home/cpo/git/manage/downloads/anarel/{{ pkg }}-{{ version }}.tar.gz
+  url: file:///reg/g/psdm/sw/conda1/manage/downloads/anarel/{{ pkg }}-{{ version }}.tar.gz
 
 requirements:
   build:
@@ -31,9 +31,8 @@ requirements:
     - qt
     - numpy
     - scipy
-    - openmpi
-    - h5py
     - mpi4py
+    - h5py
     - pytables
     - future
     - six
@@ -53,7 +52,6 @@ requirements:
     - matplotlib
     - scipy
     - pyzmq
-    - openmpi
     - h5py
     - mpi4py
     - pytables
