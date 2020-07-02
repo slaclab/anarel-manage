@@ -78,15 +78,15 @@ sed -i 's/g++/$(CXX)/g' extpkgs/pdsdata/flags.mk
 # file into anarelinfo/data so that it will get installed 
 # in conda.
 
-python $mkanarel 
-scons 
-python $mkanarel copy_depends
+${BUILD_PREFIX}/bin/python $mkanarel 
+${BUILD_PREFIX}/bin/scons 
+${BUILD_PREFIX}/bin/python $mkanarel copy_depends
 
 # need to switch back to full testing once they work - cpo
-scons test-psana
+${BUILD_PREFIX}/bin/scons test-psana
 #scons test
 
-scons conda-install
+${BUILD_PREFIX}/bin/scons conda-install
 
 # generate config file to export psana environment variables when activating the conda environment
 mkdir -p $PREFIX/etc/conda/activate.d
