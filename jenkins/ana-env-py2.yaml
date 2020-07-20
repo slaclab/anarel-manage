@@ -4,7 +4,7 @@ channels:
   - defaults
 dependencies:
   - python=2.7.15
-  - psana-conda=2.0.8
+  - psana-conda=2.0.9
   - ipython
   - nose
   - numpy

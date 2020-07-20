@@ -1,5 +1,5 @@
 {% set pkg = 'psana-conda' %}
-{% set version = '2.0.95' %}
+{% set version = '2.0.9' %}
 {% set build = 0 %}
 
 package:
@@ -7,7 +7,7 @@ package:
   version: {{ version }}
 
 source:
-  url: file:///root/anarel-manage/downloads/anarel/{{ pkg }}-{{ version }}.tar.gz
+  url: file:///reg/g/psdm/sw/conda1/manage/downloads/anarel/{{ pkg }}-{{ version }}.tar.gz
 
 requirements:
   build:
