@@ -4,7 +4,7 @@ channels:
   - defaults
 dependencies:
   - python=3.7
-  - psana-conda=2.0.9
+  - psana-conda=2.0.13
   - ipython
   - numpy
   - scipy
@@ -58,3 +58,4 @@ dependencies:
   - panel
   - holoviews
   - krtc
+  - compilers
