@@ -1,4 +1,5 @@
 channels:
+  - file:///reg/g/psdm/sw/conda1/channels/system-rhel7
   - lcls-i
   - conda-forge
   - defaults
