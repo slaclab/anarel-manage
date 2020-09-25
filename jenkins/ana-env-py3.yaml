@@ -60,3 +60,4 @@ dependencies:
   - holoviews
   - krtc
   - compilers
+  - scikit-beam

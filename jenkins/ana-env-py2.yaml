@@ -90,3 +90,4 @@ dependencies:
   - mongodb
   - pymongo
   - compilers
+  - scikit-beam
