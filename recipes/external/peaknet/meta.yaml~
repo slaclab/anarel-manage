@@ -1,0 +1,27 @@
+package:
+  name: peaknet
+  version: "0.1"
+
+source:
+  git_url: https://github.com/lcls-psana/peaknet
+
+build:
+  number: 1
+  script:
+    - pip install --no-deps --disable-pip-version-check .
+
+requirements:
+  build:
+    - python
+    - setuptools
+
+  # we also need pytorch, cudatoolkit, torchvision, cudnn, but in the past
+  # we have installed these using the command from pytorch.org.
+  # cudnn needs to match cudatoolkit version.
+  # because of this complexity we will leave out these dependencies here.
+  run:
+    - python
+    - numpy
+
+about:
+  home: https://github.com/lcls-psana/peaknet
