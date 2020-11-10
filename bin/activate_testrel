@@ -1,0 +1,18 @@
+pyver=python3.7
+pydir=$CONDA_PREFIX/lib/$pyver/site-packages
+
+export SIT_RELEASE=`cat .sit_release`
+export SIT_USE_CONDA=1
+export SIT_REPOS=$CONDA_PREFIX/data/anarelinfo
+
+# base release paths
+export PATH=$CONDA_PREFIX/bin:${PATH}
+#export PYTHONPATH=$pydir:${PYTHONPATH}
+#export LD_LIBRARY_PATH=$CONDA_PREFIX/bin:${LD_LIBRARY_PATH}
+
+# test release paths take priority
+export PYTHONPATH=$PWD/arch/$SIT_ARCH/python:${PYTHONPATH}
+export LD_LIBRARY_PATH=$PWD/arch/$SIT_ARCH/lib:$CONDA_PREFIX/lib
+export PATH=$PWD/arch/$SIT_ARCH/bin:$PATH
+
+#git clone https://github.com/lcls-psana/CalibManager

@@ -1,0 +1,5 @@
+pyver=python3.7
+pydir=$CONDA_PREFIX/lib/$pyver/site-packages
+ln -s $pydir/SConsTools/SConstruct.main SConstruct
+echo psana-conda-2.0.10 > .sit_release
+echo $CONDA_PREFIX > '.sit_conda_env'
