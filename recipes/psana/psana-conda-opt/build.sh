@@ -5,10 +5,13 @@ if [ ! -e SConstruct ]; then
     ln -s SConsTools/src/SConstruct.main SConstruct
 fi
 
+export SIT_ROOT=/cds/sw/ds/ana/data
+export SIT_ARCH=x86_64-rhel7-gcc48-opt
+
+
 ## setup needed environment variables, if not defined,
 if [ -z "$SIT_ARCH" ]; then
     echo "SIT_ARCH was not defined"
-    return
 fi
 
 export SIT_RELEASE=`cat .sit_release`
@@ -78,15 +81,15 @@ sed -i 's/g++/$(CXX)/g' extpkgs/pdsdata/flags.mk
 # file into anarelinfo/data so that it will get installed 
 # in conda.
 
-${BUILD_PREFIX}/bin/python $mkanarel 
-${BUILD_PREFIX}/bin/scons 
-${BUILD_PREFIX}/bin/python $mkanarel copy_depends
+${PREFIX}/bin/python $mkanarel 
+${PREFIX}/bin/scons 
+${PREFIX}/bin/python $mkanarel copy_depends
 
 # need to switch back to full testing once they work - cpo
-${BUILD_PREFIX}/bin/scons test-psana
+#${PREFIX}/bin/scons test-psana
 #scons test
 
-${BUILD_PREFIX}/bin/scons conda-install
+${PREFIX}/bin/scons conda-install
 
 # generate config file to export psana environment variables when activating the conda environment
 mkdir -p $PREFIX/etc/conda/activate.d

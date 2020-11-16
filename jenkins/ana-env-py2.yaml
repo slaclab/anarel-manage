@@ -1,11 +1,11 @@
 channels:
-  - file:///reg/g/psdm/sw/conda1/channels/system-rhel7
+  - file:///cds/sw/ds/ana/conda1/channels/system-rhel7
   - lcls-i
   - conda-forge
   - defaults
 dependencies:
   - python=2.7.15
-  - psana-conda=2.0.13
+  - psana-conda=4.0.0
   - ipython
   - nose
   - numpy

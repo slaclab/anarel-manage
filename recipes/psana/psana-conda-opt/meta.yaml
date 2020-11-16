@@ -1,5 +1,5 @@
 {% set pkg = 'psana-conda' %}
-{% set version = '2.0.13' %}
+{% set version = '4.0.1' %}
 {% set build = 0 %}
 
 package:
@@ -7,7 +7,7 @@ package:
   version: {{ version }}
 
 source:
-  url: file:///reg/g/psdm/sw/conda1/manage/downloads/anarel/{{ pkg }}-{{ version }}.tar.gz
+  url: file:///cds/sw/ds/ana/conda1/manage/downloads/anarel/{{ pkg }}-{{ version }}.tar.gz
 
 requirements:
   build:
@@ -20,20 +20,21 @@ requirements:
     - {{ cdt('libxxf86vm') }}  # [linux]
     - {{ cdt('libxext') }}     # [linux]
     - make
-    - python
-    - scons=3.1.2 # bug in 4.0.1 for py3? -cpo
-    - six
   host:
+    - cython
+    - python
     - scons=3.1.2 # bug in 4.0.1 for py3? -cpo
     - xorg-libxfixes  # [linux]
-    - python
-    - cython
     - boost=1.70.0
     - mysql=5.7.20
+    - mysqlclient
     - ndarray
     - qt
+    - numpy
+    - matplotlib
     - scipy
     - mpi4py
+    - pyzmq
     - h5py
     - pytables
     - future
@@ -44,7 +45,7 @@ requirements:
   run:
     - python
     - scons=3.1.2 # bug in 4.0.1 for py3? -cpo
-    - cython
+    - xorg-libxfixes  # [linux]
     - boost=1.70.0
     - mysql=5.7.20
     - mysqlclient
@@ -53,9 +54,9 @@ requirements:
     - numpy
     - matplotlib
     - scipy
+    - mpi4py
     - pyzmq
     - h5py
-    - mpi4py
     - pytables
     - future
     - six

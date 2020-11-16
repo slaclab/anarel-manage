@@ -83,14 +83,10 @@ fi
 set -e
 
 # Activate conda.  Use the base release to control the build.
-source /reg/g/psdm/etc/psconda.sh
-# when we activate the base env conda will unset these variables.
-# save a copy so we can restore them.
-export SIT_ROOT_SAVE=$SIT_ROOT
-export SIT_ARCH_SAVE=$SIT_ARCH
-conda activate base
-export SIT_ROOT=$SIT_ROOT_SAVE
-export SIT_ARCH=$SIT_ARCH_SAVE
+source /cds/sw/ds/ana/conda1/inst/etc/profile.d/conda.sh
+conda activate conda_build
+export SIT_ARCH=x86_64-rhel7-gcc48-opt
+export SIT_ROOT=/cds/sw/ds/ana/conda/data
 
 # Remove old tmp directory and remake it
 cd $BASE_DIR
@@ -105,7 +101,7 @@ fi
 # Get the tags for the packages to be installed
 cd $CONDA_DIR
 echo "$PREFIX Retrieving tags..."
-ana-rel-admin --force --cmd psana-conda-src --name $VERSION --basedir $CONDA_DIR
+/reg/g/psdm/sw/conda1/manage/bin/ana-rel-admin --force --cmd psana-conda-src --name $VERSION --basedir $CONDA_DIR
 # Don't append "nightly" onto the tar file if it's a release...
 # cause it's a release... not nightly
 if [ $RELEASE == "false" ]; then
@@ -114,13 +110,13 @@ fi
 
 # Get the recipe
 echo "$PREFIX Retrieving recipe..."
-cp -r /reg/g/psdm/sw/conda/manage/recipes/psana/psana-conda-opt .
+cp -r /reg/g/psdm/sw/conda1/manage/recipes/psana/psana-conda-opt .
 
 # Make some changes to the yaml files
 echo "$PREFIX Editing meta.yaml..."
 # Get the yaml files for creating the envs
-cp "/reg/g/psdm/sw/conda/manage/jenkins/ana-env-py2.yaml" .
-cp "/reg/g/psdm/sw/conda/manage/jenkins/ana-env-py3.yaml" .
+cp "/reg/g/psdm/sw/conda1/manage/jenkins/ana-env-py2.yaml" .
+cp "/reg/g/psdm/sw/conda1/manage/jenkins/ana-env-py3.yaml" .
 # Change names
 if [ $RELEASE == "false" ]; then
 	sed -i "s/{% set pkg =.*/{% set pkg = 'psana-conda-nightly' %}/" psana-conda-opt/meta.yaml
@@ -141,7 +137,8 @@ sed -i "/source:/!b;n;c \ \ url: file://$CONDA_DIR/downloads/anarel/{{ pkg }}-{{
 
 # Now build it
 echo "$PREFIX Building tarball into $CHANNEL_DIR..."
-conda-build --output-folder $CHANNEL_DIR psana-conda-opt
+conda build --python=2.7.15 --output-folder $CHANNEL_DIR psana-conda-opt
+conda build --python=3.7 --output-folder $CHANNEL_DIR psana-conda-opt
 
 # It builds the tarball into $CHANNEL_DIR, now lets make the environment(s)
 cd $CHANNEL_DIR/linux-64
@@ -155,14 +152,14 @@ if [ $RELEASE == "false" ]; then
 	# Create the environments based on the yaml files
 	echo "$PREFIX Creating env for ${CHANNEL_DIR}/${TAR} in ${BASE_DIR}/ana-nightly-${DATE}..."
 	conda env create -q -f $CONDA_DIR/ana-env-py2.yaml
-	# conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
+	conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
 else
 	# Don't rename the tarball (also duh)
 	TAR=$(ls psana-conda-${VERSION}*)
 	# Create the environments based on the yaml files
 	echo "$PREFIX Creating env for ${CHANNEL_DIR}/${TAR} in ${BASE_DIR}/ana-${VERSION}"
 	conda env create -q -f $CONDA_DIR/ana-env-py2.yaml
-	# conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
+	conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
 	# generates jupyter kernel config file in
 	# /reg/g/psdm/sw/conda/jhub_config/prod-rhel${RHEL_VER}/${VERSION}/kernel.json
 	# ana-rel-admin --cmd jhub --name ana-$VERSION
