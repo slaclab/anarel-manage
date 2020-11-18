@@ -5,8 +5,6 @@ py3:h5tools
 py3:CodeGen
 py3:psddl_python
 py3:expmon
-py3:mysql
-py3:RegDB
 py3:pypsalg
 py3:pdscalibdata
 py3:psana_examples

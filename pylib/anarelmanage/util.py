@@ -125,7 +125,7 @@ def getOsAndPlatform():
     elif platform_string.startswith('Linux'):
         if '-redhat-' in platform_string:
             version_string = platform_string.split('-redhat-')[1].split('-')[0]
-            major_version = int(math.floor(float(version_string)))
+            major_version = int(math.floor(float(version_string[:2])))
             archMachine = platform.machine()
             assert archMachine == 'x86_64', "unexpected - machine architechture is not x86_64"
             return 'rhel%d' % major_version, 'linux-64'

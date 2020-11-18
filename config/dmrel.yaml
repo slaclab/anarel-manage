@@ -51,10 +51,7 @@
     # moving to 1.60.0 got the boost_python lib to load, but there
     # are still other boost libraries that don't load
 
-  mysql:
-    ver: latest
-
-  ndarray:
+  ndarray-psana:
     ver: latest
 
   # we build psana with 4.8.5, I don't think building with 4.8.7 works
@@ -144,15 +141,6 @@
     ver: latest
 
   simplejson:
-    ver: latest
-
-  # looks like this is not in py3
-  MySQL-python:
-    ver: latest
-    py3: skip
-
-  # Murali says this is the better, more standard interface for mysql python programming
-  mysql-connector-python:
     ver: latest
 
   # zmq.backend.cffi won't import without this, still doesn't seem to import with it?
@@ -246,10 +234,6 @@
 
   # using python to run ssh commands in other places, Igor liked this 
   paramiko:
-    ver: latest
-
-  # Object oriented SQL
-  sqlalchemy:
     ver: latest
 
   # sphinx 

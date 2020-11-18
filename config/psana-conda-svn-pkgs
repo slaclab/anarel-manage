@@ -80,8 +80,6 @@ PSTime             svn=psdm subdir=no conda_branch=no
 
 PyCSPadImage       svn=psdm subdir=no conda_branch=no
 PyDataSource       svn=psdm subdir=no conda_branch=no
-RdbMySQL           svn=psdm subdir=no conda_branch=no
-RegDB              svn=psdm subdir=no conda_branch=no
 
 # we want to drop root, the root conda package has a build problem with png
 #RootHist           svn=psdm subdir=no conda_branch=no
@@ -126,7 +124,6 @@ hdf5pp               svn=psdm subdir=no conda_branch=no
 #matplotlib          svn=psdm subdir=no conda_branch=no
 #mpi4py              svn=psdm subdir=no conda_branch=no
 
-mysql                svn=psdm subdir=no conda_branch=yes
 ndarray_ext           svn=psdm subdir=no conda_branch=yes
 
 #networkx            svn=psdm subdir=no conda_branch=no
