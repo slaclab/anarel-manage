@@ -32,6 +32,7 @@ RHEL_VER=7
 
 BASE_DIR="/cds/sw/ds/ana/conda1/manage/scratch"
 CHANNEL_DIR="/cds/sw/ds/ana/conda1/channels/psana-rhel${RHEL_VER}"
+ENV_DIR="/cds/sw/ds/ana/conda1/inst/envs/"
 
 # Optionally accept a version number. Defaults to 99.99.99
 VERSION=${1-"99.99.99"}
@@ -112,13 +113,15 @@ cp "/cds/sw/ds/ana/conda1/manage/jenkins/ana-env-py3.yaml" .
 # Change names
 if [ $RELEASE == "false" ]; then
 	sed -i "s/{% set pkg =.*/{% set pkg = 'psana-conda-nightly' %}/" psana-conda-opt/meta.yaml
-	sed -i "/^name:/ s/$/-nightly-${DATE}-py2/" ana-env-py2.yaml
+	sed -i "/^name:/ s/$/-nightly-${DATE}/" ana-env-py2.yaml
 	sed -i "/^name:/ s/$/-nightly-${DATE}-py3/" ana-env-py3.yaml
+        sed -i "/^  - psana-conda/ s/$/-nightly=${VERSION}/" ana-env-py2.yaml
+        sed -i "/^  - psana-conda/ s/$/-nightly=${VERSION}/" ana-env-py3.yaml
 else
         sed -i "/^name:/ s/$/-${VERSION}/" ana-env-py2.yaml
         sed -i "/^name:/ s/$/-${VERSION}-py3/" ana-env-py3.yaml
-        sed -i "/^  - psana-conda=/ s/$/${VERSION}/" ana-env-py2.yaml
-        sed -i "/^  - psana-conda=/ s/$/${VERSION}/" ana-env-py3.yaml
+        sed -i "/^  - psana-conda/ s/$/=${VERSION}/" ana-env-py2.yaml
+        sed -i "/^  - psana-conda/ s/$/=${VERSION}/" ana-env-py3.yaml
 fi
 
 # Change version and source directory to what it should be
@@ -130,24 +133,34 @@ echo "$PREFIX Building tarball into $CHANNEL_DIR..."
 conda build --python=2.7.15 --output-folder $CHANNEL_DIR psana-conda-opt
 conda build --python=3.7 --output-folder $CHANNEL_DIR psana-conda-opt
 
-# It builds the tarball into $CHANNEL_DIR, now lets make the environment(s)
+#It builds the tarball into $CHANNEL_DIR, now lets make the environment(s)
 cd $CHANNEL_DIR/linux-64
 if [ $RELEASE == "false" ]; then
 	# Rename tarball cause nightly... duh.
-	TAR=$(ls psana-conda-nightly-${VERSION}*)
-	echo "$PREFIX Changing name from $TAR to psana-conda-nightly-${DATE}..."
-	mv $TAR psana-conda-nightly-${DATE}.tar.bz2
+	TAR=$(ls psana-conda-nightly-${VERSION}* | grep py2)
+        BASE_NAME=$(basename $TAR .tar.bz2)
+	echo "$PREFIX Changing name from $TAR to ${BASE_NAME}${DATE}.tar.bz2..."
+	mv $TAR ${BASE_NAME}${DATE}.tar.bz2
+	TAR=$(ls psana-conda-nightly-${VERSION}* | grep py3)
+        BASE_NAME=$(basename $TAR .tar.bz2)
+	echo "$PREFIX Changing name from $TAR to ${BASE_NAME}${DATE}.tar.bz2..."
+	mv $TAR ${BASE_NAME}${DATE}.tar.bz2
 	# Update the json file
 	conda index
 	# Create the environments based on the yaml files
-	echo "$PREFIX Creating env for ${CHANNEL_DIR}/${TAR} in ${BASE_DIR}/ana-nightly-${DATE}..."
+	echo "$PREFIX Creating env in ${BASE_DIR}/ana-${VERSION}-${DATE}"
 	conda env create -q -f $CONDA_DIR/ana-env-py2.yaml
+	echo "$PREFIX Creating env in ${BASE_DIR}/ana-${VERSION}-${DATE}"
+	conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
 else
+	# Update the json file
+	conda index
 	# Don't rename the tarball (also duh)
 	TAR=$(ls psana-conda-${VERSION}*)
 	# Create the environments based on the yaml files
-	echo "$PREFIX Creating env for ${CHANNEL_DIR}/${TAR} in ${BASE_DIR}/ana-${VERSION}"
+	echo "$PREFIX Creating env in ${BASE_DIR}/ana-${VERSION}"
 	conda env create -q -f $CONDA_DIR/ana-env-py2.yaml
+	echo "$PREFIX Creating env in ${BASE_DIR}/ana-${VERSION}-py3"
 	conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
 	# generates jupyter kernel config file in
 	# /reg/g/psdm/sw/conda/jhub_config/prod-rhel${RHEL_VER}/${VERSION}/kernel.json
@@ -166,15 +179,15 @@ fi
 
 # If nightly check env/tarball count to maintain circular buffer of $MAX_BUILDS
 if [ $RELEASE == "false" ]; then
-	cd $BASE_DIR
-	NUM_ENVS_PY2=$(ls | grep ana-nightly | grep py2 | wc -l)
+	cd $ENV_DIR
+	NUM_ENVS_PY2=$(ls | grep ana-nightly | grep -v py3 | wc -l)
 	NUM_ENVS_PY3=$(ls | grep ana-nightly | grep py3 | wc -l)
 	NUM_ENVS=$((NUM_ENVS_PY2 + NUM_ENVS_PY3))
 	if [ $NUM_ENVS_PY2 -ne $NUM_ENVS_PY3 ]; then
 		echo "$PREFIX Number of nightly py2 builds ($NUM_ENVS_PY2) does not equal the number of nightly py3 builds ($NUM_ENVS_PY3)..."
 		echo "$PREFIX They should be equal..."
-		#echo "$PREFIX Nothing will be deleted. Aborting..."
-		#exit 1
+		echo "$PREFIX Nothing will be deleted. Aborting..."
+		exit 1
 	fi
 
 	cd $CHANNEL_DIR/linux-64
@@ -182,23 +195,24 @@ if [ $RELEASE == "false" ]; then
 
 	# First lets make sure there are an equal number of tarballs
 	# and environment since they should be isomorphic (yay math terms)
-	if [ $NUM_TARS -ne $((NUM_ENVS / 2)) ]; then
-		echo "$PREFIX There are $NUM_TARS tarballs and $((NUM_ENVS / 2)) py2/py3 envs..."
+	if [ $NUM_TARS -ne $NUM_ENVS ]; then
+		echo "$PREFIX There are $NUM_TARS tarballs and $NUM_ENVS py2/py3 envs..."
 		echo "$PREFIX They should be equal..."
-		#echo "$PREFIX Nothing will be deleted. Aborting..."
-		#exit 1
+		echo "$PREFIX Nothing will be deleted. Aborting..."
+		exit 1
 	fi
 
 	# If they are, determine which environment(s) to delete if there are any
-	cd $BASE_DIR
-	if [ $((NUM_ENVS / 2)) -gt $MAX_BUILDS ]; then
+	cd $ENV_DIR
+	if [ $NUM_ENVS -gt $(($MAX_BUILDS * 2)) ]; then
 		NUM_ENVS_TO_REMOVE=$(($NUM_ENVS - $MAX_BUILDS * 2))
+                echo $(ls -t | grep ana-nightly | tail -n $NUM_ENVS_TO_REMOVE)
 		ENVS_TO_REMOVE=$(ls -t | grep ana-nightly | tail -n $NUM_ENVS_TO_REMOVE)
 
 		echo "$PREFIX Removing $NUM_ENVS_TO_REMOVE env(s):"
 		echo $ENVS_TO_REMOVE
 		for ENV in ${ENVS_TO_REMOVE[@]}; do
-		    conda remove --name $ENV --all
+		    conda env remove --name $ENV
 		done
 	else
 		echo "$PREFIX There are less than or equal to $MAX_BUILDS envs..."
@@ -207,8 +221,8 @@ if [ $RELEASE == "false" ]; then
 
 	# And same with tarball
 	cd $CHANNEL_DIR/linux-64
-	if [ $NUM_TARS -gt $MAX_BUILDS ]; then
-		NUM_TARS_TO_REMOVE=$(($NUM_TARS - $MAX_BUILDS))
+	if [ $NUM_TARS -gt $(($MAX_BUILDS *2)) ]; then
+		NUM_TARS_TO_REMOVE=$(($NUM_TARS - $MAX_BUILDS * 2))
 		TARS_TO_REMOVE=$(ls -t | grep psana-conda-nightly | tail -n $NUM_TARS_TO_REMOVE)
 
 		echo "$PREFIX Removing $NUM_TARS_TO_REMOVE tarball(s):"
