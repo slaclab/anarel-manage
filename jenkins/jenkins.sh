@@ -134,14 +134,15 @@ conda build --python=2.7.15 --output-folder $CHANNEL_DIR psana-conda-opt
 conda build --python=3.7 --output-folder $CHANNEL_DIR psana-conda-opt
 
 #It builds the tarball into $CHANNEL_DIR, now lets make the environment(s)
+echo $CHANNEL_DIR/linux-64
 cd $CHANNEL_DIR/linux-64
 if [ $RELEASE == "false" ]; then
 	# Rename tarball cause nightly... duh.
-	TAR=$(ls psana-conda-nightly-${VERSION}* | grep py2)
+	TAR=$(ls psana-conda-nightly-${VERSION}* | grep -v hour | grep py2)
         BASE_NAME=$(basename $TAR .tar.bz2)
 	echo "$PREFIX Changing name from $TAR to ${BASE_NAME}${DATE}.tar.bz2..."
 	mv $TAR ${BASE_NAME}${DATE}.tar.bz2
-	TAR=$(ls psana-conda-nightly-${VERSION}* | grep py3)
+	TAR=$(ls psana-conda-nightly-${VERSION}* | grep -v hour | grep py3)
         BASE_NAME=$(basename $TAR .tar.bz2)
 	echo "$PREFIX Changing name from $TAR to ${BASE_NAME}${DATE}.tar.bz2..."
 	mv $TAR ${BASE_NAME}${DATE}.tar.bz2
