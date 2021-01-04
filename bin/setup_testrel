@@ -1,5 +1,28 @@
-pyver=python3.7
+if [ -z "$CONDA_PREFIX" ]; then
+    echo "Error: CONDA_PREFIX not set. Setup conda environment."
+    return 1
+fi 
+
+pyver="python"$(python -c "import sys; print(str(sys.version_info.major)+'.'+str(sys.version_info.minor))")
 pydir=$CONDA_PREFIX/lib/$pyver/site-packages
-ln -s $pydir/SConsTools/SConstruct.main SConstruct
-echo psana-conda-2.0.10 > .sit_release
-echo $CONDA_PREFIX > '.sit_conda_env'
+
+if [ ! -L SConstruct ]; then
+  ln -s $pydir/SConsTools/SConstruct.main SConstruct
+  echo $CONDA_PREFIX > '.sit_conda_env'
+  # a dummy entry to keep scons happy
+  echo psana-conda-2.0.10 > .sit_release
+fi
+
+export SIT_RELEASE=`cat .sit_release`
+export SIT_USE_CONDA=1
+export SIT_REPOS=$CONDA_PREFIX/data/anarelinfo
+
+# base release paths
+export PATH=$CONDA_PREFIX/bin:${PATH}
+#export PYTHONPATH=$pydir:${PYTHONPATH}
+#export LD_LIBRARY_PATH=$CONDA_PREFIX/bin:${LD_LIBRARY_PATH}
+
+# test release paths take priority
+export PYTHONPATH=$PWD/arch/$SIT_ARCH/python:${PYTHONPATH}
+export LD_LIBRARY_PATH=$PWD/arch/$SIT_ARCH/lib:$CONDA_PREFIX/lib
+export PATH=$PWD/arch/$SIT_ARCH/bin:$PATH
