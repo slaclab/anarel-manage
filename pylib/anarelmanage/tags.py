@@ -48,12 +48,24 @@ def updateWithLatestTags(anaTags):
     print("querying svn repos for latest tags of %d packages" % len(anaTags))
     print("make sure this account has access to repos (kinit username where username has read access)")
     sys.stdout.flush()
+    # cpo: kludge for a branch that supports psana1 py3 development
+    # for these packages fetch the "py3" tag
+    scriptDir = os.path.abspath(os.path.split(__file__)[0])
+    py3pkgsfile = open(os.path.join(scriptDir,'py3pkgs.txt'),'r')
+    py3pkgs_and_repo = py3pkgsfile.read().split()
+    py3pkgsfile.close()
+    py3repodict = {}
+    for line in py3pkgs_and_repo:
+        (repo,pkg) = line.split(':')
+        py3repodict[pkg] = repo
     for pkg, pkgdict in anaTags.iteritems():
         repo = pkgdict['repo']
         assert repo in repodict.keys(), "pkg=%s, don't understand repo=%s" % (pkg, repo)
         if repo == 'psdm':
             tagsurl = repodict[repo] + '/' + pkg
             tag = getLatestTagGit(tagsurl)
+            if pkg in py3repodict:
+                tag = py3repodict[pkg]
         else:
             tagsurl = repodict[repo] + '/' + pkg + '/tags'
             tag = getLatestTagSvn(tagsurl)
@@ -99,6 +111,7 @@ def checkoutCode(anaTags, master):
             assert stderr=='', "error with cmd: %s\n  stderr=%s" % (cmd, stderr)
         print(stdout)
         sys.stdout.flush()
+    #sys.exit(0)
 
 def readAnaTags(anaTagsFilename):
     assert os.path.exists(anaTagsFilename), "ana-tags file: %s doesn't exist" % anaTagsFilename

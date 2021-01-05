@@ -1,26 +1,65 @@
 name: ana
+channels:
+  - file:///cds/sw/ds/ana/conda1/channels/psana-rhel7
+  - file:///cds/sw/ds/ana/conda1/channels/system-rhel7
+  - lcls-i
+  - conda-forge
+  - defaults
 dependencies:
-  - h5py
+  - python=3.7
+  - psana-conda
   - ipython
   - numpy
   - scipy
-  - mpi4py
-  - pytables
+  - scons
   - cython
+  - boost
+  - mysql
+  - ndarray
   - matplotlib
   - pyzmq
   - pandas
   - pillow
+  - pyqtgraph
+  - scikit-beam
   - scikit-learn
   - anaconda-client
+  - pyyaml
+  - curl
   - git
-  - sphinx
+  - cmake
+  - jupyter
+  - virtualenv
   - requests
+  - simplejson
+  - mysqlclient
+  - cffi
+  - pytest
   - xarray
   - dask
   - seaborn
   - bokeh
+  - h5netcdf
+  - click
+  - Flask
+  - plotly
+  #- logbookclient
+  #- kerberos
+  #- pscache
+  #- psgeom
   - numba
-  - ipykernel
-  - ipywidgets
-  - lmfit
+  #- hexanode-proxy
+  - kafka-python
+  - gunicorn
+  - opencv
+  #- psocake
+  #- xtcav2
+  - fftw
+  - pyepics
+  - pymongo
+  - caproto
+  - panel
+  - holoviews
+  - krtc
+  - compilers
+  - scikit-beam

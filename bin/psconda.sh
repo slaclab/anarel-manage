@@ -1,5 +1,6 @@
-ana_current=$(head -n 1 /reg/g/psdm/sw/conda/current/ana/ana-current)
-rhel_version=$(less /etc/redhat-release | command grep -o -E '[0-9]+' | head -1)
-export PATH=/reg/g/psdm/sw/conda/manage/bin:$PATH
-. /reg/g/psdm/sw/conda/inst/miniconda2-prod-rhel$rhel_version/etc/profile.d/conda.sh
-conda activate $ana_current
+# needed to avoid file locking crash in mpi splitscan tests
+export HDF5_USE_FILE_LOCKING=FALSE
+export SIT_ROOT=/cds/sw/ds/ana/
+export SIT_ARCH=x86_64-rhel7-gcc48-opt
+eval "$(/cds/sw/ds/ana/conda1/inst/bin/conda shell.bash hook)"
+conda activate ana-4.0.5$@

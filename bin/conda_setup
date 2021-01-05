@@ -1,29 +1,25 @@
-#!/bin/bash
-
-# Determine the directory containing this script
-if [[ -n $BASH_VERSION ]]; then
-    _SCRIPT_LOCATION=${BASH_SOURCE[0]}
-    _SHELL="bash"
-else
-    echo "Only bash is supported"
-    return 1
-fi
-_CONDA_SETUP_DIR=$(dirname "$_SCRIPT_LOCATION")
-
-# Ensure that this script is sourced, not executed
-if [[ -n $BASH_VERSION ]] && [[ "$(basename "$0" 2> /dev/null)" == "conda_setup" ]]; then
-    (>&2 echo "Error: conda_setup must be sourced. Run 'source conda_setup'
-instead of 'conda_setup' To see conda_setup options, add -h.
-")
-    exit 1
+pyver=`python -c "import sys; print(str(sys.version_info[0])+'.'+str(sys.version_info[1]))"`
+pydir=$CONDA_PREFIX/lib/python$pyver/site-packages
+if [ ! -f ".sit_conda_env" ]; then
+  echo "no_longer_used" > .sit_release
+  echo $CONDA_PREFIX > '.sit_conda_env'
+  ln -s "$pydir/SConsTools/SConstruct.main" SConstruct
 fi
 
-if [[ $_CONDA_SETUP_ACTIVE ]]; then
-    undo_conda
+sit_conda_env=$(head -n 1 .sit_conda_env)
+if [ "$CONDA_PREFIX" != $sit_conda_env ]; then
+  echo "**** ERROR: previous conda env $sit_conda_env disagress with current conda env $CONDA_PREFIX"
+  return 1
 fi
 
-export PS1=$PS1
-FNAME=`mktemp`
-$_CONDA_SETUP_DIR/conda_setup_details --file $FNAME $*
-source $FNAME
-rm -f $FNAME
+export SIT_RELEASE=`cat .sit_release`
+export SIT_USE_CONDA=1
+export SIT_REPOS=$CONDA_PREFIX/data/anarelinfo
+
+# base release paths
+export PATH=$CONDA_PREFIX/bin:${PATH}
+
+# test release paths take priority
+export PYTHONPATH=$PWD/arch/$SIT_ARCH/python:${PYTHONPATH}
+export LD_LIBRARY_PATH=$PWD/arch/$SIT_ARCH/lib:$CONDA_PREFIX/lib
+export PATH=$PWD/arch/$SIT_ARCH/bin:$PATH

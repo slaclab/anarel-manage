@@ -19,7 +19,7 @@
 #############################################################################
 #---------------------------------VARIABLES---------------------------------#
 #############################################################################
-conda_setup="/reg/g/psdm/bin/conda_setup"
+#conda_setup="/reg/g/psdm/bin/conda_setup"
 PREFIX="[JENKINS SCRIPT]:"
 BUILDER=$(whoami)
 HOSTNAME=$(hostname)
@@ -28,18 +28,11 @@ MAX_BUILDS=5
 echo "$PREFIX Building on ${HOSTNAME} as ${BUILDER}..."
 
 # Find the RHEL number from the redhat-release text file
-RHEL_VER=UNKNOWN
-cat /etc/redhat-release | grep -q "release 7" && RHEL_VER=7
-cat /etc/redhat-release | grep -q "release 6" && RHEL_VER=6
-cat /etc/redhat-release | grep -q "release 5" && RHEL_VER=5
-if [ $RHEL_VER = UNKNOWN ]; then
-	echo "$PREFIX RHEL version could not be found. Aborting..."
-	exit 1
-fi
+RHEL_VER=7
 
-# Relevant directories
-BASE_DIR="/reg/g/psdm/sw/conda/inst/miniconda2-prod-rhel${RHEL_VER}/envs"
-CHANNEL_DIR="/reg/g/psdm/sw/conda/channels/psana-rhel${RHEL_VER}"
+BASE_DIR="/cds/sw/ds/ana/conda1/manage/scratch"
+CHANNEL_DIR="/cds/sw/ds/ana/conda1/channels/psana-rhel${RHEL_VER}"
+ENV_DIR="/cds/sw/ds/ana/conda1/inst/envs/"
 
 # Optionally accept a version number. Defaults to 99.99.99
 VERSION=${1-"99.99.99"}
@@ -82,15 +75,11 @@ fi
 # Exit with an exit code if there is an error
 set -e
 
-# Activate conda.  Use the base release to control the build.
-source /reg/g/psdm/etc/psconda.sh
-# when we activate the base env conda will unset these variables.
-# save a copy so we can restore them.
-export SIT_ROOT_SAVE=$SIT_ROOT
-export SIT_ARCH_SAVE=$SIT_ARCH
-conda activate base
-export SIT_ROOT=$SIT_ROOT_SAVE
-export SIT_ARCH=$SIT_ARCH_SAVE
+# Activate conda.  Use the conda_build env to control the build.
+source /cds/sw/ds/ana/conda1/inst/etc/profile.d/conda.sh
+conda activate conda_build
+export SIT_ARCH=x86_64-rhel7-gcc48-opt
+export SIT_ROOT=/cds/sw/ds/ana/conda1/data
 
 # Remove old tmp directory and remake it
 cd $BASE_DIR
@@ -105,7 +94,7 @@ fi
 # Get the tags for the packages to be installed
 cd $CONDA_DIR
 echo "$PREFIX Retrieving tags..."
-ana-rel-admin --force --cmd psana-conda-src --name $VERSION --basedir $CONDA_DIR
+/cds/sw/ds/ana/conda1/manage/bin/ana-rel-admin --force --cmd psana-conda-src --name $VERSION --basedir $CONDA_DIR
 # Don't append "nightly" onto the tar file if it's a release...
 # cause it's a release... not nightly
 if [ $RELEASE == "false" ]; then
@@ -114,55 +103,66 @@ fi
 
 # Get the recipe
 echo "$PREFIX Retrieving recipe..."
-cp -r /reg/g/psdm/sw/conda/manage/recipes/psana/psana-conda-opt .
+cp -r /cds/sw/ds/ana/conda1/manage/recipes/psana/psana-conda-opt .
 
 # Make some changes to the yaml files
 echo "$PREFIX Editing meta.yaml..."
 # Get the yaml files for creating the envs
-cp "/reg/g/psdm/sw/conda/manage/jenkins/ana-env-py2.yaml" .
-cp "/reg/g/psdm/sw/conda/manage/jenkins/ana-env-py3.yaml" .
+cp "/cds/sw/ds/ana/conda1/manage/jenkins/ana-env-py2.yaml" .
+cp "/cds/sw/ds/ana/conda1/manage/jenkins/ana-env-py3.yaml" .
 # Change names
 if [ $RELEASE == "false" ]; then
 	sed -i "s/{% set pkg =.*/{% set pkg = 'psana-conda-nightly' %}/" psana-conda-opt/meta.yaml
-	sed -i "/^name:/ s/$/-nightly-${DATE}-py2/" ana-env-py2.yaml
+	sed -i "/^name:/ s/$/-nightly-${DATE}/" ana-env-py2.yaml
 	sed -i "/^name:/ s/$/-nightly-${DATE}-py3/" ana-env-py3.yaml
+        sed -i "/^  - psana-conda/ s/$/-nightly=${VERSION}/" ana-env-py2.yaml
+        sed -i "/^  - psana-conda/ s/$/-nightly=${VERSION}/" ana-env-py3.yaml
 else
-	sed -i "/^name:/ s/$/-${VERSION}/" ana-env-py2.yaml
-	sed -i "/^name:/ s/$/-${VERSION}-py3/" ana-env-py3.yaml
+        sed -i "/^name:/ s/$/-${VERSION}/" ana-env-py2.yaml
+        sed -i "/^name:/ s/$/-${VERSION}-py3/" ana-env-py3.yaml
+        sed -i "/^  - psana-conda/ s/$/=${VERSION}/" ana-env-py2.yaml
+        sed -i "/^  - psana-conda/ s/$/=${VERSION}/" ana-env-py3.yaml
 fi
-# These 3 packages are only on RHEL7, so remove them if this build isn't RHEL7
-if [ ! $RHEL_VER == 7 ]; then
-	sed -i "/yaml-cpp\|tensorflow\|jupyterhub/d" ana-env-py2.yaml
-	sed -i "/yaml-cpp\|tensorflow\|jupyterhub/d" ana-env-py3.yaml
-fi
+
 # Change version and source directory to what it should be
 sed -i "s/{% set version =.*/{% set version = '$VERSION' %}/" psana-conda-opt/meta.yaml
 sed -i "/source:/!b;n;c \ \ url: file://$CONDA_DIR/downloads/anarel/{{ pkg }}-{{ version }}.tar.gz" psana-conda-opt/meta.yaml
 
 # Now build it
 echo "$PREFIX Building tarball into $CHANNEL_DIR..."
-conda-build --output-folder $CHANNEL_DIR psana-conda-opt
+conda build --python=2.7.15 --output-folder $CHANNEL_DIR psana-conda-opt
+conda build --python=3.7 --output-folder $CHANNEL_DIR psana-conda-opt
 
-# It builds the tarball into $CHANNEL_DIR, now lets make the environment(s)
+#It builds the tarball into $CHANNEL_DIR, now lets make the environment(s)
+echo $CHANNEL_DIR/linux-64
 cd $CHANNEL_DIR/linux-64
 if [ $RELEASE == "false" ]; then
 	# Rename tarball cause nightly... duh.
-	TAR=$(ls psana-conda-nightly-${VERSION}*)
-	echo "$PREFIX Changing name from $TAR to psana-conda-nightly-${DATE}..."
-	mv $TAR psana-conda-nightly-${DATE}.tar.bz2
+	TAR=$(ls psana-conda-nightly-${VERSION}* | grep -v hour | grep py2)
+        BASE_NAME=$(basename $TAR .tar.bz2)
+	echo "$PREFIX Changing name from $TAR to ${BASE_NAME}${DATE}.tar.bz2..."
+	mv $TAR ${BASE_NAME}${DATE}.tar.bz2
+	TAR=$(ls psana-conda-nightly-${VERSION}* | grep -v hour | grep py3)
+        BASE_NAME=$(basename $TAR .tar.bz2)
+	echo "$PREFIX Changing name from $TAR to ${BASE_NAME}${DATE}.tar.bz2..."
+	mv $TAR ${BASE_NAME}${DATE}.tar.bz2
 	# Update the json file
 	conda index
 	# Create the environments based on the yaml files
-	echo "$PREFIX Creating env for ${CHANNEL_DIR}/${TAR} in ${BASE_DIR}/ana-nightly-${DATE}..."
+	echo "$PREFIX Creating env in ${BASE_DIR}/ana-${VERSION}-${DATE}"
 	conda env create -q -f $CONDA_DIR/ana-env-py2.yaml
-	# conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
+	echo "$PREFIX Creating env in ${BASE_DIR}/ana-${VERSION}-${DATE}"
+	conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
 else
+	# Update the json file
+	conda index
 	# Don't rename the tarball (also duh)
 	TAR=$(ls psana-conda-${VERSION}*)
 	# Create the environments based on the yaml files
-	echo "$PREFIX Creating env for ${CHANNEL_DIR}/${TAR} in ${BASE_DIR}/ana-${VERSION}"
+	echo "$PREFIX Creating env in ${BASE_DIR}/ana-${VERSION}"
 	conda env create -q -f $CONDA_DIR/ana-env-py2.yaml
-	# conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
+	echo "$PREFIX Creating env in ${BASE_DIR}/ana-${VERSION}-py3"
+	conda env create -q -f $CONDA_DIR/ana-env-py3.yaml
 	# generates jupyter kernel config file in
 	# /reg/g/psdm/sw/conda/jhub_config/prod-rhel${RHEL_VER}/${VERSION}/kernel.json
 	# ana-rel-admin --cmd jhub --name ana-$VERSION
@@ -180,15 +180,15 @@ fi
 
 # If nightly check env/tarball count to maintain circular buffer of $MAX_BUILDS
 if [ $RELEASE == "false" ]; then
-	cd $BASE_DIR
-	NUM_ENVS_PY2=$(ls | grep ana-nightly | grep py2 | wc -l)
+	cd $ENV_DIR
+	NUM_ENVS_PY2=$(ls | grep ana-nightly | grep -v py3 | wc -l)
 	NUM_ENVS_PY3=$(ls | grep ana-nightly | grep py3 | wc -l)
 	NUM_ENVS=$((NUM_ENVS_PY2 + NUM_ENVS_PY3))
 	if [ $NUM_ENVS_PY2 -ne $NUM_ENVS_PY3 ]; then
 		echo "$PREFIX Number of nightly py2 builds ($NUM_ENVS_PY2) does not equal the number of nightly py3 builds ($NUM_ENVS_PY3)..."
 		echo "$PREFIX They should be equal..."
-		#echo "$PREFIX Nothing will be deleted. Aborting..."
-		#exit 1
+		echo "$PREFIX Nothing will be deleted. Aborting..."
+		exit 1
 	fi
 
 	cd $CHANNEL_DIR/linux-64
@@ -196,23 +196,24 @@ if [ $RELEASE == "false" ]; then
 
 	# First lets make sure there are an equal number of tarballs
 	# and environment since they should be isomorphic (yay math terms)
-	if [ $NUM_TARS -ne $((NUM_ENVS / 2)) ]; then
-		echo "$PREFIX There are $NUM_TARS tarballs and $((NUM_ENVS / 2)) py2/py3 envs..."
+	if [ $NUM_TARS -ne $NUM_ENVS ]; then
+		echo "$PREFIX There are $NUM_TARS tarballs and $NUM_ENVS py2/py3 envs..."
 		echo "$PREFIX They should be equal..."
-		#echo "$PREFIX Nothing will be deleted. Aborting..."
-		#exit 1
+		echo "$PREFIX Nothing will be deleted. Aborting..."
+		exit 1
 	fi
 
 	# If they are, determine which environment(s) to delete if there are any
-	cd $BASE_DIR
-	if [ $((NUM_ENVS / 2)) -gt $MAX_BUILDS ]; then
+	cd $ENV_DIR
+	if [ $NUM_ENVS -gt $(($MAX_BUILDS * 2)) ]; then
 		NUM_ENVS_TO_REMOVE=$(($NUM_ENVS - $MAX_BUILDS * 2))
+                echo $(ls -t | grep ana-nightly | tail -n $NUM_ENVS_TO_REMOVE)
 		ENVS_TO_REMOVE=$(ls -t | grep ana-nightly | tail -n $NUM_ENVS_TO_REMOVE)
 
 		echo "$PREFIX Removing $NUM_ENVS_TO_REMOVE env(s):"
 		echo $ENVS_TO_REMOVE
 		for ENV in ${ENVS_TO_REMOVE[@]}; do
-		    conda remove --name $ENV --all
+		    conda env remove --name $ENV
 		done
 	else
 		echo "$PREFIX There are less than or equal to $MAX_BUILDS envs..."
@@ -221,8 +222,8 @@ if [ $RELEASE == "false" ]; then
 
 	# And same with tarball
 	cd $CHANNEL_DIR/linux-64
-	if [ $NUM_TARS -gt $MAX_BUILDS ]; then
-		NUM_TARS_TO_REMOVE=$(($NUM_TARS - $MAX_BUILDS))
+	if [ $NUM_TARS -gt $(($MAX_BUILDS *2)) ]; then
+		NUM_TARS_TO_REMOVE=$(($NUM_TARS - $MAX_BUILDS * 2))
 		TARS_TO_REMOVE=$(ls -t | grep psana-conda-nightly | tail -n $NUM_TARS_TO_REMOVE)
 
 		echo "$PREFIX Removing $NUM_TARS_TO_REMOVE tarball(s):"
@@ -235,6 +236,7 @@ if [ $RELEASE == "false" ]; then
 
 	echo "$PREFIX Finished building for $HOSTNAME as $BUILDER..."
 else
-    anaconda upload --no-progress -u lcls-rhel${RHEL_VER} ${CHANNEL_DIR}/linux-64/$(ls $CHANNEL_DIR/linux-64 | grep $VERSION | grep psana | grep conda)
+    anaconda upload --no-progress -u lcls-i ${CHANNEL_DIR}/linux-64/$(ls $CHANNEL_DIR/linux-64 | grep $VERSION | grep psana | grep conda | grep py27)
+    anaconda upload --no-progress -u lcls-i ${CHANNEL_DIR}/linux-64/$(ls $CHANNEL_DIR/linux-64 | grep $VERSION | grep psana | grep conda | grep py3)
     echo "$PREFIX Finished building official ana release version $VERSION for $HOSTNAME as $BUILDER..."
 fi

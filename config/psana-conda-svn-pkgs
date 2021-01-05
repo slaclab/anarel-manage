@@ -135,7 +135,7 @@ numpy                svn=psdm subdir=no conda_branch=yes
 
 #opencv2             svn=psdm subdir=no conda_branch=no
 
-openmpi              svn=psdm subdir=no conda_branch=yes
+#openmpi              svn=psdm subdir=no conda_branch=yes
 
 #pandas              svn=psdm subdir=no conda_branch=no
 #paramiko            svn=psdm subdir=no conda_branch=no

@@ -501,7 +501,7 @@ for cmdHelpFunc in commandHelpFuncList:
     epilog += ' %s: %s\n' % (cmd.rjust(longestCommand), cmdhelp)
 
 if __name__ == '__main__':
-    conda_basedir_default = '/reg/g/psdm/sw/conda'
+    conda_basedir_default = '/cds/sw/ds/ana/conda1/'
     manage_default = 'manage'
     def_email = 'pcds-ana-l@slac.stanford.edu'
     osName, platform = util.getOsAndPlatform()

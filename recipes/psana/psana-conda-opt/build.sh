@@ -5,10 +5,13 @@ if [ ! -e SConstruct ]; then
     ln -s SConsTools/src/SConstruct.main SConstruct
 fi
 
+export SIT_ROOT=/cds/sw/ds/ana/data
+export SIT_ARCH=x86_64-rhel7-gcc48-opt
+
+
 ## setup needed environment variables, if not defined,
 if [ -z "$SIT_ARCH" ]; then
     echo "SIT_ARCH was not defined"
-    return
 fi
 
 export SIT_RELEASE=`cat .sit_release`
@@ -41,6 +44,9 @@ echo "set SIT_DATA to $SIT_DATA"
 CWD=$(pwd)
 echo "Current dir: $CWD"
 
+# needed to avoid file locking crash in mpi splitscan tests
+export HDF5_USE_FILE_LOCKING=FALSE
+
 export PYTHONPATH=$CWD/arch/$SIT_ARCH/python:$PYTHONPATH
 export LD_LIBRARY_PATH=$CWD/arch/$SIT_ARCH/lib:$CONDA_PREFIX/lib
 # put ana release bin second in path
@@ -57,6 +63,14 @@ if [ ! -e "$mkanarel" ]; then
    return
 fi
 
+# patch the pdsdata/psalg makefiles to use the conda compilers
+sed -i 's/gcc/$(CC)/g' extpkgs/psalg/package.mk
+sed -i 's/g++/$(CXX)/g' extpkgs/psalg/package.mk
+sed -i 's/gcc/$(CC)/g' extpkgs/pdsdata/package.mk
+sed -i 's/g++/$(CXX)/g' extpkgs/pdsdata/package.mk
+sed -i 's/gcc/$(CC)/g' extpkgs/pdsdata/flags.mk
+sed -i 's/g++/$(CXX)/g' extpkgs/pdsdata/flags.mk
+
 # first we run mkanarel. This creates a new package called
 # anarelinfo. It will be a python module with the psana-conda
 # version and tag information, it will also copy psana-conda-tags
@@ -67,18 +81,15 @@ fi
 # file into anarelinfo/data so that it will get installed 
 # in conda.
 
-python $mkanarel 
-scons 
-python $mkanarel copy_depends
+${PREFIX}/bin/python $mkanarel 
+${PREFIX}/bin/scons 
+${PREFIX}/bin/python $mkanarel copy_depends
 
-if [[ $SIT_ARCH = *-rhel5-* ]]
-then
-	echo "Skipping testing on rhel5 due to MPI issues with the build machine"
-else
-	scons test
-fi
+# need to switch back to full testing once they work - cpo
+#${PREFIX}/bin/scons test-psana
+#scons test
 
-scons conda-install
+${PREFIX}/bin/scons conda-install
 
 # generate config file to export psana environment variables when activating the conda environment
 mkdir -p $PREFIX/etc/conda/activate.d

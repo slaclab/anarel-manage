@@ -1,31 +1,30 @@
 name: ana
+channels:
+  - file:///cds/sw/ds/ana/conda1/channels/psana-rhel7
+  - file:///cds/sw/ds/ana/conda1/channels/system-rhel7
+  - lcls-i
+  - conda-forge
+  - defaults
 dependencies:
   - python=2.7.15
-  - openmpi=1.10.6
-  - hdf5=1.8.18
+  - psana-conda
   - ipython
   - nose
   - numpy
   - scipy
-  - h5py=2.7.0
-  - mpi4py=2.0.0
-  - pytables=3.3.0
   - scons
   - cython
   - boost
   - mysql
   - ndarray
-  - qt=4.8.7=4 # see comment in psana recipe meta.yaml
   - matplotlib
   - pyzmq
-  - pylint
   - coverage
-  - jinja2=2.8.1
-  - pandas=0.20.2
+  - pandas
   - pillow
-  - pyqt=4.11.4
+  - pyqt
   - pyqtgraph
-  - python-dateutil=2.5.3
+  - python-dateutil
   - scikit-beam
   - scikit-learn
   - anaconda-client
@@ -35,7 +34,6 @@ dependencies:
   - lxml
   - cssselect
   - sphinx
-  - APScheduler
   - cmake
   - notebook
   - jupyter
@@ -45,69 +43,45 @@ dependencies:
   - MySQL-python
   - mysql-connector-python
   - cffi
-  - gevent
   - pytest
   - pyopengl
   - mock
   - psutil
   - memory_profiler
-  - watchdog
   - xarray
-  - dask=1.2.0 # bug in 1.2.1, and more recent versions require newer numpy (https://github.com/dask/dask/issues/4846)
-  - bottleneck
+  - dask
   - seaborn
-  - joblib
   - bokeh
-  - ptyprocess
   - mkl-service
-  - spyder
   - cyordereddict
   - h5netcdf
-  - tqdm
   - click
   - Flask
   - itsdangerous
   - tzlocal
-  - werkzeug
   - plotly
-  - twine
   - eigen
-  - psana-conda
   - logbookclient
-  - kerberos=1.2.5
+  - kerberos
   - pscache
   - psgeom
   - numba
-  - nltk
-  - gensim
-  - neon
-  - pymc
-  - paramiko
   - sqlalchemy
   - numpydoc
-  - workerpool
-  - xz
-  - wrapt
   - supervisor
-  - swig
-  - sympy
-  - thinc
   - biopython
   - pyabel
   - yaml-cpp
   - hexanode-proxy
   - kafka-python
-  - blaze
   - readline
   - gunicorn
-  - eventlet
   - flask-socketio
   - subprocess32
-  - opencv=3.1.0
+  - opencv
   - psocake
   - glueviz
   - pyfai
-  - hdbscan
   - eigen
   - holoviews
   - xtcav2
@@ -117,4 +91,5 @@ dependencies:
   - pyepics
   - mongodb
   - pymongo
-  - krtc
+  - compilers
+  - scikit-beam
