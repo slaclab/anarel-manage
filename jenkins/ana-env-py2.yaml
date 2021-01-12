@@ -1,13 +1,12 @@
 name: ana
 channels:
-  - file:///cds/sw/ds/ana/conda1/channels/psana-rhel7
+  - valmar
   - file:///cds/sw/ds/ana/conda1/channels/system-rhel7
-  - lcls-i
   - conda-forge
   - defaults
 dependencies:
   - python=2.7.15
-  - psana-conda
+  - psana
   - ipython
   - nose
   - numpy
@@ -15,9 +14,8 @@ dependencies:
   - scons
   - cython
   - boost
-  - mysql
-  - ndarray
-  - matplotlib
+  - ndarray-psana
+  - matplotlib-base
   - pyzmq
   - coverage
   - pandas
@@ -40,8 +38,6 @@ dependencies:
   - virtualenv
   - requests
   - simplejson
-  - MySQL-python
-  - mysql-connector-python
   - cffi
   - pytest
   - pyopengl
@@ -61,18 +57,14 @@ dependencies:
   - tzlocal
   - plotly
   - eigen
-  - logbookclient
-  - kerberos
   - pscache
   - psgeom
   - numba
-  - sqlalchemy
   - numpydoc
   - supervisor
   - biopython
   - pyabel
   - yaml-cpp
-  - hexanode-proxy
   - kafka-python
   - readline
   - gunicorn

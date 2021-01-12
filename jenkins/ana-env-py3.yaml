@@ -46,7 +46,7 @@ dependencies:
   #- logbookclient
   #- kerberos
   #- pscache
-  #- psgeom
+  - psgeom
   - numba
   #- hexanode-proxy
   - kafka-python
