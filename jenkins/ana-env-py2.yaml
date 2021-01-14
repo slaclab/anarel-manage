@@ -85,3 +85,5 @@ dependencies:
   - pymongo
   - compilers
   - scikit-beam
+  - future
+  - krtc

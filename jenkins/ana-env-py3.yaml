@@ -16,7 +16,7 @@ dependencies:
   - boost
   - mysql
   - ndarray-psana
-  - matplotlib
+  - matplotlib-base
   - pyzmq
   - pandas
   - pillow
@@ -63,3 +63,5 @@ dependencies:
   - krtc
   - compilers
   - scikit-beam
+  - future
+  - mypy_extensions
