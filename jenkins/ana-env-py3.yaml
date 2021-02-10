@@ -1,8 +1,7 @@
 name: ana
 channels:
-  - valmar
-  - file:///cds/sw/ds/ana/conda1/channels/system-rhel7
   - lcls-i
+  - file:///cds/sw/ds/ana/conda1/channels/system-rhel7
   - conda-forge
   - defaults
 dependencies:
@@ -43,17 +42,11 @@ dependencies:
   - click
   - Flask
   - plotly
-  #- logbookclient
-  #- kerberos
-  #- pscache
   - psgeom
   - numba
-  #- hexanode-proxy
   - kafka-python
   - gunicorn
-  - opencv
-  #- psocake
-  #- xtcav2
+#  - opencv
   - fftw
   - pyepics
   - pymongo
@@ -65,3 +58,6 @@ dependencies:
   - scikit-beam
   - future
   - mypy_extensions
+  - libpressio
+  - jupyterlab
+  - ipympl
