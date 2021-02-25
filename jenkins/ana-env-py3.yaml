@@ -46,7 +46,7 @@ dependencies:
   - numba
   - kafka-python
   - gunicorn
-#  - opencv
+  - opencv
   - fftw
   - pyepics
   - pymongo
