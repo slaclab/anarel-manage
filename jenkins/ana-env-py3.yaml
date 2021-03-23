@@ -1,7 +1,6 @@
 name: ana
 channels:
   - lcls-i
-  - file:///cds/sw/ds/ana/conda1/channels/system-rhel7
   - conda-forge
   - defaults
 dependencies:
@@ -55,9 +54,12 @@ dependencies:
   - holoviews
   - krtc
   - compilers
+  - openmpi
+  - mpi4py
   - scikit-beam
   - future
   - mypy_extensions
   - libpressio
   - jupyterlab
   - ipympl
+  - gsl

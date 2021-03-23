@@ -1,7 +1,6 @@
 name: ana
 channels:
   - lcls-i
-  - file:///cds/sw/ds/ana/conda1/channels/system-rhel7
   - conda-forge
   - defaults
 dependencies:
@@ -40,7 +39,6 @@ dependencies:
   - simplejson=3.17.0
   - cffi=1.14.0
   - pytest=4.6.4
-  - pyopengl=3.1.5
   - mock=3.0.5
   - psutil=5.7.0
   - memory_profiler=0.57.0
@@ -70,8 +68,7 @@ dependencies:
   - flask-socketio=4.3.2
   - subprocess32=3.5.4
   - opencv=4.2.0
-  - psocake=01.00.13
-  - glueviz=0.15.2
+  - psocake=00.06.03
   - pyfai=0.19.0
   - eigen=3.3.9
   - holoviews=1.14.1
@@ -86,3 +83,5 @@ dependencies:
   - future=0.18.2
   - krtc=0.1.4
   - jupyterlab=0.33.12
+  - openmpi
+  - mpi4py
