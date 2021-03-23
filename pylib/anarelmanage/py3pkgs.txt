@@ -39,7 +39,6 @@ py3:ParCorAna
 py3:PSQt
 py3:PyDataSource
 py3:PSCalib
-py3:Translator
 py3:CalibManager
 py3:psddl
 py3:pyimgalgos

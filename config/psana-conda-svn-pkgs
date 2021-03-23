@@ -87,7 +87,6 @@ PyDataSource       svn=psdm subdir=no conda_branch=no
 SConsTools          svn=psdm subdir=no conda_branch=yes
 
 TimeTool           svn=psdm subdir=no conda_branch=no
-Translator         svn=psdm subdir=no conda_branch=no
 
 XtcExplorer        svn=psdm subdir=no conda_branch=no
 
