@@ -68,7 +68,7 @@ dependencies:
   - flask-socketio=4.3.2
   - subprocess32=3.5.4
   - opencv=4.2.0
-  - psocake=00.06.03
+  - psocake=00.06.04
   - pyfai=0.19.0
   - eigen=3.3.9
   - holoviews=1.14.1
