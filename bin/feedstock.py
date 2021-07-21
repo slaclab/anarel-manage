@@ -13,6 +13,7 @@ build_waves = [
 'sz-feedstock',
 'psgeom-feedstock',
 'xtcav2-feedstock',
+'xtcav2-py2-feedstock',
 'psocake-feedstock',
 'psocake-py2-feedstock',
 ],
