@@ -59,8 +59,9 @@ dependencies:
   - scikit-beam
   - future
   - mypy_extensions
-  - libpressio
+#  - libpressio
   - jupyterlab
   - ipympl
   - gsl
   - psocake
+  - xtcav2
