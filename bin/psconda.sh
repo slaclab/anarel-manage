@@ -13,4 +13,4 @@ do
      ext="-py3"
   fi
 done
-conda activate ana-4.0.28$ext
+conda activate ana-4.0.34$ext
