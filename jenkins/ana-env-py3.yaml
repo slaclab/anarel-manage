@@ -19,7 +19,6 @@ dependencies:
   - pandas
   - pillow
   - pyqtgraph
-  - scikit-beam
   - scikit-learn
   - anaconda-client
   - pyyaml
@@ -39,7 +38,7 @@ dependencies:
   - bokeh
   - h5netcdf
   - click
-  - Flask
+  - flask
   - plotly
   - psgeom
   - numba
