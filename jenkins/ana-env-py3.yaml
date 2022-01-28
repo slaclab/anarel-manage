@@ -65,3 +65,4 @@ dependencies:
   - psocake
   - xtcav2
   - dill
+  - pyfai
