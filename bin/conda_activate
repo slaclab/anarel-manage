@@ -29,13 +29,29 @@ if [ -z $RELNEW ]; then # release name IS EMPTY
   return 2 ## exit 0 # exits session if script is sorced
 fi
 
-RELAVAILABLE=$(conda env list | grep -i $RELNEW | awk '{print $1}')
+LISTOFRELS=$(conda env list | grep -i $RELNEW | awk '{print $1}')
 
 echo "current release  $RELCUR"
 echo "activate release $RELNEW"
 
-if [ $RELAVAILABLE == $RELNEW ]; then # release is found in conda env list
-  echo "  requested release is available"
+
+is_available=false
+
+if [ -z "$LISTOFRELS" ]; then
+  echo "list of found releases is empty"
+else
+  for rel in $LISTOFRELS; do
+    echo "found release $rel"
+    if [ $rel == $RELNEW ]; then
+      #echo " then requested release is available"
+      is_available=true
+      break
+    fi
+  done
+fi
+
+if [ $is_available = true ]; then # release is found in conda env list
+  echo "  requested release is available in conda env list"
 else
   echo "========="
   conda env list
