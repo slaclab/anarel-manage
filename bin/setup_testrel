@@ -6,12 +6,13 @@ fi
 pyver="python"$(python -c "import sys; print(str(sys.version_info.major)+'.'+str(sys.version_info.minor))")
 pydir=$CONDA_PREFIX/lib/$pyver/site-packages
 
-if [ ! -L SConstruct ]; then
-  ln -s $pydir/SConsTools/SConstruct.main SConstruct
-  echo $CONDA_PREFIX > '.sit_conda_env'
-  # a dummy entry to keep scons happy
-  echo psana-conda-2.0.10 > .sit_release
+if [ -L SConstruct ]; then
+  rm SConstruct
 fi
+ln -s $pydir/SConsTools/SConstruct.main SConstruct
+echo $CONDA_PREFIX > '.sit_conda_env'
+# a dummy entry to keep scons happy
+echo psana-conda-2.0.10 > .sit_release
 
 export SIT_RELEASE=`cat .sit_release`
 export SIT_USE_CONDA=1
