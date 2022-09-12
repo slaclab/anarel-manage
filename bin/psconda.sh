@@ -24,4 +24,4 @@ then
 else
   eval "$(/cds/sw/ds/ana/conda1/inst/bin/conda shell.bash hook)"
 fi
-conda activate ana-4.0.43$ext
+conda activate ana-4.0.44$ext
