@@ -1,20 +1,21 @@
 # needed to avoid file locking crash in mpi splitscan tests
 export HDF5_USE_FILE_LOCKING=FALSE
-export SIT_ROOT=/cds/sw/ds/ana/
+export SIT_ROOT=/cds/group/psdm
+export SIT_PSDM_DATA=/cds/data/psdm
 export SIT_ARCH=x86_64-rhel7-gcc48-opt
 # needed for SRCF
 export OPENBLAS_NUM_THREADS=1
-ext=""
-v2=0
+py2=0
+v2=1
 for arg in "$@"
 do
-  if [ "$arg" == "-py3" ]
+  if [ "$arg" == "-py2" ]
   then
-     ext="-py3"
+     py2=1
   fi
-  if [ "$arg" == "-v2" ]
+  if [ "$arg" == "-v1" ]
   then
-     v2=1
+     v2=0
   fi
 done
 if [ $v2 -eq 1 ]
@@ -24,4 +25,11 @@ then
 else
   eval "$(/cds/sw/ds/ana/conda1/inst/bin/conda shell.bash hook)"
 fi
-conda activate ana-4.0.44$ext
+if [ $py2 -eq 1 ]
+then 
+  export SIT_DATA=/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.45/data:/cds/group/psdm/data/
+  conda activate ana-4.0.45
+else
+  export SIT_DATA=/cds/sw/ds/ana/conda1/inst/envs/ana-4.0.54-py3/data:/cds/group/psdm/data/
+  conda activate ana-4.0.54-py3
+fi

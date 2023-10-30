@@ -4,7 +4,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.7
+  - python=3.9
   - psana
   - ipython
   - numpy
@@ -58,7 +58,6 @@ dependencies:
   - scikit-beam
   - future
   - mypy_extensions
-  - libpressio
   - jupyterlab
   - ipympl
   - gsl
@@ -66,3 +65,4 @@ dependencies:
   - xtcav2
   - dill
   - pyfai
+  - psmon

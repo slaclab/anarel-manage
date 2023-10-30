@@ -170,7 +170,7 @@ psddldata            svn=psdm subdir=no conda_branch=no
 # looks like a simple thing to display an image
 psdisplay           svn=psdm subdir=no conda_branch=no
 
-psmon                svn=psdm subdir=no conda_branch=no
+#psmon                svn=psdm subdir=no conda_branch=no
 
 #pyana               svn=psdm subdir=no conda_branch=no
 #pyana_examples      svn=psdm subdir=no conda_branch=no

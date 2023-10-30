@@ -25,5 +25,7 @@ export PATH=$CONDA_PREFIX/bin:${PATH}
 
 # test release paths take priority
 export PYTHONPATH=$PWD/arch/$SIT_ARCH/python:${PYTHONPATH}
-export LD_LIBRARY_PATH=$PWD/arch/$SIT_ARCH/lib:$CONDA_PREFIX/lib
+# LD_LIBRARY_PATH breaks the encapsulation of the conda
+# environment. We need to use RPATH / $ORIGIN instead (valmar and cpo)
+#export LD_LIBRARY_PATH=$PWD/arch/$SIT_ARCH/lib:$CONDA_PREFIX/lib
 export PATH=$PWD/arch/$SIT_ARCH/bin:$PATH

@@ -67,6 +67,7 @@ conda deactivate
 
 echo "> conda activate $RELNEW"
 conda activate $RELNEW
+export SIT_DATA=/cds/sw/ds/ana/conda1/inst/envs/$RELNEW/data:/cds/group/psdm/data/
 
 if [ -f ${_OFNAME} ]; then
   echo "file ${_OFNAME} new content: ${RELDIR}"
