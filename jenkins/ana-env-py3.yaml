@@ -66,3 +66,23 @@ dependencies:
   - dill
   - pyfai
   - psmon
+  - asyncqt
+  - setproctitle
+  - pyfftw
+  - sympy
+  - pint
+  - pyflakes
+  - autopep8
+  - docutils
+  - pycodestyle
+  - pathspec
+  - qtawesome
+  - mypy
+  - pytest
+  - pytest-asyncio
+  - pytest-qt
+  - cogsci:ipyqode.core
+  - cogsci:pyqode.python
+  - pyqode.qt
+  - lcls-ii:amityping
+  - lcls-ii:networkfox
