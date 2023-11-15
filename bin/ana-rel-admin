@@ -117,9 +117,9 @@ def checkFixPermissions(args):
 def makePsanaCondaSrc(args):
     t0 = time.time()
     assert args.name, "must use --name to provide version string for the psana-conda package, i.e, --name n.n.n"
-    version_str = args.name
-    relname = util.psanaCondaPackageName(version_str)
-    outputFile = util.psanaCondaSourceZipFilename(args.basedir, version_str)
+    version_str = args.name  # 'n.n.n'
+    relname = util.psanaCondaPackageName(version_str)  # 'psana-conda-n.n.n'
+    outputFile = util.psanaCondaSourceZipFilename(args.basedir, version_str)  # <--basedir='pwd'>/downloads/anarel/psana-conda-n.n.n.tar.gz)
     if os.path.exists(outputFile):
         assert args.force, "makePsanaCondaSrc: output file: %s exists. Use --force to overwrite" % outputFile
         print("about to remove old file: %s" % outputFile)
@@ -127,7 +127,7 @@ def makePsanaCondaSrc(args):
         os.unlink(outputFile)
         print("  removed old file: %s" % outputFile)
         sys.stdout.flush()
-    scratchDir = os.path.join(args.basedir, 'scratch', relname)
+    scratchDir = os.path.join(args.basedir, 'scratch', relname)  # <--basedir='pwd'>/scratch/psana-conda-n.n.n)
     if os.path.exists(scratchDir):
         print("about to remove old scratch dir: %s" % scratchDir)
         sys.stdout.flush()
@@ -135,25 +135,28 @@ def makePsanaCondaSrc(args):
         print("removed old scratch directory: %s" % scratchDir)
         sys.stdout.flush()
     os.makedirs(scratchDir)
-    tagsFile = util.getPsanaTagsFile(args.tagsfile)
+    tagsFile = util.getPsanaTagsFile(args.tagsfile)  # < config/psana-conda-svn-pkgs
     anaTags = tags.readAnaTags(tagsFile)
     tags.updateWithLatestTags(anaTags)
-    os.chdir(scratchDir)
+    os.chdir(scratchDir)                             # cd scratch/psana-conda-4.0.56
     tags.checkoutCode(anaTags, args.master)
-    tags.writeTagsFile(anaTags, 'psana-conda-tags')
-    f=file('.sit_release', 'w')
+    tags.writeTagsFile(anaTags, 'psana-conda-tags')  # > scratch/psana-conda-4.0.56/psana-conda-tags
+    f=file('.sit_release', 'w')                      # > scratch/psana-conda-4.0.56/.sit_release
     f.write('%s\n' % relname)
     f.close()
     print("-- makePsanaCondaSrc: wrote .sit_release file with contents: %s" % file('.sit_release').read())
     sys.stdout.flush()
-    os.chdir('..')
-    cmd = 'tar cfvz %s %s' % (outputFile, relname)
+    os.chdir('..')                                   # cd scratch/
+    cmd = 'tar cfvz %s %s' % (outputFile, relname)   # > downloads/anarel/psana-conda-4.0.56.tar.gz
     print(cmd)
     sys.stdout.flush()
     os.system(cmd)
-    ttime = time.time()-t0
-    print("-- makePsanaCondaSrc: finished in %.2f seconds" % ttime)
     sys.stdout.flush()
+    cmd = 'sha256sum %s' % outputFile
+    print(cmd)
+    os.system(cmd)
+    sys.stdout.flush()
+    print("-- makePsanaCondaSrc: finished in %.2f seconds" % (time.time()-t0))
 
         
 def envSetup(args):
@@ -504,7 +507,7 @@ if __name__ == '__main__':
     conda_basedir_default = '/cds/sw/ds/ana/conda1/'
     manage_default = 'manage'
     def_email = 'pcds-ana-l@slac.stanford.edu'
-    osName, platform = util.getOsAndPlatform()
+    osName, platform = util.getOsAndPlatform()  # osName: rhel7 platform: linux-64
     tagfile='psana-conda-svn-pkgs'
     parser = argparse.ArgumentParser(description=description,
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
