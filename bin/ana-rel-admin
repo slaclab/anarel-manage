@@ -158,7 +158,7 @@ def makePsanaCondaSrc(args):
     sys.stdout.flush()
     print("-- makePsanaCondaSrc: finished in %.2f seconds" % (time.time()-t0))
 
-        
+
 def envSetup(args):
     assert not (args.opt and args.dbg), "only one of arg.opt and args.dbg can be true when adding environment variables"
     assert args.name is not None, "use --name to specifiy the environment (even if it is activated, todo, fix this)"
@@ -180,7 +180,7 @@ def anacondaUpload(args):
     all_os = ['rhel5', 'rhel6', 'rhel7']
     assert current_os in all_os, "unexpected - os=%s not in all_os" % current_os
     all_os.remove(current_os)
-    
+
     if args.skip:
         return
 
@@ -188,7 +188,7 @@ def anacondaUpload(args):
         args.os = next_os
         pkgBuilder = makePackageBuilderFromArgs(args)
         pkgBuilder.anacondaUpload()
-        
+
 def makeCheckpointFile(args):
     assert args.name, "must specify --name"
     fname, numFiles = util.checkPoint(args.basedir, args.name, "-stageX")
@@ -199,7 +199,7 @@ def compareCheckPointFiles(args):
     assert args.fileA, "no --fileA given for checkpoint compare"
     assert args.fileB, "no --fileB given for checkpoint compare"
     util.compareCheckPointFiles(args.fileA, args.fileB)
-    
+
 def newRel(args):
     releaseBuilder = makeReleaseBuilderFromArgs(args)
     if releaseBuilder.inter or args.xx:
@@ -260,7 +260,7 @@ def changeCurrent(args):
         else:
             print("did NOT replace %s with %s" % (output, currentEnv))
         sys.stdout.flush()
-              
+
 def anaEnvLists(args):
     for inst in ['prod','dev']:
         for osname in ['rhel5', 'rhel6','rhel7']:
@@ -327,7 +327,7 @@ def rmRel(args):
     if len(toRemove)==0:
         print(" rmRel: WARNING: no environments to remove. Is the name wrong? name=%s envs=\n%s" % (args.name, '\n'.join(condaEnvs)))
         return
-    
+
     for env in toRemove:
         cmd = 'conda env remove -n %s' % env
         if args.force:
@@ -340,9 +340,9 @@ def rmRel(args):
         assert exitcode == 0, "command failed: %s, exitcode=%d" % (cmd, exitcode)
         # note - there may not be a jhub config (like for dm envs) in which case below
         # gives a warning
-        util.manageJhubConfigKernel(cmd='remove', envName=env, 
+        util.manageJhubConfigKernel(cmd='remove', envName=env,
                                     basedir=args.basedir, force=args.force)
-                                    
+
 
     envRoot, condaEnvs = util.condaEnvs()
     for env in toRemove:
@@ -356,7 +356,7 @@ def envReport(args):
     util.diffEnvs(args.fileA, args.fileB, args.basedir)
 
 def jhubCreateConfig(args):
-    util.manageJhubConfigKernel(cmd="create", envName=args.name, basedir=args.basedir, 
+    util.manageJhubConfigKernel(cmd="create", envName=args.name, basedir=args.basedir,
                                 force=args.force)
 
 def cleanLocks(args):
@@ -376,13 +376,13 @@ def cleanLocks(args):
             print("deleted lock file %s" % lock_file)
         except OSError:
             print("*WARNING*: unable to delete lock file: %s" % lock_file)
-        
+
 def updateConda(args):
     pass
     # need to automate testing the new conda
-    # create a new miniconda installation, 
+    # create a new miniconda installation,
 def jhubRmConfig(args):
-    util.manageJhubConfigKernel(cmd="remove", envName=args.name, basedir=args.basedir, 
+    util.manageJhubConfigKernel(cmd="remove", envName=args.name, basedir=args.basedir,
                                 force=args.force)
 
 def dummy(args):
@@ -395,7 +395,7 @@ def dummy(args):
     msg = ''
     for ky,val in os.environ.iteritems():
         msg += '%s=%s\n' % (ky,val)
-    print("dummy output: user=%s username=%s sudo_user=%s host=%s hostname=%s\npath=%s os.keys=%s\nenviron=%s" % 
+    print("dummy output: user=%s username=%s sudo_user=%s host=%s hostname=%s\npath=%s os.keys=%s\nenviron=%s" %
                           (user, username,    sudo_user, host, hostname, path, '\n'.join(os.environ.keys()), msg))
     sys.stdout.flush()
     sys.exit(0)
@@ -413,7 +413,7 @@ commandHelpFuncList = [
      'index all the channels (usually not needed, bld-pkg should do it)',
      genChanIndicies),
 
-    ('bld-pkg', 
+    ('bld-pkg',
      'build a specific package',
      buildPackageCommand),
 
@@ -493,7 +493,7 @@ commandHelpFuncList = [
 commands = [cmdTuple[0] for cmdTuple in commandHelpFuncList]
 
 description='''
-admin tool for conda based release system. In addition 
+admin tool for conda based release system. In addition
 '''
 
 epilog='''command must be one of:
@@ -512,60 +512,60 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=description,
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      epilog=epilog)
-    parser.add_argument('--cmd', type=str, 
+    parser.add_argument('--cmd', type=str,
                         help="must be one of commands below", default=None)
-    parser.add_argument('--channel', type=str, 
+    parser.add_argument('--channel', type=str,
                         help="channel to build", default=None)
-    parser.add_argument('--recipe', type=str, 
+    parser.add_argument('--recipe', type=str,
                         help="recipe directory", default=None)
-    parser.add_argument('--variant', type=str, 
+    parser.add_argument('--variant', type=str,
                         help="variant for newrel", default=None)
-    parser.add_argument('--fileA', type=str, 
+    parser.add_argument('--fileA', type=str,
                         help="fileA for checkpoint compare", default=None)
-    parser.add_argument('--fileB', type=str, 
+    parser.add_argument('--fileB', type=str,
                         help="fileB for checkpoint compare", default=None)
-    parser.add_argument('--basedir', type=str, 
+    parser.add_argument('--basedir', type=str,
                         help="basedir for conda system. (def=%s)" % \
                         conda_basedir_default, default=conda_basedir_default)
-    parser.add_argument('--manage', type=str, 
+    parser.add_argument('--manage', type=str,
                         help="subdirectory for manage code, (def=%s)" % manage_default, \
                         default=manage_default)
-    parser.add_argument('--force', action='store_true', 
+    parser.add_argument('--force', action='store_true',
                         help="overwrite existing files.", default=False)
-    parser.add_argument('--warn-if-exists', action='store_true', 
+    parser.add_argument('--warn-if-exists', action='store_true',
                         help="just print a warning if output exists, don't create error.",
                         default=False)
-    parser.add_argument('--os', type=str, 
+    parser.add_argument('--os', type=str,
                         help="operationg system. Default is (for this platform) %s" % osName, default=osName)
-    parser.add_argument('--checkpoint', action='store_true', 
+    parser.add_argument('--checkpoint', action='store_true',
                         help="checkpoint the release building process", default=False)
     parser.add_argument('--stage', help='stage to start at with newrel', type=int, default=1)
-    parser.add_argument('--platform', type=str, 
+    parser.add_argument('--platform', type=str,
                         help="conda platform, linux-64 (default) or osx/win-64", default=platform)
-    parser.add_argument('--xtra', type=str, 
+    parser.add_argument('--xtra', type=str,
                         help="xtra args to pass to conda build", default='')
-    parser.add_argument('--python', type=str, 
+    parser.add_argument('--python', type=str,
                         help='python ver in conda build, ex: 2.7', default=None)
-    parser.add_argument('--numpy', type=str, 
+    parser.add_argument('--numpy', type=str,
                         help='numpy ver in conda build, ex: 1.11', default=None)
-    parser.add_argument('--name', type=str, 
+    parser.add_argument('--name', type=str,
                         help='name for ana release or environment', default=None)
-    parser.add_argument('--email', type=str, 
+    parser.add_argument('--email', type=str,
                         help='email address for notifications. default=%s' % def_email, default=def_email)
-    parser.add_argument('--master', action='store_true', 
+    parser.add_argument('--master', action='store_true',
                         help='check out code from master with the psana src command')
-    parser.add_argument('--nolog', action='store_true', 
+    parser.add_argument('--nolog', action='store_true',
                         help='no log file (for auto and bld-pkg.')
-    parser.add_argument('--dev', action='store_true', 
+    parser.add_argument('--dev', action='store_true',
                         help='develop mode, for auto.')
-    parser.add_argument('--ana', action='store_true', default=False, 
+    parser.add_argument('--ana', action='store_true', default=False,
                         help='for auto and change-current, specify modifying the ana environments')
-    parser.add_argument('--dm', action='store_true', default=False, 
+    parser.add_argument('--dm', action='store_true', default=False,
                         help='for auto and change-current, specify modifying the dm anvironments')
-    parser.add_argument('--skip', action='store_true', 
+    parser.add_argument('--skip', action='store_true',
                         help='skip default for various, used for anaconda-upload.')
-    parser.add_argument('--tagsfile', type=str, 
-                        help="alternate svn tags file. if relative path doesn't exist, will look in basedir/manage/config. default=%s" % tagfile, default=tagfile) 
+    parser.add_argument('--tagsfile', type=str,
+                        help="alternate svn tags file. if relative path doesn't exist, will look in basedir/manage/config. default=%s" % tagfile, default=tagfile)
     parser.add_argument('--clean', action='store_true', default=False, help='for auto, dont pickup where last succeeded, clean build.')
     parser.add_argument('--opt', action='store_true', default=False, help='specify opt build for psana-conda pkg')
     parser.add_argument('--dbg', action='store_true', default=False, help='specify dbg build for psana-conda pkg')
