@@ -25,7 +25,7 @@ def _getTopSubDir(subdir):
     return subPath
 
 def getConfigDir():
-    global CONFIG    
+    global CONFIG
     if CONFIG is None:
         CONFIG = _getTopSubDir('config')
     return CONFIG
@@ -55,9 +55,9 @@ def getFile(location, fname):
 def whichCondaInstall(condaInstallBaseDir):
     '''takes a look at where os comes from, should be something like
      /reg/g/psdm/sw/conda/inst/miniconda2-dev-rhel7/envs/myenv/lib/os.py
-    
-    checks that this starts with the condaInstallBaseDir arg, then 
-    checks that inst is the next subdir, then returns what follows, i.e, 
+
+    checks that this starts with the condaInstallBaseDir arg, then
+    checks that inst is the next subdir, then returns what follows, i.e,
     returns miniconda2-dev-rhel7 for above
     '''
     pythonLib = os.path.split(os.__file__)[0]
@@ -81,7 +81,7 @@ def getEnvRootDir(condaRootPath, envName):
     return envRoot
 
 def logDir(basedir):
-    _logDir = os.path.join(basedir, 'logs')    
+    _logDir = os.path.join(basedir, 'logs')
     assert os.path.exists(_logDir), "log dir %s doesn't exist" % _logDir
     return _logDir
 
@@ -108,27 +108,35 @@ def removeIfPresent(fname):
     else:
         print("## file %s ## doesn't exist" % fname)
         return False
-    
+
 def warning(msg):
     sys.stderr.write("WARNING: %s\n" % msg)
     sys.stderr.flush()
-    
+
 def error(msg):
     sys.stderr.write("ERROR: %s\n" % msg)
     sys.stderr.flush()
     sys.exit(1)
 
 def getOsAndPlatform():
-    platform_string = platform.platform()
+    platform_string = platform.platform()  # Linux-3.10.0-1160.76.1.el7.x86_64-x86_64-with-glibc2.17
+                                           # Linux-3.10.0-1160.76.1.el7.x86_64-x86_64-with-redhat-7.9-Maipo
+    print('platform_string:', platform_string)
+
     if platform_string.startswith('Darwin'):
         return 'osx','osx'
     elif platform_string.startswith('Linux'):
         if '-redhat-' in platform_string:
             version_string = platform_string.split('-redhat-')[1].split('-')[0]
             major_version = int(math.floor(float(version_string[:2])))
-            archMachine = platform.machine()
+            archMachine = platform.machine()  # x86_64
             assert archMachine == 'x86_64', "unexpected - machine architechture is not x86_64"
             return 'rhel%d' % major_version, 'linux-64'
+        if '-glibc2.' in platform_string and '.el7.' in platform_string:
+            archMachine = platform.machine()  # x86_64
+            assert archMachine == 'x86_64', "unexpected - machine architechture is not x86_64"
+            return 'rhel7', 'linux-64'
+
     raise Exception("could not determin Os/platform. Only looked for Darwin and redhat linux, but platform string is %s" % platform_string)
 
 def dprint(verbose, msg):
@@ -160,7 +168,7 @@ def getSITvariables(verbose=False, debug=False):
     sitVars = {'SIT_ARCH':'%s-%s-%s%s-%s' % (archMachine, osName, compiler, versionWithoutDot, optOrDebug)}
     sitVars['SIT_ROOT'] = '/reg/g/psdm'
     return sitVars
-    
+
 def strip_warnings_and_harmless_messages(txt):
     def ignore(ln):
         ln = ln.strip()
@@ -195,7 +203,7 @@ def get_md5(path):
     o,e = run_command(cmd, quiet=True)
     assert e.strip()=='', "stderr=%s cmd=%s" % (e,cmd)
     return o.split()[0]
-        
+
 def get_md5_listing(envRootDir, output_file):
     listing = []
     for root, dirs, files in os.walk(envRootDir):
@@ -471,7 +479,7 @@ def htmlPsanaDiffReports(psanaReport):
             name=changed['new']['name']
             oldtag = changed['old']['tag']
             newtag = changed['new']['tag']
-            html += '  <tr><td>%s</td><td>%s</td><td>--></td><td>%s</td></tr>\n' % (name, oldtag, newtag)        
+            html += '  <tr><td>%s</td><td>%s</td><td>--></td><td>%s</td></tr>\n' % (name, oldtag, newtag)
         html += '</table>\n'
     return html
 
@@ -486,7 +494,7 @@ def htmlEnvDiffReports(envA, envB, pkgsReport, psanaReport):
         if channel is None:
             return 'defaults'
         return channel
-    
+
     html ='<h1>conda environment report</h1>\n'
     OLD_NEW = '''{old} --> {new}<br>\n'''
     html += OLD_NEW.format(old=envA, new=envB)
@@ -556,7 +564,7 @@ def diffEnvs(envA, envB, basedir):
 
     pkgsA={}
     pkgsB={}
-    
+
     for envName, envPkgs in zip([envA, envB],
                                 [pkgsA,pkgsB]):
         cmd = "conda list --name %s --json"  % envName
@@ -593,7 +601,7 @@ def manageJhubConfigKernel(cmd, envName, basedir, force):
     for subdir in [shortInstall, 'kernels', envName]:
         kernelEnvDir = os.path.join(kernelEnvDir, subdir)
         if not os.path.exists(kernelEnvDir):
-            if cmd == 'remove': 
+            if cmd == 'remove':
                 print("manageJhubConfigKernel cmd==remove but dir=%s doesn't exist, not deleting anything" % kernelEnvDir)
                 return
             print("Creating path: %s" % kernelEnvDir)
@@ -612,7 +620,7 @@ def manageJhubConfigKernel(cmd, envName, basedir, force):
         error("The jhub kernel file: %s already exists. Use --force to overwrite" % outFilename)
 
     pyVer = 2
-    if envName.endswith('-py3'): 
+    if envName.endswith('-py3'):
         pyVer = 3
 
     envDir = getEnvRootDir(os.path.join(basedir, 'inst', condaInstall), envName)
@@ -624,12 +632,12 @@ def manageJhubConfigKernel(cmd, envName, basedir, force):
     sit_data = ':'.join([os.path.join(envDir, 'data'),
                          '/reg/g/psdm/data'])
 
-    data = {"display_name": "Python %d %s" % (pyVer, envName), 
-            "language": "python", 
+    data = {"display_name": "Python %d %s" % (pyVer, envName),
+            "language": "python",
             "argv": [pyBin,
-                     "-m", 
-                     "ipykernel", 
-                     "-f", 
+                     "-m",
+                     "ipykernel",
+                     "-f",
                      "{connection_file}"],
             "env": {"SIT_DATA": sit_data,
                     "SIT_ROOT": "/reg/g/psdm", "LD_LIBRARY_PATH": ""}
