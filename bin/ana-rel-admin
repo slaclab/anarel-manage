@@ -159,7 +159,9 @@ def makePsanaCondaSrc(args):
     print(cmd)
     os.system(cmd)
     sys.stdout.flush()
-    print("-- makePsanaCondaSrc: finished in %.2f seconds" % (time.time()-t0))
+    print('Before "conda build" update version %s and sha256sum in psana1-feedstock/recipe/meta.yaml' % version_str
+          +'\n  see https://github.com/slac-lcls/psana1-feedstock/blob/main/recipe/meta.yaml')
+    print('-- makePsanaCondaSrc: finished in %.2f seconds' % (time.time()-t0))
 
 
 def envSetup(args):
