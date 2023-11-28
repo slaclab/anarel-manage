@@ -42,7 +42,7 @@ FileIO             svn=psdm subdir=no conda_branch=no
 
 # maybe we won't support these - old translator
 H5DataTypes        svn=psdm subdir=no conda_branch=no
-HDF5Explorer       svn=psdm subdir=no conda_branch=no
+#HDF5Explorer       svn=psdm subdir=no conda_branch=no
 
 IData              svn=psdm subdir=no conda_branch=no
 ImgAlgos           svn=psdm subdir=no conda_branch=no
@@ -88,7 +88,7 @@ SConsTools          svn=psdm subdir=no conda_branch=yes
 
 TimeTool           svn=psdm subdir=no conda_branch=no
 
-XtcExplorer        svn=psdm subdir=no conda_branch=no
+#XtcExplorer        svn=psdm subdir=no conda_branch=no
 
 XtcInput           svn=psdm subdir=no conda_branch=no
 
@@ -220,7 +220,7 @@ xtcav                svn=psdm subdir=no conda_branch=no
 # dependency, can't separate it
 #psparallel          svn=psdm subdir=no conda_branch=no
 # this was taken out, this stuff was moved into psana
-# 
+#
 # Chris says unit tests are Ok
 # psgeom is now build as an external package
 #psgeom             svn=psdm subdir=no conda_branch=no
