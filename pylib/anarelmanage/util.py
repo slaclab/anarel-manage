@@ -94,11 +94,11 @@ def run_command(cmd_or_cmdList, stderr_in_stdout=False, quiet=False, shell=True)
     if stderr_in_stdout:
         p = sb.Popen(cmd_or_cmdList, shell=shell, stdout=sb.PIPE, stderr=sb.STDOUT)
         stdout, stderr = p.communicate()
-        return stdout
+        return stdout.decode('ascii')
     else:
         p = sb.Popen(cmd_or_cmdList, shell=shell, stdout=sb.PIPE, stderr=sb.PIPE)
         stdout, stderr = p.communicate()
-        return stdout, stderr.strip()
+        return stdout.decode('ascii'), stderr.decode('ascii').strip()
 
 def removeIfPresent(fname):
     if os.path.exists(fname):
