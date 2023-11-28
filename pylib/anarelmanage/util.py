@@ -132,10 +132,13 @@ def getOsAndPlatform():
             archMachine = platform.machine()  # x86_64
             assert archMachine == 'x86_64', "unexpected - machine architechture is not x86_64"
             return 'rhel%d' % major_version, 'linux-64'
-        if '-glibc2.' in platform_string and '.el7.' in platform_string:
+        if '-glibc2.' in platform_string:
             archMachine = platform.machine()  # x86_64
             assert archMachine == 'x86_64', "unexpected - machine architechture is not x86_64"
-            return 'rhel7', 'linux-64'
+            if '.el7' in platform_string:
+                return 'rhel7', 'linux-64'
+            if '.el8' in platform_string:
+                return 'rhel8', 'linux-64'
 
     raise Exception("could not determin Os/platform. Only looked for Darwin and redhat linux, but platform string is %s" % platform_string)
 
