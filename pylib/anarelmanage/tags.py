@@ -13,7 +13,7 @@ def getLatestTagGit(tagurl):
     cmd = 'git ls-remote --tags %s' %tagurl
     output = subprocess.check_output(shlex.split(cmd))#, encoding='utf-8')
     # check stderr
-    tags = [l.split('\t')[1] for l in output.splitlines()]
+    tags = [l.decode('ascii').split('\t')[1] for l in output.splitlines()]
     r = re.compile('.*?/(V\d\d-\d\d-\d\d)')
     prod_tags = []
     for tag in tags:
@@ -48,7 +48,7 @@ def updateWithLatestTags(anaTags):
     print("querying svn repos for latest tags of %d packages" % len(anaTags))
     print("make sure this account has access to repos (kinit username where username has read access)")
     sys.stdout.flush()
-    for pkg, pkgdict in anaTags.iteritems():
+    for pkg, pkgdict in anaTags.items():
         repo = pkgdict['repo']
         assert repo in repodict.keys(), "pkg=%s, don't understand repo=%s" % (pkg, repo)
         if repo == 'psdm':
@@ -73,7 +73,7 @@ def checkoutCode(anaTags, master):
     print("cheking out %d packages from ana tags list" % len(anaTags))
     sys.stdout.flush()
 
-    for pkg, pkgdict in anaTags.iteritems():
+    for pkg, pkgdict in anaTags.items():
         repo = pkgdict['repo']
         assert repo in repodict.keys(), "pkg=%s, don't understand repo=%s" % (pkg, repo)
         assert 'tag' in pkgdict, "no tag defined for pkg=%s, not branches/conda" % pkg
@@ -104,7 +104,8 @@ def checkoutCode(anaTags, master):
 def readAnaTags(anaTagsFilename):
     assert os.path.exists(anaTagsFilename), "ana-tags file: %s doesn't exist" % anaTagsFilename
     tags = {}
-    for ii,ln in enumerate(file(anaTagsFilename).read().split('\n')):
+    #for ii,ln in enumerate(file(anaTagsFilename).read().split('\n')):  # py2 -> py3
+    for ii,ln in enumerate(open(anaTagsFilename, 'r').readlines()):
         ln = ln.strip()
         if len(ln)==0: continue
         if ln[0] == '#': continue
@@ -136,15 +137,14 @@ def readAnaTags(anaTagsFilename):
     return tags
 
 def writeTagsFile(anaTags, filename):
-    pkgs = anaTags.keys()
-    pkgs.sort()
-    fout = file(filename, 'w')
+    pkgs = sorted(anaTags.keys())
+    #pkgs.sort()
+    fout = open(filename, 'w')
     for pkg in pkgs:
         ln =  pkg.ljust(35)
         pkgdict = anaTags[pkg]
         keys = pkgdict.keys()
-        keys.sort()
-        for ky in keys:
+        for ky in sorted(keys):
             ln += ' '
             ln += ('%s=%s' % (ky.rjust(15), str(pkgdict[ky]).ljust(15)))
         fout.write('%s\n' % ln)
