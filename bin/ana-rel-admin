@@ -80,7 +80,7 @@ def genCondaRcCommand(args):
                 (OS, BUILD, miniconda_dir)
             condarc_fname = os.path.join(miniconda_dir, '.condarc')
             condarc = template.render(OS=OS, CONDA_ROOT=args.basedir, BUILD=BUILD)
-            fout = file(condarc_fname,'w')
+            fout = open(condarc_fname,'w')
             fout.write(condarc)
             fout.close()
             print("Wrote %s" % condarc_fname)
@@ -141,15 +141,18 @@ def makePsanaCondaSrc(args):
     os.chdir(scratchDir)                             # cd scratch/psana-conda-4.0.56
     tags.checkoutCode(anaTags, args.master)
     tags.writeTagsFile(anaTags, 'psana-conda-tags')  # > scratch/psana-conda-4.0.56/psana-conda-tags
-    f=file('.sit_release', 'w')                      # > scratch/psana-conda-4.0.56/.sit_release
+    f=open('.sit_release', 'w')                      # > scratch/psana-conda-4.0.56/.sit_release
     f.write('%s\n' % relname)
     f.close()
-    print("-- makePsanaCondaSrc: wrote .sit_release file with contents: %s" % file('.sit_release').read())
+    print("-- makePsanaCondaSrc: wrote .sit_release file with contents: %s" % str(open('.sit_release').readlines()))
     sys.stdout.flush()
     os.chdir('..')                                   # cd scratch/
     cmd = 'tar cfvz %s %s' % (outputFile, relname)   # > downloads/anarel/psana-conda-4.0.56.tar.gz
     print(cmd)
     sys.stdout.flush()
+    outputDir = os.path.dirname(outputFile)
+    if not os.path.exists(outputDir):
+        os.makedirs(outputDir)
     os.system(cmd)
     sys.stdout.flush()
     cmd = 'sha256sum %s' % outputFile
@@ -247,13 +250,13 @@ def changeCurrent(args):
         currentEnv = args.name + variantExt
         output = os.path.join(args.basedir, 'current', swGroup, currentFname)
         assert os.path.exists(output), "file %s doesn't exist" % output
-        print("current content of %s:\n%s" % (output, file(output,'r').read()))
+        print("current content of %s:\n%s" % (output, str(open(output,'r').readlines())))
         sys.stdout.flush()
         whichInstallationsHaveThisEnvironment(currentEnv)
         ans=raw_input("\n====\nGiven report on  %s - switch %s-current? (y/Y)" % (currentEnv, swGroup))
         if ans.lower().strip()=='y':
             print("about to replace ana-current file: ")
-            fout = file(output,'w')
+            fout = open(output,'w')
             fout.write(currentEnv)
             fout.close()
             print("replaced %s-current file: %s" % (swGroup, output))
@@ -291,7 +294,7 @@ def anaEnvLists(args):
 
 def buildAllPkgs(args):
     fname = util.getFile(location='config', fname='pkg_build_order.yaml')
-    for pkginfo in yaml.load(file(fname,'r')):
+    for pkginfo in yaml.load(open(fname,'r')):
         if 'limit_os' in pkginfo and pkginfo['limit_os'] != args.os:
             print("skipping pkg=%s since limit_os=%s and os=%s" % (pkginfo['pkg'], pkginfo['limit_os'], args.os))
             sys.stdout.flush()
