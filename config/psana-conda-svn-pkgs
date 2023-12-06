@@ -2,8 +2,10 @@
 
 # first packages that live in a subdir to the release:
 
-pdsdata             svn=pcds  subdir=extpkgs conda_branch=no
-psalg               svn=pcds  subdir=extpkgs conda_branch=no
+#pdsdata             svn=pcds  subdir=extpkgs conda_branch=no
+#psalg               svn=pcds  subdir=extpkgs conda_branch=no
+pdsdata             svn=psdm  subdir=extpkgs conda_branch=no
+psalg               svn=psdm  subdir=extpkgs conda_branch=no
 
 # we could do ndarray in this fashion, but since pdsdata and psalg
 # both depend on it, and it is a source only package, it is easier
