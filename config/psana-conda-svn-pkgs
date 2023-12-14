@@ -70,7 +70,7 @@ PSHdf5Input        svn=psdm subdir=no conda_branch=no
 
 PSHist             svn=psdm subdir=no conda_branch=no
 
-PSQt               svn=psdm subdir=no conda_branch=no
+#PSQt               svn=psdm subdir=no conda_branch=no
 PSShmemInput       svn=psdm subdir=no conda_branch=no
 
 PSXtcInput         svn=psdm subdir=no conda_branch=no
@@ -216,6 +216,8 @@ pytools              svn=psdm subdir=no conda_branch=no
 #xraylib             svn=psdm subdir=no conda_branch=no
 
 xtcav                svn=psdm subdir=no conda_branch=no
+data_test_access     svn=psdm subdir=no conda_branch=no
+data_test            svn=psdm subdir=/tmp conda_branch=no
 
 ######## new packages, these packages came out during conda work
 # need this, psana imports it, but it also import psana, circular
