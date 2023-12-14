@@ -7,7 +7,7 @@ then
     # s3df
     export SIT_ROOT=/sdf/group/lcls/ds/ana
     export SIT_PSDM_DATA=/sdf/data/lcls/ds
-    eval "$(/sdf/group/lcls/ds/ana/sw/conda1/inst/bin/conda shell.bash hook)"
+    eval "$(/sdf/group/lcls/ds/ana/sw/conda1-v3/inst/bin/conda shell.bash hook)"
     export CONDA_ENVS_DIRS=/sdf/group/lcls/ds/ana/sw/conda1/inst/envs
 else
     # psana
@@ -33,6 +33,6 @@ then
   export SIT_DATA=$CONDA_ENVS_DIRS/ana-4.0.45/data:$SIT_ROOT/data/
   conda activate ana-4.0.45
 else
-  export SIT_DATA=$CONDA_ENVS_DIRS/ana-4.0.55-py3/data:$SIT_ROOT/data/
-  conda activate ana-4.0.55-py3
+  export SIT_DATA=$CONDA_ENVS_DIRS/ana-4.0.57-py3/data:$SIT_ROOT/data/
+  conda activate ana-4.0.57-py3
 fi
