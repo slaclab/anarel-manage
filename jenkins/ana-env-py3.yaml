@@ -86,3 +86,4 @@ dependencies:
   - pyqode.qt
   - lcls-ii:amityping
   - lcls-ii:networkfox
+  - lark-parser
