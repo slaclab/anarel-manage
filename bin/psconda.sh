@@ -1,3 +1,4 @@
+
 # needed to avoid file locking crash in mpi splitscan tests
 export HDF5_USE_FILE_LOCKING=FALSE
 export SIT_ARCH=x86_64-rhel7-gcc48-opt
@@ -33,6 +34,6 @@ then
   export SIT_DATA=$CONDA_ENVS_DIRS/ana-4.0.45/data:$SIT_ROOT/data/
   conda activate ana-4.0.45
 else
-  export SIT_DATA=$CONDA_ENVS_DIRS/ana-4.0.57-py3/data:$SIT_ROOT/data/
-  conda activate ana-4.0.57-py3
+  export SIT_DATA=$CONDA_ENVS_DIRS/ana-4.0.62-py3/data:$SIT_ROOT/data/
+  conda activate ana-4.0.62-py3
 fi

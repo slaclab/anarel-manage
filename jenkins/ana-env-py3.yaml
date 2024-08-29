@@ -87,3 +87,4 @@ dependencies:
   - lcls-ii:amityping
   - lcls-ii:networkfox
   - lark-parser
+  - zarr
