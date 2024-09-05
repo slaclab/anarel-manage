@@ -1,3 +1,5 @@
+# Needee by JuoyterLab
+export JUPYTERLAB_WORKSPACES_DIR=${HOME}
 
 # needed to avoid file locking crash in mpi splitscan tests
 export HDF5_USE_FILE_LOCKING=FALSE
