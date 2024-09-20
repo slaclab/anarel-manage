@@ -1,5 +1,6 @@
 # Needee by JuoyterLab
 export JUPYTERLAB_WORKSPACES_DIR=${HOME}
+export JUPYTERLAB_SETTINGS_DIR=${HOME}/.jupyter/lab/user-settings
 
 # needed to avoid file locking crash in mpi splitscan tests
 export HDF5_USE_FILE_LOCKING=FALSE
