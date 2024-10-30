@@ -37,6 +37,6 @@ then
   export SIT_DATA=$CONDA_ENVS_DIRS/ana-4.0.45/data:$SIT_ROOT/data/
   conda activate ana-4.0.45
 else
-  export SIT_DATA=$CONDA_ENVS_DIRS/ana-4.0.62-py3/data:$SIT_ROOT/data/
-  conda activate ana-4.0.62-py3
+  export SIT_DATA=$CONDA_ENVS_DIRS/ana-4.0.63-py3/data:$SIT_ROOT/data/
+  conda activate ana-4.0.63-py3
 fi
