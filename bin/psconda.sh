@@ -11,13 +11,13 @@ then
     # s3df
     export SIT_ROOT=/sdf/group/lcls/ds/ana
     export SIT_PSDM_DATA=/sdf/data/lcls/ds
-    eval "$(/sdf/group/lcls/ds/ana/sw/conda1-v3/inst/bin/conda shell.bash hook)"
+    eval "$(/sdf/group/lcls/ds/ana/sw/conda1-v4/inst/bin/conda shell.bash hook)"
     export CONDA_ENVS_DIRS=/sdf/group/lcls/ds/ana/sw/conda1/inst/envs
 else
     # psana
     export SIT_ROOT=/cds/group/psdm
     export SIT_PSDM_DATA=/cds/data/psdm
-    eval "$(/cds/sw/ds/ana/conda1-v2/inst/bin/conda shell.bash hook)"
+    eval "$(/cds/sw/ds/ana/conda1-v4/inst/bin/conda shell.bash hook)"
     export CONDA_ENVS_DIRS=/cds/sw/ds/ana/conda1/inst/envs
 fi
 
