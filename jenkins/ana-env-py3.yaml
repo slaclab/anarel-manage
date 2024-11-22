@@ -88,3 +88,4 @@ dependencies:
   - lcls-ii:networkfox
   - lark-parser
   - zarr
+  - git-lfs
