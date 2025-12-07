@@ -1,5 +1,5 @@
-# Needee by JuoyterLab
-export JUPYTERLAB_WORKSPACES_DIR=${HOME}
+# Needed by JupyterLab
+export JUPYTERLAB_WORKSPACES_DIR=${HOME}/.jupyter/lab/workspaces
 export JUPYTERLAB_SETTINGS_DIR=${HOME}/.jupyter/lab/user-settings
 
 # needed to avoid file locking crash in mpi splitscan tests
